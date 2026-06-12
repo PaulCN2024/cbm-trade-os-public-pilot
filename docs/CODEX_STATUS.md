@@ -13,8 +13,10 @@ External Review Alignment / Git Baseline / Public Status
 - Added `README.md` with public review URLs and safety boundaries.
 - Sanitized default mock bank fields in `lib/mock-crm.js` to use `CONFIGURED_IN_SECURE_SETTINGS` placeholders instead of real bank account values.
 - Confirmed sensitive local research output is not tracked by Git.
-- Attempted GitHub push through HTTPS and SSH; both are blocked by missing GitHub credentials/SSH key.
-- Confirmed public Vercel alias can expose this status file for ChatGPT external review.
+- Confirmed GitHub repository `PaulCN2024/cbm-trade-os-public-pilot` exists and is public.
+- Confirmed GitHub connector has admin/push access to that repository.
+- Attempted terminal GitHub push through HTTPS and SSH; both are blocked by missing local GitHub credentials/SSH key.
+- Published initial GitHub README through the GitHub connector.
 
 ## Changed Files
 - `.gitignore`
@@ -59,27 +61,25 @@ Passed. 156 tests passed, 0 failed. Existing Node module type warnings were emit
 Passed.
 
 ## GitHub Repository URL
-Not completed yet.
-
-Intended repository:
+Repository created:
 
 ```text
 https://github.com/PaulCN2024/cbm-trade-os-public-pilot
 ```
 
-Current blocker:
+Current terminal push blocker:
 
 ```text
 HTTPS push: fatal: could not read Username for 'https://github.com': Device not configured
 SSH push: git@github.com: Permission denied (publickey).
 ```
 
-The current local project is now a Git repository and is ready to push after GitHub authorization or remote repository creation.
+The current local project is now a Git repository and is ready to push after GitHub CLI login, HTTPS token setup or SSH key setup. The GitHub connector can write individual files, and has already initialized the repository README.
 
 ## Latest Commit Hash
 
 ```text
-19f4444 Prepare public GitHub review baseline
+3eb733d Update external review status
 ```
 
 ## Vercel Deployment URL
@@ -143,9 +143,9 @@ Yes.
 - `/trade-os-prototype?cb=v5` contains `DEPLOYMENT_CHECK_TRADE_OS_V5`.
 
 ## Known Issues
-- GitHub source alignment is not complete because local terminal GitHub authentication is missing.
+- Full GitHub source alignment is not complete because local terminal GitHub authentication is missing.
 - `gh` CLI is not installed.
-- GitHub MCP tools can operate on existing repositories but do not expose a create-new-repository tool in this session.
+- GitHub connector has repository access and can write files, but it is not a replacement for local `git push` for a full multi-file source push.
 - Public Vercel status file must be redeployed after this update so ChatGPT can read the latest status.
 
 ## Remaining Mock/localStorage Parts
@@ -154,7 +154,7 @@ Yes.
 - OpenAI, Gmail and WhatsApp sending are not enabled.
 
 ## Next Recommended Phase
-Complete GitHub authorization by either:
+Complete full GitHub source push by either:
 
 1. Creating the public repository `PaulCN2024/cbm-trade-os-public-pilot` on GitHub and adding a working SSH key or HTTPS token, then running `git push -u origin main`; or
 2. Installing/authenticating GitHub CLI with `gh auth login`, then pushing the existing local repository.
