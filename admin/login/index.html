@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>CBM Trade OS | Admin Login</title>
+    <link rel="stylesheet" href="/admin/login/styles.css" />
+  </head>
+  <body>
+    <main class="login-shell">
+      <section class="login-card">
+        <p class="eyebrow">CBM Trade OS</p>
+        <h1>Admin Login</h1>
+        <p class="muted">Supabase pilot admin access. TODO: replace with full role-based permissions before production team use.</p>
+        <form id="loginForm" method="post" action="#" onsubmit="return false">
+          <label>
+            Email
+            <input name="email" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button id="signInButton" type="button">Sign in</button>
+        </form>
+        <p class="status" id="loginStatus" role="status"></p>
+        <p class="safety">No customer messages, official quotations, PI, prices, delivery time, payment terms, bank account, compensation or responsibility judgment are automated.</p>
+      </section>
+    </main>
+    <script type="module" src="/admin/login/app.js"></script>
+  </body>
+</html>

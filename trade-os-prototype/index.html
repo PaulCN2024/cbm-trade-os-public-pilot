@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CBM Trade OS</title>
+    <meta
+      name="description"
+      content="CBM Trade OS public demo for mock foreign trade customer acquisition, CRM, inquiry, quotation, order, shipment and after-sales workflow."
+    />
+    <meta name="theme-color" content="#10231f" />
+    <link rel="manifest" href="/trade-os-prototype/manifest.webmanifest" />
+    <link rel="stylesheet" href="/trade-os-prototype/styles.css?v=phase4h" />
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <div class="brand-mark">CBM</div>
+        <div>
+          <strong>CBM Trade OS</strong>
+          <span>外贸项目工作台</span>
+        </div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <button class="ghost-button" id="resetDataButton" type="button">重置演示数据</button>
+      <button class="ghost-button" id="adminLogoutButton" type="button">退出登录</button>
+    </aside>
+
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">建筑铝型材 · 幕墙 · ACM · 项目供应链</p>
+          <p class="deployment-check">DEPLOYMENT_CHECK_TRADE_OS_V5</p>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p class="demo-note">Admin pilot · Supabase front CRM data when configured · downstream mock modules · manual review required</p>
+        </div>
+        <div class="topbar-tools">
+          <div class="admin-status" id="adminIdentity">Admin session checking...</div>
+          <a class="ghost-button" href="/admin/system-check">System Check</a>
+          <div class="search-wrap">
+            <span aria-hidden="true">⌕</span>
+            <input id="globalSearch" type="search" placeholder="搜索客户、项目、型材、邮件摘要" />
+          </div>
+        </div>
+      </header>
+
+      <section id="app" class="content" aria-live="polite">
+        <section class="crawler-fallback" aria-label="CBM Trade OS static overview">
+          <p class="eyebrow">Server-rendered fallback for external review tools</p>
+          <h2>CBM Trade OS public demo</h2>
+          <p>
+            CBM Trade OS is a mock foreign trade business operating system for customer acquisition,
+            lead management, inquiry analysis, project tracking, quotation drafts, order workflow,
+            shipment tracking, after-sales service and repeat business development.
+          </p>
+          <p>
+            Current demo scope: independent website inquiry, action center, lead pool, customer 360, inquiry pool,
+            mock AI summary, missing information analysis, project center, product library, quotation center, document center,
+            follow-up tasks, order center, shipment center and after-sales center.
+          </p>
+          <ul>
+            <li>Business line A: architectural aluminum solutions, windows, doors, curtain wall systems, louvers, railings and ACP panels.</li>
+            <li>Business line B: precision aluminum manufacturing, CNC parts, extrusions with machining, brackets, housings and anodized or powder coated parts.</li>
+            <li>Safety rule: all official quotations, PI, price, delivery, payment and bank information require manual review.</li>
+            <li>Data rule: front CRM pilot data can come from Supabase after admin login; downstream commercial workflow remains mock localStorage data.</li>
+          </ul>
+          <p>
+            JavaScript enhances this page into the interactive CRM dashboard. If a crawler cannot run JavaScript,
+            this fallback content is the readable overview of the deployed route.
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="entityDialog">
+      <form method="dialog" class="dialog-card" id="entityForm">
+        <header>
+          <h2 id="dialogTitle">新增</h2>
+          <button class="icon-button" value="cancel" aria-label="关闭" type="submit">×</button>
+        </header>
+        <div id="dialogFields" class="form-grid"></div>
+        <footer>
+          <button class="ghost-button" value="cancel" type="submit">取消</button>
+          <button class="primary-button" id="dialogSaveButton" value="default" type="submit">保存</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <script type="module" src="/trade-os-prototype/app.js?v=phase4h"></script>
+  </body>
+</html>

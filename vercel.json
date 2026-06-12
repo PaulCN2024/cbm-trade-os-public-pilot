@@ -1,0 +1,32 @@
+{
+  "outputDirectory": ".",
+  "routes": [
+    {
+      "src": "^/trade-os-prototype(?:/index(?:\\.html)?)?/?$",
+      "dest": "/api/trade-os-prototype"
+    },
+    {
+      "src": "^/trade-website(?:/index(?:\\.html)?)?/?$",
+      "dest": "/api/trade-website"
+    },
+    {
+      "src": "^/admin/login(?:/index(?:\\.html)?)?/?$",
+      "dest": "/api/admin-login"
+    },
+    {
+      "src": "^/admin/dev-test(?:/index(?:\\.html)?)?/?$",
+      "dest": "/api/admin-dev-test"
+    },
+    {
+      "src": "^/admin/system-check(?:/index(?:\\.html)?)?/?$",
+      "dest": "/api/admin-system-check"
+    },
+    {
+      "src": "^/admin/command-center(?:/index(?:\\.html)?)?/?$",
+      "dest": "/api/admin-system-check?page=command-center"
+    },
+    {
+      "handle": "filesystem"
+    }
+  ]
+}

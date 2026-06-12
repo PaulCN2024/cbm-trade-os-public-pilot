@@ -1,0 +1,15 @@
+.DS_Store
+.git/
+.vercel/
+node_modules/
+.tools/
+.python_deps/
+.python_vercel_cli/
+.playwright-browsers/
+research_output/
+deploy/
+AGENTS.md
+research_local_business.py
+*.log
+.env
+.env.*

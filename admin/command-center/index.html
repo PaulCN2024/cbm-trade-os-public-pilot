@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>CBM Trade OS | 指令中心</title>
+    <link rel="stylesheet" href="/admin/command-center/styles.css?v=phase4k-zh-fix1" onerror="this.onerror=null;this.href='./styles.css?v=phase4k-zh-fix1';" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">CBM Trade OS</p>
+          <h1>指令中心</h1>
+          <p>面向外贸业务的指令式工作台。目前仅使用规则解析，高风险商业动作必须人工审核。</p>
+          <p class="verify-marker">COMMAND_CENTER_UI_ZH_FIX_V1</p>
+        </div>
+        <div class="hero-actions">
+          <a href="/trade-os-prototype">打开 Trade OS</a>
+          <a href="/admin/system-check">系统检查</a>
+          <button id="logoutButton" type="button">退出登录</button>
+        </div>
+      </header>
+
+      <section class="panel command-panel">
+        <div class="panel-header">
+          <div>
+            <h2>自然语言业务指令</h2>
+            <p>不自动发送客户消息、正式报价、PI，不确认价格、交期、付款条款、银行信息、赔偿或责任判断。</p>
+          </div>
+          <span class="mode-pill" id="modePill">mode</span>
+        </div>
+        <div class="examples" id="exampleCommands"></div>
+        <textarea id="commandInput" rows="4" placeholder="例如：今天有哪些客户要跟进？"></textarea>
+        <div class="actions">
+          <button id="parseButton" type="button">第 1 步：生成计划</button>
+          <button id="previewButton" type="button">第 2 步：预览</button>
+          <label class="approval-check"><input id="approvalCheckbox" type="checkbox" /> 我已人工确认，仅创建草稿/预览</label>
+          <button id="confirmButton" type="button">第 3 步：确认安全动作</button>
+          <button id="executeButton" type="button">第 4 步：执行安全动作</button>
+          <button id="draftOnlyButton" type="button">仅创建草稿</button>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <div class="panel-header"><h2>第 1 步：识别意图</h2></div>
+          <div id="parsedPreview" class="preview-box"></div>
+        </article>
+        <article class="panel">
+          <div class="panel-header"><h2>第 2 步：执行计划</h2></div>
+          <div id="plannedActions" class="preview-box"></div>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <div class="panel-header"><h2>缺失信息</h2></div>
+          <div id="missingInfo" class="preview-box"></div>
+        </article>
+        <article class="panel warning-panel">
+          <div class="panel-header"><h2>第 3 步：人工确认</h2></div>
+          <div id="approvalWarning" class="preview-box"></div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>第 4 步：预览 / 执行结果卡片</h2>
+            <p>先显示业务可读的结果卡片，原始调试 JSON 放在下方折叠区。</p>
+          </div>
+        </div>
+        <div id="resultCards" class="result-cards"></div>
+        <details class="debug-details">
+          <summary>原始调试 JSON</summary>
+          <pre id="resultPreview" class="result-preview">还没有运行指令。</pre>
+        </details>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>第 5 步：执行记录</h2>
+            <p>MVP 阶段暂存在浏览器 localStorage。</p>
+          </div>
+          <button id="clearHistoryButton" type="button">清空历史</button>
+        </div>
+        <div class="history-filters" id="historyFilters"></div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>流程恢复工作台</h2>
+            <p>从指令历史继续处理安全的内部步骤，高风险动作仍然保持阻止状态。</p>
+          </div>
+        </div>
+        <div id="commandJourney" class="command-journey"></div>
+        <div id="resumeWorkspace" class="resume-workspace"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>内部审核记录</h2>
+            <p>仅内部记录，不代表已发送客户；用于查看指令、草稿、审核状态、禁止动作和关联业务对象。</p>
+          </div>
+        </div>
+        <div id="auditSummary" class="audit-summary"></div>
+        <div id="auditFilters" class="history-filters"></div>
+        <div id="auditList" class="audit-list"></div>
+        <div id="auditDetailPanel" class="audit-detail-panel"></div>
+      </section>
+    </main>
+
+    <script type="module">
+      const commandCenterAppPath = location.protocol === "file:" ? "./app.js?v=phase4k-zh-fix1" : "/admin/command-center/app.js?v=phase4k-zh-fix1";
+      import(commandCenterAppPath);
+    </script>
+  </body>
+</html>

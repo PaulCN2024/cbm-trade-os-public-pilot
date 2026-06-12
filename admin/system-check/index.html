@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>CBM Trade OS | System Check</title>
+    <link rel="stylesheet" href="/admin/system-check/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">CBM Trade OS</p>
+          <h1>System Check</h1>
+          <p>Admin-only verification for Phase 3C Supabase E2E readiness.</p>
+        </div>
+        <div class="hero-actions">
+          <a href="/trade-os-prototype">Open Trade OS</a>
+          <button id="logoutButton" type="button">Logout</button>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Admin Identity</h2>
+        </div>
+        <div class="checks" id="identityChecks"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Environment</h2>
+          <button id="refreshButton" type="button">Refresh</button>
+        </div>
+        <div class="checks" id="envChecks"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Admin API Access</h2>
+        </div>
+        <div class="checks" id="apiChecks"></div>
+      </section>
+
+      <section class="panel danger-zone">
+        <div class="panel-header">
+          <div>
+            <h2>Pilot Data Cleanup</h2>
+            <p>Development / pilot cleanup only. Protected by admin login and confirmation phrase.</p>
+          </div>
+          <button id="loadCleanupButton" type="button">Check Pilot Data</button>
+        </div>
+        <div class="checks" id="cleanupChecks"></div>
+        <div class="cleanup-actions">
+          <input id="cleanupConfirmInput" type="text" placeholder="Type DELETE PILOT TEST DATA" />
+          <button id="cleanupButton" type="button">Delete Pilot Test Data</button>
+        </div>
+        <p class="warning-text" id="cleanupStatus"></p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Guardrails</h2>
+        </div>
+        <ul class="guardrails">
+          <li>No Supabase service key is shown or used in browser code.</li>
+          <li>Admin APIs must return 401 without authentication.</li>
+          <li>Public inquiry API does not require login but validates input.</li>
+          <li>Mock mode remains available for development.</li>
+          <li>No automatic customer messages, official quotation, PI, price, delivery time, payment terms, bank account, compensation or responsibility judgment.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script type="module" src="/admin/system-check/app.js"></script>
+  </body>
+</html>

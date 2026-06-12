@@ -1,0 +1,35 @@
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Local environment and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Local Vercel state
+.vercel/
+
+# Local automation/runtime caches
+.tools/
+.python_deps/
+.python_vercel_cli/
+.playwright-browsers/
+
+# Logs and temporary files
+*.log
+.tmp/
+tmp/
+
+# Test and generated artifacts
+playwright-report/
+test-results/
+trade-website-preview.png
+
+# Sensitive/local business research output
+AGENTS.md
+research_output/
+research_local_business.py
+deploy/

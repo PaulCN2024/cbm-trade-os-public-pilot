@@ -1,0 +1,9 @@
+{
+  "name": "CBM Trade OS Demo",
+  "short_name": "CBM Trade OS",
+  "description": "Public demo for CBM foreign trade operating system mock workflow.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f7f6",
+  "theme_color": "#10231f"
+}
