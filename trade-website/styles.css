@@ -186,15 +186,16 @@ p {
 
 .hero-media {
   background:
-    url("https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1800&q=84")
+    url("assets/cbm-architectural-aluminum-facade.jpg")
     center / cover no-repeat;
   transform: scale(1.03);
+  filter: saturate(0.95) contrast(1.06);
 }
 
 .hero-shade {
   background:
-    linear-gradient(90deg, rgba(7, 16, 14, 0.94), rgba(7, 16, 14, 0.66) 45%, rgba(7, 16, 14, 0.2)),
-    linear-gradient(0deg, rgba(7, 16, 14, 0.62), rgba(7, 16, 14, 0.08));
+    linear-gradient(90deg, rgba(7, 16, 14, 0.95), rgba(7, 16, 14, 0.68) 43%, rgba(7, 16, 14, 0.24)),
+    linear-gradient(0deg, rgba(7, 16, 14, 0.7), rgba(7, 16, 14, 0.08));
 }
 
 .hero-content {
@@ -247,6 +248,23 @@ p {
   font-weight: 850;
 }
 
+.trust-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 16px;
+}
+
+.trust-bar span {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 13px;
+  font-weight: 850;
+}
+
 .section {
   padding: clamp(56px, 8vw, 104px) clamp(18px, 5vw, 72px);
 }
@@ -280,23 +298,45 @@ p {
 .image-card {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 14px;
   background: var(--panel);
-  box-shadow: var(--shadow);
+  box-shadow: 0 18px 46px rgba(16, 24, 22, 0.11);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
 }
 
 .card-image {
   min-height: 340px;
   background-position: center;
   background-size: cover;
+  transition:
+    transform 0.5s ease,
+    filter 0.22s ease;
+}
+
+.image-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(15, 107, 94, 0.26);
+  box-shadow: 0 28px 70px rgba(16, 24, 22, 0.16);
+}
+
+.image-card:hover .card-image {
+  transform: scale(1.045);
+  filter: saturate(1.04) contrast(1.04);
 }
 
 .architectural-card .card-image {
-  background-image: url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1100&q=82");
+  background-image:
+    linear-gradient(0deg, rgba(8, 19, 17, 0.14), rgba(8, 19, 17, 0.02)),
+    url("assets/cbm-architectural-aluminum-facade.jpg");
 }
 
 .precision-card .card-image {
-  background-image: url("https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=1100&q=82");
+  background-image:
+    linear-gradient(0deg, rgba(8, 19, 17, 0.18), rgba(8, 19, 17, 0.02)),
+    url("assets/cbm-cnc-aluminum-machining.jpg");
 }
 
 .card-content {
@@ -363,23 +403,55 @@ p {
   font-size: 14px;
 }
 
+.group-cta {
+  width: fit-content;
+  border: 1px solid rgba(15, 107, 94, 0.22);
+  border-radius: 999px;
+  padding: 9px 13px;
+  background: rgba(15, 107, 94, 0.08);
+  color: var(--brand-dark);
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.group-cta:hover {
+  transform: translateY(-1px);
+  border-color: rgba(15, 107, 94, 0.36);
+  background: rgba(15, 107, 94, 0.13);
+}
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
 .finishing-gallery,
 .shipping-gallery {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .gallery-card {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 13px;
   background: #fff;
-  box-shadow: 0 12px 32px rgba(16, 24, 22, 0.08);
+  box-shadow: 0 14px 36px rgba(16, 24, 22, 0.09);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.gallery-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(15, 107, 94, 0.28);
+  box-shadow: 0 24px 58px rgba(16, 24, 22, 0.14);
 }
 
 .gallery-card > div {
@@ -389,6 +461,14 @@ p {
   background-color: #d8dedb;
   background-position: center;
   background-size: cover;
+  transition:
+    transform 0.45s ease,
+    filter 0.22s ease;
+}
+
+.gallery-card:hover > div {
+  transform: scale(1.045);
+  filter: saturate(1.08) contrast(1.06);
 }
 
 .gallery-card > div::before,
@@ -399,7 +479,9 @@ p {
 }
 
 .gallery-card > div::after {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(9, 20, 18, 0.18));
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.26), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(9, 20, 18, 0.2));
 }
 
 .gallery-card h3 {
@@ -417,33 +499,34 @@ p {
   background:
     linear-gradient(90deg, transparent 0 18%, rgba(255, 255, 255, 0.72) 18% 20%, transparent 20% 38%, rgba(255, 255, 255, 0.72) 38% 40%, transparent 40% 58%, rgba(255, 255, 255, 0.72) 58% 60%, transparent 60%),
     linear-gradient(0deg, transparent 0 26%, rgba(255, 255, 255, 0.68) 26% 28%, transparent 28% 56%, rgba(255, 255, 255, 0.68) 56% 58%, transparent 58%),
-    linear-gradient(135deg, #6f8b91, #d7e4e2);
+    url("assets/cbm-architectural-aluminum-facade.jpg") center / cover no-repeat;
 }
 
 .curtain > div {
   background:
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.72) 0 3px, transparent 3px 42px),
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.5) 0 2px, transparent 2px 54px),
-    linear-gradient(135deg, #31494f, #9bb2b4);
+    url("assets/cbm-architectural-aluminum-facade.jpg") center / cover no-repeat;
 }
 
 .facade > div {
   background:
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0 2px, transparent 2px 24px),
-    linear-gradient(135deg, #7e8d8e, #d8c2a7);
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.62) 0 2px, transparent 2px 32px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.34) 0 2px, transparent 2px 28px),
+    url("assets/cbm-architectural-aluminum-facade.jpg") center / cover no-repeat;
 }
 
 .louvers > div {
   background:
-    repeating-linear-gradient(165deg, rgba(255, 255, 255, 0.82) 0 8px, rgba(35, 61, 63, 0.36) 8px 18px, transparent 18px 34px),
-    linear-gradient(135deg, #8fa1a0, #d5dad7);
+    repeating-linear-gradient(170deg, rgba(255, 255, 255, 0.9) 0 7px, rgba(35, 61, 63, 0.42) 7px 17px, transparent 17px 32px),
+    url("assets/cbm-architectural-aluminum-facade.jpg") center / cover no-repeat;
 }
 
 .railings > div {
   background:
-    linear-gradient(90deg, transparent 0 10%, rgba(255, 255, 255, 0.75) 10% 12%, transparent 12% 30%, rgba(255, 255, 255, 0.75) 30% 32%, transparent 32% 50%, rgba(255, 255, 255, 0.75) 50% 52%, transparent 52%),
-    linear-gradient(0deg, transparent 0 66%, rgba(255, 255, 255, 0.78) 66% 70%, transparent 70%),
-    linear-gradient(135deg, #6d888b, #e2e8e7);
+    linear-gradient(90deg, transparent 0 10%, rgba(255, 255, 255, 0.78) 10% 12%, transparent 12% 30%, rgba(255, 255, 255, 0.78) 30% 32%, transparent 32% 50%, rgba(255, 255, 255, 0.78) 50% 52%, transparent 52%),
+    linear-gradient(0deg, transparent 0 65%, rgba(255, 255, 255, 0.82) 65% 69%, transparent 69%),
+    url("assets/cbm-architectural-aluminum-facade.jpg") center / cover no-repeat;
 }
 
 .cnc > div {
@@ -451,62 +534,143 @@ p {
     radial-gradient(circle at 34% 48%, #d9ded9 0 16%, transparent 17%),
     radial-gradient(circle at 68% 45%, #aeb9b7 0 11%, transparent 12%),
     linear-gradient(90deg, transparent 0 18%, rgba(32, 44, 44, 0.22) 18% 21%, transparent 21%),
-    linear-gradient(135deg, #60757a, #c8d1ce);
+    url("assets/cbm-cnc-aluminum-machining.jpg") center / cover no-repeat;
 }
 
 .extrusion > div {
   background:
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.72) 0 10px, rgba(54, 74, 75, 0.3) 10px 13px, transparent 13px 34px),
-    linear-gradient(135deg, #7c8f91, #d9d7cd);
+    url("assets/cbm-aluminum-profiles-finishing.jpg") center / cover no-repeat;
 }
 
 .brackets > div {
   background:
     radial-gradient(circle at 32% 38%, #eef1ef 0 7%, transparent 8%),
     radial-gradient(circle at 66% 64%, #eef1ef 0 7%, transparent 8%),
-    linear-gradient(135deg, transparent 0 44%, rgba(255, 255, 255, 0.66) 44% 56%, transparent 56%),
-    linear-gradient(135deg, #526a6e, #b9c2bc);
+    linear-gradient(135deg, transparent 0 42%, rgba(255, 255, 255, 0.7) 42% 58%, transparent 58%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.36) 0 16%, transparent 16%),
+    url("assets/cbm-cnc-aluminum-machining.jpg") center / cover no-repeat;
 }
 
 .housings > div {
   background:
     radial-gradient(circle at 50% 50%, transparent 0 20%, rgba(255, 255, 255, 0.72) 21% 28%, transparent 29%),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.62) 0 16%, transparent 16% 84%, rgba(255, 255, 255, 0.62) 84%),
-    linear-gradient(135deg, #576f73, #cbd3cf);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.66) 0 15%, transparent 15% 85%, rgba(255, 255, 255, 0.66) 85%),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.28) 0 16%, transparent 16%),
+    url("assets/cbm-cnc-aluminum-machining.jpg") center / cover no-repeat;
 }
 
 .connectors > div {
   background:
     radial-gradient(circle at 30% 34%, #eef1ee 0 7%, transparent 8%),
     radial-gradient(circle at 70% 66%, #eef1ee 0 7%, transparent 8%),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 9px, transparent 9px 26px),
-    linear-gradient(135deg, #647b7e, #d8d6ce);
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.58) 0 9px, transparent 9px 26px),
+    repeating-linear-gradient(0deg, rgba(20, 40, 42, 0.16) 0 2px, transparent 2px 30px),
+    url("assets/cbm-aluminum-profiles-finishing.jpg") center / cover no-repeat;
 }
 
 .anodized > div {
   background:
     linear-gradient(120deg, rgba(255, 255, 255, 0.85) 0 12%, transparent 12% 22%, rgba(255, 255, 255, 0.5) 22% 30%, transparent 30%),
-    linear-gradient(135deg, #8d999b, #f0eee7);
+    url("assets/cbm-aluminum-profiles-finishing.jpg") center / cover no-repeat;
 }
 
 .coated > div {
   background:
-    linear-gradient(90deg, #0f6b5e 0 25%, #c8793f 25% 50%, #e8e9e4 50% 75%, #4e6872 75%),
-    linear-gradient(135deg, #899799, #f0eee8);
+    linear-gradient(90deg, rgba(15, 107, 94, 0.4) 0 25%, rgba(200, 121, 63, 0.38) 25% 50%, rgba(232, 233, 228, 0.32) 50% 75%, rgba(78, 104, 114, 0.42) 75%),
+    url("assets/cbm-aluminum-profiles-finishing.jpg") center / cover no-repeat;
+}
+
+.color-match > div {
+  background:
+    linear-gradient(90deg, rgba(20, 28, 30, 0.25) 0 20%, rgba(232, 233, 228, 0.18) 20% 40%, rgba(200, 121, 63, 0.32) 40% 60%, rgba(15, 107, 94, 0.35) 60% 80%, rgba(78, 104, 114, 0.34) 80%),
+    url("assets/cbm-aluminum-profiles-finishing.jpg") center / cover no-repeat;
+}
+
+.protection > div {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.72) 0 13%, transparent 13% 24%, rgba(255, 255, 255, 0.35) 24% 36%, transparent 36%),
+    url("assets/cbm-aluminum-profiles-finishing.jpg") center / cover no-repeat;
 }
 
 .packing > div {
   background:
     repeating-linear-gradient(90deg, rgba(120, 84, 48, 0.28) 0 10px, transparent 10px 44px),
     repeating-linear-gradient(0deg, rgba(120, 84, 48, 0.2) 0 8px, transparent 8px 36px),
-    linear-gradient(135deg, #bca179, #ece2cf);
+    url("assets/cbm-export-packing-warehouse.jpg") center / cover no-repeat;
 }
 
 .shipment > div {
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.58) 0 8%, transparent 8% 92%, rgba(255, 255, 255, 0.58) 92%),
     repeating-linear-gradient(0deg, rgba(30, 49, 53, 0.22) 0 2px, transparent 2px 30px),
-    linear-gradient(135deg, #546d75, #c7d1cf);
+    url("assets/cbm-export-packing-warehouse.jpg") center / cover no-repeat;
+}
+
+.documents > div,
+.loading > div,
+.project-follow > div {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.46) 0 8%, transparent 8% 92%, rgba(255, 255, 255, 0.46) 92%),
+    url("assets/cbm-export-packing-warehouse.jpg") center / cover no-repeat;
+}
+
+.cases-section {
+  background: #fff;
+}
+
+.case-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.case-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 14px 38px rgba(16, 24, 22, 0.08);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.case-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(15, 107, 94, 0.26);
+  box-shadow: 0 24px 58px rgba(16, 24, 22, 0.13);
+}
+
+.case-card > div {
+  aspect-ratio: 16 / 9;
+  background-position: center;
+  background-size: cover;
+}
+
+.case-windows > div,
+.case-facade > div {
+  background-image:
+    linear-gradient(0deg, rgba(8, 19, 17, 0.14), rgba(8, 19, 17, 0.02)),
+    url("assets/cbm-architectural-aluminum-facade.jpg");
+}
+
+.case-cnc > div {
+  background-image:
+    linear-gradient(0deg, rgba(8, 19, 17, 0.18), rgba(8, 19, 17, 0.02)),
+    url("assets/cbm-cnc-aluminum-machining.jpg");
+}
+
+.case-card h3 {
+  margin: 18px 18px 8px;
+  font-size: 18px;
+}
+
+.case-card p {
+  margin: 0 18px 20px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .capability-section {
@@ -514,8 +678,8 @@ p {
   overflow: hidden;
   color: #fff;
   background:
-    linear-gradient(90deg, rgba(12, 27, 24, 0.92), rgba(12, 27, 24, 0.74)),
-    url("https://images.unsplash.com/photo-1581093458791-9d15482442f6?auto=format&fit=crop&w=1800&q=82")
+    linear-gradient(90deg, rgba(12, 27, 24, 0.94), rgba(12, 27, 24, 0.76)),
+    url("assets/cbm-cnc-aluminum-machining.jpg")
     center / cover no-repeat;
 }
 
@@ -553,6 +717,23 @@ p {
 .capability-grid span {
   color: rgba(255, 255, 255, 0.82);
   line-height: 1.35;
+}
+
+.capability-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.capability-tags span {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 13px;
+  font-weight: 850;
 }
 
 .process-section {
@@ -610,7 +791,7 @@ p {
   align-items: start;
   background:
     linear-gradient(90deg, rgba(245, 247, 245, 0.98), rgba(245, 247, 245, 0.9)),
-    url("https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1800&q=80")
+    url("assets/cbm-export-packing-warehouse.jpg")
     center / cover no-repeat;
 }
 
@@ -627,35 +808,40 @@ p {
 
 .inquiry-form {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: clamp(20px, 3vw, 32px);
+  border-radius: 16px;
+  padding: clamp(18px, 3vw, 30px);
   background: rgba(255, 255, 255, 0.97);
-  box-shadow: var(--shadow);
+  box-shadow: 0 22px 60px rgba(16, 24, 22, 0.12);
 }
 
 .form-step {
+  position: relative;
   display: grid;
-  gap: 14px;
-  border: 1px solid rgba(15, 107, 94, 0.16);
-  border-radius: 9px;
-  padding: clamp(16px, 2.4vw, 22px);
+  gap: 16px;
+  border: 1px solid rgba(15, 107, 94, 0.13);
+  border-radius: 14px;
+  padding: clamp(18px, 2.4vw, 24px);
   background:
-    linear-gradient(135deg, rgba(15, 107, 94, 0.06), rgba(255, 255, 255, 0.86));
+    linear-gradient(135deg, rgba(15, 107, 94, 0.045), rgba(255, 255, 255, 0.94));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 
 .form-step h3 {
   margin-bottom: 0;
-  font-size: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(15, 107, 94, 0.12);
+  font-size: 20px;
 }
 
 .step-badge {
   width: fit-content;
   border-radius: 999px;
   padding: 5px 10px;
-  background: var(--brand);
+  background: rgba(15, 107, 94, 0.1);
   color: #fff;
+  color: var(--brand-dark);
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.02em;
@@ -680,11 +866,15 @@ select,
 textarea {
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 9px;
   padding: 12px;
   background: #fff;
   color: var(--ink);
   outline: 0;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
 }
 
 input:focus,
@@ -761,6 +951,29 @@ textarea {
   color: rgba(255, 255, 255, 0.68);
 }
 
+.sticky-rfq {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 20;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 13px 18px;
+  background: var(--copper);
+  color: #111816;
+  box-shadow: 0 18px 42px rgba(16, 24, 22, 0.22);
+  font-weight: 950;
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.sticky-rfq:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 58px rgba(16, 24, 22, 0.28);
+}
+
 @media (max-width: 1180px) {
   .gallery-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -768,6 +981,10 @@ textarea {
 
   .finishing-gallery,
   .shipping-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .case-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -807,6 +1024,7 @@ textarea {
   .gallery-grid,
   .finishing-gallery,
   .shipping-gallery,
+  .case-grid,
   .capability-grid,
   .process-flow,
   .inquiry-section,
@@ -820,6 +1038,20 @@ textarea {
 
   .card-image {
     min-height: 260px;
+  }
+
+  body {
+    padding-bottom: 76px;
+  }
+
+  .sticky-rfq {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    padding: 14px 16px;
   }
 
   .process-flow article::after {

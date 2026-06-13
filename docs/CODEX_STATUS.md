@@ -9,6 +9,222 @@ External Review Alignment / GitHub Source Push / Public V5 Verification
 ## Current Status
 Completed. The current CBM Trade OS public pilot source has been pushed to GitHub, and the Vercel public alias has been verified with raw `curl` checks.
 
+## Latest Update: Trade Website Buyer-Oriented Conversion V7
+Completed locally on 2026-06-13.
+
+Scope:
+- Focused only on `/trade-website`.
+- Did not change Trade OS admin, CRM logic, Supabase, Command Center, Document Center, backend APIs, RFQ backend behavior or business logic.
+- Did not add OpenAI or new dependencies.
+
+Changes:
+- Updated visible deployment marker to:
+  - `DEPLOYMENT_CHECK_TRADE_WEBSITE_BUYER_V7`
+- Improved hero positioning:
+  - kept `Aluminum Projects & Precision Manufacturing`
+  - added buyer-focused subtitle: `Supplier for project aluminum systems, CNC parts and custom extruded components from China.`
+  - added compact trust bar: drawings review, manual quotation, export packing, shipment documents, project follow-up
+- Reorganized product groups into buyer-oriented procurement groups:
+  - `Architectural Project Products`
+  - `Custom Aluminum Manufacturing`
+  - `Surface Finishing Options`
+  - `Export Packing & Shipment Support`
+- Added one small CTA per product group:
+  - `Send RFQ for this category`
+- Added `Application Cases` section with 3 typical applications:
+  - `Hotel / Apartment Windows`
+  - `Curtain Wall Facade Project`
+  - `Custom CNC Aluminum Parts Order`
+- Added procurement proof tags to capability section:
+  - Drawing review
+  - Sample / mold review
+  - Export packing
+  - Shipment documents
+  - Surface finish support
+- Strengthened RFQ conversion path:
+  - desktop bottom-right sticky `Submit Inquiry`
+  - mobile bottom sticky CTA bar
+- Kept RFQ fields, names, honeypot, submit button and backend behavior unchanged.
+
+Validation:
+- Local desktop browser check: V7 marker present, hero subtitle present, 5 trust items, 4 category CTAs, 3 application cases, 5 capability tags, sticky RFQ present.
+- Local mobile browser check at 390px width: no horizontal overflow; sticky RFQ uses bottom bar layout.
+- Browser console during local desktop/mobile checks: 0 errors, 0 warnings.
+
+Next recommended step:
+- User visual review of `/trade-website`.
+- If accepted, commit and deploy for external ChatGPT review.
+
+## Latest Update: Trade Website Image Accuracy & Visual Polish V6
+Completed locally on 2026-06-13.
+
+Scope:
+- Focused only on `/trade-website`.
+- Did not change Trade OS admin, CRM logic, Supabase, Command Center, Document Center, RFQ form behavior, backend APIs or business logic.
+- Did not add dependencies.
+
+Changes:
+- Updated visible deployment marker to:
+  - `DEPLOYMENT_CHECK_TRADE_WEBSITE_VISUAL_V6`
+- Replaced the hero background with a more architecture-aluminum aligned glass/facade image already used in the page asset set.
+- Kept the architectural business-line image focused on building/facade context.
+- Kept the precision manufacturing image focused on industrial manufacturing context.
+- Kept gallery product cards as controlled category-specific aluminum/industrial visuals instead of adding many unstable random external image URLs.
+- Generated and added local website photos:
+  - `trade-website/assets/cbm-architectural-aluminum-facade.jpg`
+  - `trade-website/assets/cbm-cnc-aluminum-machining.jpg`
+  - `trade-website/assets/cbm-aluminum-profiles-finishing.jpg`
+  - `trade-website/assets/cbm-export-packing-warehouse.jpg`
+- Replaced external Unsplash photo dependencies in `/trade-website/styles.css` with local generated manufacturing images.
+- Compressed generated PNG images into JPEG assets for lower page weight.
+- Improved product-card visual polish:
+  - stronger real-photo overlay contrast
+  - premium card radius and shadow
+  - hover lift
+  - subtle image zoom
+  - clearer gallery spacing
+  - more specific visual treatments for facade, louvers, railings, brackets, housings and connectors
+- Fixed a broken capability-section Unsplash image URL that returned 404; all external website image URLs now return HTTP 200 in local checks.
+- Later replaced all external website image URLs with local generated image assets.
+- Improved RFQ visual grouping:
+  - `Contact Information`
+  - `Project Information`
+  - lighter form cards
+  - clearer spacing
+  - softer step badges
+
+Image quality review:
+- Hero / architectural business card: exact, generated architectural aluminum facade and window system image.
+- Windows & Doors: exact/acceptable, uses generated architectural aluminum facade/window image.
+- Curtain Walls: exact/acceptable, uses generated architectural aluminum facade image.
+- Facade Materials: acceptable, uses generated architectural facade context; detailed ACP/material close-up still needs real product photo later.
+- Aluminum Louvers: placeholder/acceptable, uses architectural aluminum context with louver overlay; should be replaced with real louver product photo when available.
+- Glass Railings: placeholder/acceptable, uses architectural glass/aluminum context; should be replaced with real railing profile/fitting photo when available.
+- CNC Parts: exact, uses generated CNC aluminum machining image.
+- Brackets: acceptable, uses generated CNC machining image; real bracket close-up would be better later.
+- Housings: acceptable, uses generated CNC machining image; real housing/enclosure photo would be better later.
+- Custom Extrusions: exact/acceptable, uses generated aluminum profile stacks and cross-sections.
+- Connectors: acceptable, uses generated aluminum profile/component image.
+- Anodized Parts: acceptable, uses generated aluminum profiles and surface samples.
+- Powder Coated Parts: acceptable, uses generated aluminum profiles and surface samples with color overlay.
+- Packing & Shipment: exact/acceptable, uses generated export packing warehouse image.
+- Preserved short-copy, image-first structure.
+
+Required content check:
+- `Aluminum Projects & Precision Manufacturing`: present.
+- `Architectural Aluminum Project Supply`: present.
+- `Precision Aluminum Manufacturing`: present.
+- `Submit Inquiry for Manual Review`: present.
+- `Official quotation requires manual review`: present.
+- `Windows & Doors`: present.
+- `CNC Parts`: present.
+- `16 CNC Centers`: present.
+- `400t Monthly Capacity`: present.
+
+Old string check:
+- `Prepare inquiry email`: absent.
+- `Export saved leads`: absent.
+- `China project supplier for facade, windows and aluminum systems`: absent.
+- `Custom aluminum profiles`: absent.
+
+Validation:
+- Local `curl` check confirmed the V6 marker and required visible strings.
+- Local `curl -I` confirmed `/trade-website/styles.css` and `/trade-website/script.js` return 200.
+- Local external image URL check confirmed all `images.unsplash.com` URLs used by `/trade-website/styles.css` return HTTP 200.
+- Local asset check confirmed generated website image files exist under `trade-website/assets/`.
+- Local CSS check confirmed no `images.unsplash.com` URLs remain in `/trade-website/styles.css`.
+
+Next recommended step:
+- Run local browser visual review.
+- If accepted, commit and deploy for external ChatGPT review.
+
+## Latest Update: Trade OS UI-3 Command Center Focus Mode
+Completed locally on 2026-06-13.
+
+Scope:
+- Focused on `/admin/command-center`.
+- Applied UI/UX principles from progressive disclosure, visual hierarchy and cognitive-load reduction.
+- Did not change CRM, Supabase, Document Center business logic, Command Center parser/executor logic or public website behavior.
+- Did not add OpenAI, Gmail, WhatsApp, new Supabase tables, new APIs or new dependencies.
+
+Changes:
+- Reworked Command Center from a three-column information wall into a focused one-task workspace.
+- Added visible marker:
+  - `COMMAND_CENTER_UI3_FOCUS_MODE_V1`
+- First screen now emphasizes one primary task:
+  - enter a natural-language foreign trade command
+  - generate a handling plan
+  - preview result cards
+  - keep manual review boundaries visible
+- Reduced initial visible complexity:
+  - only 3 example commands are shown by default
+  - command history is collapsed
+  - internal audit records are collapsed
+  - resume workflow is collapsed
+  - processing details are collapsed until the user generates a plan
+  - raw JSON remains collapsed
+- Added a simple four-step process strip:
+  - identify intent
+  - generate plan
+  - preview result
+  - manual review
+- Changed initialization so the page no longer auto-renders a default command on load.
+- Bumped Command Center static asset version to `ui3a`.
+
+Files changed in this update:
+- `admin/command-center/index.html`
+- `admin/command-center/styles.css`
+- `admin/command-center/app.js`
+- `docs/CODEX_STATUS.md`
+
+Validation:
+- Local Command Center preview: CSS and JS loaded with 200 responses.
+- Local browser verification: `COMMAND_CENTER_UI3_FOCUS_MODE_V1` visible, focus layout rendered, no horizontal overflow.
+- Initial state verification: only `今日辅助信息` is expanded by default.
+- Command flow verification: after clicking `生成处理方案`, the `处理方案` section expands and shows parsed intent and plan.
+- Browser console during local verification: 0 errors, 0 warnings.
+
+Next recommended phase:
+- User visual review of UI-3 locally.
+- If accepted, deploy to Vercel for external ChatGPT review.
+
+## Latest Update: Trade OS UI-2 Command Center Workspace Upgrade
+Completed locally on 2026-06-13.
+
+Scope:
+- Focused on `/admin/command-center`.
+- Did not change CRM, Supabase, Document Center business logic, Command Center parser/executor logic or public website behavior.
+- Did not add OpenAI, Gmail, WhatsApp, new Supabase tables, new APIs or new dependencies.
+
+Changes:
+- Reworked Command Center from a long stacked admin page into a three-column operating workspace:
+  - left rail: business command examples and compact command history
+  - center: command input, intent/plan/missing-info strip, business result cards
+  - right rail: manual review boundary, resume workflow, internal audit records
+- Added visible marker:
+  - `COMMAND_CENTER_UI2_WORKSPACE_V1`
+- Upgraded hero copy to emphasize command-first foreign trade workflow handling.
+- Improved visual hierarchy with stronger hero, command console, sticky rails, compact history, result cards and audit/resume panels.
+- Kept raw debug JSON collapsed by default.
+- Added additional Chinese mappings for visible safety next-action text.
+- Bumped Command Center static asset version to `ui2a` to avoid stale preview cache.
+
+Files changed in this update:
+- `admin/command-center/index.html`
+- `admin/command-center/styles.css`
+- `admin/command-center/app.js`
+- `docs/CODEX_STATUS.md`
+
+Validation:
+- Local Command Center preview: CSS and JS loaded with 200 responses.
+- Local browser verification: three-column workspace rendered, `COMMAND_CENTER_UI2_WORKSPACE_V1` visible, no horizontal overflow.
+- Local command test: `给 Kevin 的 Celeste4 项目生成 PI 草稿。` produced result cards and manual review warnings without enabling high-risk actions.
+- Browser console during local verification: 0 errors, 0 warnings.
+
+Next recommended phase:
+- Let the user visually review UI-2 locally.
+- If accepted, redeploy to Vercel for external ChatGPT review.
+
 ## Latest Update: Trade OS UI-1 Backend Design System & Interaction Cleanup
 Completed locally on 2026-06-13.
 
