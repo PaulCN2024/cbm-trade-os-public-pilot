@@ -130,7 +130,7 @@ function renderParsed(parsed, plan = null) {
     <p><strong>业务标签:</strong> ${escapeHtml(toChineseIntentLabel(parsed.intent_label || parsed.intent))}</p>
     <p><strong>置信度:</strong> ${Math.round(parsed.confidence * 100)}%</p>
     <p><strong>识别到的信息:</strong></p>
-    <pre>${escapeHtml(JSON.stringify(parsed.entities, null, 2))}</pre>
+    ${renderEntityChips(parsed.entities)}
   `;
   const steps = plan?.plan_steps || parsed.planned_actions;
   const blocked = plan?.blocked_actions?.length ? `<p class="warning-text"><strong>已阻止的高风险动作</strong></p><ul>${plan.blocked_actions.map((item) => `<li>${escapeHtml(toChineseActionLabel(item))}</li>`).join("")}</ul>` : "";
@@ -143,6 +143,12 @@ function renderParsed(parsed, plan = null) {
     ? `<p class="warning-text">需要人工审核</p><p><strong>风险等级:</strong> ${escapeHtml(toChineseStatusLabel(parsed.risk_level))}</p><p>最终执行已阻止。当前只能生成草稿或预览。</p><ul>${parsed.approval_reasons.map((item) => `<li>${escapeHtml(toChineseActionLabel(item))}</li>`).join("")}</ul><ul>${safetyBoundaryNotes().map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
     : `<p class="muted">这个指令可以进入预览、确认和安全的内部执行流程。</p>`;
   updateWorkflowButtons();
+}
+
+function renderEntityChips(entities = {}) {
+  const entries = Object.entries(entities || {}).filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "");
+  if (!entries.length) return `<p class="muted">暂未识别到明确业务对象。</p>`;
+  return `<div class="entity-chip-list">${entries.map(([key, value]) => `<span class="entity-chip"><strong>${escapeHtml(toChineseFieldLabel(key))}</strong>${escapeHtml(toChineseResultText(value))}</span>`).join("")}</div>`;
 }
 
 function renderResultCards(cards = []) {
@@ -748,6 +754,13 @@ function toChineseFieldLabel(value) {
     "Next version": "下一个版本",
     "ZIP fallback path": "ZIP 备用路径",
     "Lead/customer status": "线索/客户状态",
+    customer_alias: "客户别名",
+    project: "项目",
+    lead_id: "线索 ID",
+    inquiry_id: "询盘 ID",
+    archive_year: "归档年份",
+    archive_order_no: "订单序号",
+    document_hint: "单据类型",
   };
   return labels[value] || value || "";
 }
@@ -818,6 +831,27 @@ function toChineseActionLabel(value) {
     "Use this path when exporting manually.": "手动导出时使用这个路径。",
     "Keep original customer files in the same order folder.": "把客户原始文件保存在同一个订单文件夹中。",
     "Submit or import an inquiry first.": "请先提交或导入询盘。",
+    "Read follow-up tasks": "读取跟进任务",
+    "Separate overdue, today and upcoming items": "区分逾期、今日和即将到期任务",
+    "Show recommended next safe action": "展示下一步安全动作建议",
+    "list follow-ups": "列出跟进任务",
+    "create command log": "创建指令记录",
+    "Read latest website inquiry": "读取最新网站询盘",
+    "Run rule-based inquiry analyzer": "运行规则询盘分析",
+    "Show missing information and reply draft": "展示缺失信息和回复草稿",
+    "Find customer by alias, country or project": "按别名、国家或项目查找客户",
+    "Show related inquiries, projects and follow-ups": "展示关联询盘、项目和跟进任务",
+    "Load lead": "读取线索",
+    "Create customer record after manual confirmation": "人工确认后创建客户记录",
+    "Link inquiry and follow-up tasks": "关联询盘和跟进任务",
+    "Load inquiry": "读取询盘",
+    "Create project draft from inquiry": "从询盘创建项目草稿",
+    "Create quotation draft": "创建报价草稿",
+    "Create document draft": "创建单据草稿",
+    "Map document fields safely": "安全映射单据字段",
+    "Check forbidden fields": "检查禁用字段",
+    "Build archive path preview": "生成归档路径预览",
+    "Create follow-up task": "创建跟进任务",
   };
   if (exact[text]) return exact[text];
   return text

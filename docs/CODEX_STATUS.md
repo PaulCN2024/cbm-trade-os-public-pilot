@@ -9,6 +9,72 @@ External Review Alignment / GitHub Source Push / Public V5 Verification
 ## Current Status
 Completed. The current CBM Trade OS public pilot source has been pushed to GitHub, and the Vercel public alias has been verified with raw `curl` checks.
 
+## Latest Update: Trade OS UI-1 Backend Design System & Interaction Cleanup
+Completed locally on 2026-06-13.
+
+Scope:
+- Focused on `trade-os-prototype` and `admin/command-center`.
+- Did not change CRM, Supabase, Command Center execution logic, Document Center business logic or public website behavior.
+- Did not add OpenAI, Gmail, WhatsApp, new Supabase tables or new dependencies.
+
+Changes:
+- Added `docs/TRADE_OS_UI_PRINCIPLES.md`.
+- Repositioned Trade OS as a command-first, task-driven backend experience.
+- Updated Trade OS topbar and navigation labels to Chinese-first wording.
+- Reworked Dashboard / 工作台 into a task-first overview:
+  - `今日待处理`
+  - `待审核询盘`
+  - `待跟进客户`
+  - `待审核单据`
+  - `高风险阻止动作`
+  - `今日工作流`
+  - `最近指令`
+  - `需要人工审核`
+  - `最新网站询盘`
+- Improved backend visual system:
+  - stronger hierarchy
+  - cleaner spacing
+  - polished buttons
+  - hover lift
+  - subtle transitions
+  - stronger status chips
+  - workflow/context panel styling
+- Improved Command Center visual feel:
+  - more prominent command input
+  - better example command chips
+  - cleaner result cards
+  - drawer-like audit detail panel styling
+  - collapsed raw debug JSON remains secondary
+  - parsed entities now display as readable chips instead of raw JSON by default
+- Added lightweight data-URI favicons to avoid preview `/favicon.ico` console noise.
+
+Files changed in this update:
+- `docs/TRADE_OS_UI_PRINCIPLES.md`
+- `trade-os-prototype/index.html`
+- `trade-os-prototype/app.js`
+- `trade-os-prototype/styles.css`
+- `admin/command-center/index.html`
+- `admin/command-center/app.js`
+- `admin/command-center/styles.css`
+- `docs/CODEX_STATUS.md`
+
+Validation:
+- `npm test`: passed, 156 tests passed, 0 failed.
+- `npm run build`: passed.
+- Local Command Center preview: CSS and JS loaded with 200 responses.
+- Local Command Center preview: visible UI is Chinese-first and styled, not plain text.
+- Local Command Center console after favicon fix: 0 errors, 0 warnings.
+
+Known remaining UI issues:
+- Many deeper Trade OS modules still have dense tables and mixed English labels.
+- Document Center remains MVP-level and should be refined later with a focused document workflow design pass.
+- Trade OS admin still uses static/mock UI patterns in downstream modules; this phase did not redesign every module.
+- Public Vercel alias has not been redeployed for this local UI-1 update.
+
+Next recommended phase:
+- Trade OS UI-2: module-level simplification for Inquiry Pool, Customer 360, Document Center and Follow-up Workbench.
+- Keep Command Center as the primary daily entry and move more details into drawers/panels.
+
 ## Latest Update: Website Image Accuracy & Conversion Polish
 Completed locally on 2026-06-13.
 

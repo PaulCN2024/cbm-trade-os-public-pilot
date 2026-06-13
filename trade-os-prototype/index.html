@@ -9,8 +9,9 @@
       content="CBM Trade OS public demo for mock foreign trade customer acquisition, CRM, inquiry, quotation, order, shipment and after-sales workflow."
     />
     <meta name="theme-color" content="#10231f" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23176b5b'/%3E%3Cpath d='M12 42h40v8H12zm6-28h28v8H18zm-6 14h40v8H12z' fill='%23d99055'/%3E%3C/svg%3E" />
     <link rel="manifest" href="/trade-os-prototype/manifest.webmanifest" />
-    <link rel="stylesheet" href="/trade-os-prototype/styles.css?v=phase4h" />
+    <link rel="stylesheet" href="/trade-os-prototype/styles.css?v=ui1" />
   </head>
   <body>
     <aside class="sidebar" aria-label="主导航">
@@ -29,14 +30,14 @@
     <main class="shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">建筑铝型材 · 幕墙 · ACM · 项目供应链</p>
+          <p class="eyebrow">指令优先 · 任务驱动 · 人工审核边界</p>
           <p class="deployment-check">DEPLOYMENT_CHECK_TRADE_OS_V5</p>
-          <h1 id="pageTitle">Dashboard</h1>
-          <p class="demo-note">Admin pilot · Supabase front CRM data when configured · downstream mock modules · manual review required</p>
+          <h1 id="pageTitle">工作台</h1>
+          <p class="demo-note">外贸经营系统 MVP · 前端 CRM Pilot · 下游模块仍为 mock · 高风险动作需要人工审核</p>
         </div>
         <div class="topbar-tools">
-          <div class="admin-status" id="adminIdentity">Admin session checking...</div>
-          <a class="ghost-button" href="/admin/system-check">System Check</a>
+          <div class="admin-status" id="adminIdentity">正在检查管理员会话...</div>
+          <a class="ghost-button" href="/admin/system-check">系统检查</a>
           <div class="search-wrap">
             <span aria-hidden="true">⌕</span>
             <input id="globalSearch" type="search" placeholder="搜索客户、项目、型材、邮件摘要" />
@@ -86,6 +87,6 @@
       </form>
     </dialog>
 
-    <script type="module" src="/trade-os-prototype/app.js?v=phase4h"></script>
+    <script type="module" src="/trade-os-prototype/app.js?v=ui1"></script>
   </body>
 </html>

@@ -632,14 +632,14 @@ const seedData = {
 };
 
 const navItems = [
-  ["dashboard", "⌂", "Dashboard"],
+  ["dashboard", "⌂", "工作台"],
   ["actionCenter", "◧", "行动中心"],
   ["acquisition", "⊕", "获客中心"],
   ["flow", "⇢", "业务链路"],
-  ["customers", "◫", "客户"],
+  ["customers", "◫", "客户 360"],
   ["prospects", "◎", "潜客"],
   ["leadPool", "◉", "线索池"],
-  ["leads", "◇", "询盘"],
+  ["leads", "◇", "询盘池"],
   ["website", "▣", "独立站"],
   ["alibaba", "▧", "阿里巴巴询盘"],
   ["social", "◌", "社媒"],
@@ -650,7 +650,7 @@ const navItems = [
   ["products", "▨", "产品库"],
   ["quotes", "≋", "报价"],
   ["documents", "▥", "单据中心"],
-  ["commandCenter", "⌘", "Command Center / 指令中心"],
+  ["commandCenter", "⌘", "指令中心"],
   ["orders", "▤", "订单"],
   ["shipments", "⇄", "出货"],
   ["afterSales", "↺", "售后"],
@@ -1576,110 +1576,124 @@ function renderDashboard() {
   const shipmentDrafts = state.shipments.filter((item) => item.manual_review_required);
   const afterSalesOpen = state.after_sales_cases.filter((item) => item.status !== "CLOSED");
   const repeatTasks = state.follow_up_tasks.filter((item) => item.type === "REPEAT_BUSINESS");
+  const reviewDocs = [
+    ...state.documents.filter((item) => item.manual_review_required || item.status === DocumentStatus.NEED_REVIEW),
+    ...listDocumentDraftReviewRecords(commandHistory).filter((item) => item.manual_review_required),
+  ];
+  const blockedActions = [
+    ...state.quotations.filter((item) => item.manual_review_required),
+    ...state.orders.filter((item) => item.manual_review_required),
+    ...state.shipments.filter((item) => item.manual_review_required),
+    ...commandHistory.filter((item) => item.approval_required || item.blocked_actions?.length),
+  ];
+  const latestInquiries = state.inquiries
+    .slice()
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))
+    .slice(0, 4);
+  const recentCommands = commandHistory.slice(0, 4);
+  const todayWorkflow = buildActionQueue().slice(0, 5);
 
   return `
-    <div class="grid stats-grid">
-      ${stat("客户", state.customers.length, "含关联公司和联系人")}
-      ${stat("目标潜客", prospects, "独立站、社媒、转介绍")}
-      ${stat("高优先级询盘", urgentLeads, "需要回复或补齐信息")}
-      ${stat("待跟进任务", pendingFollowUps.length, `${overdueFollowUps.length} 个已逾期`)}
-      ${stat("高分询盘", highScoreInquiries.length, "Score 85+")}
-      ${stat("可报价询盘", readyToQuote.length, "进入人工报价审核")}
-      ${stat("Mock 订单", orderDrafts.length, "PI / payment / production")}
-      ${stat("出货草稿", shipmentDrafts.length, "单证占位需审核")}
-      ${stat("售后跟进", afterSalesOpen.length, "反馈、问题、复购机会")}
-      ${stat("复购提醒", repeatTasks.length, "repeat business")}
-      ${stat("进行中项目", activeProjects, "报价、生产、验货、出货")}
-      ${stat("高优先级待办", tasks, "let me check 后续必须闭环")}
+    <section class="ops-hero panel">
+      <div class="ops-hero-copy">
+        <span class="badge ok">指令优先</span>
+        <h2>今天先处理这些事</h2>
+        <p>工作台只显示每日经营状态和下一步动作。复杂详情进入模块、抽屉或指令中心继续处理。</p>
+        <div class="toolbar-actions">
+          <a class="primary-button" href="/admin/command-center">进入指令中心</a>
+          <button class="ghost-button" data-view-shortcut="actionCenter" type="button">查看行动中心</button>
+          <button class="ghost-button" data-import-website-leads type="button">导入网站询盘</button>
+        </div>
+      </div>
+      <aside class="ops-context-panel">
+        <strong>人工审核边界</strong>
+        <span>不自动发送消息 / 正式报价 / PI</span>
+        <span>不确认价格、交期、付款、银行信息</span>
+        <span>所有高风险动作显示：需要人工审核</span>
+      </aside>
+    </section>
+
+    <div class="grid stats-grid task-stats">
+      ${stat("今日待处理", pendingFollowUps.length + urgentLeads, `${overdueFollowUps.length} 个逾期`)}
+      ${stat("待审核询盘", state.inquiries.filter((item) => item.status === InquiryStatus.NEED_MORE_INFO || item.status === InquiryStatus.NEW).length, "缺资料 / 新询盘")}
+      ${stat("待跟进客户", pendingFollowUps.length, "人工跟进任务")}
+      ${stat("待审核单据", reviewDocs.length, "草稿 / PI / 报价")}
+      ${stat("高风险阻止动作", blockedActions.length, "需要人工审核")}
     </div>
 
     ${followUpWorkbenchSection()}
 
-    <div class="grid two-col" style="margin-top:16px">
+    <div class="grid two-col dashboard-workflow-grid" style="margin-top:16px">
       <section class="panel">
         <div class="panel-header">
           <div>
-            <h2>获客漏斗</h2>
-            <p>独立站内容、社媒触达、潜客开发和询盘转化</p>
+            <h2>今日工作流</h2>
+            <p>按优先级组织，不自动外发任何客户消息。</p>
           </div>
-          <button class="primary-button" data-action="add-prospect" type="button">新增潜客</button>
         </div>
-        <div class="panel-body">
-          ${growthFunnel()}
+        <div class="panel-body action-queue">
+          ${todayWorkflow.map(actionQueueCard).join("") || empty("暂无今日工作流。")}
         </div>
       </section>
 
       <section class="panel">
         <div class="panel-header">
           <div>
-          <h2>AI 待办摘要</h2>
-          <p>模拟从独立站、Gmail、文件和项目状态中提取</p>
+          <h2>需要人工审核</h2>
+          <p>报价、PI、单据、付款和外发动作都只进入内部审核。</p>
           </div>
         </div>
-        <div class="panel-body task-list">
-          ${filteredTasks.map(taskCard).join("") || empty("暂无匹配任务")}
+        <div class="panel-body task-list compact-list">
+          ${blockedActions.slice(0, 6).map((item) => `
+            <article class="task-item">
+              <span class="badge danger">需要人工审核</span>
+              <h3>${escapeHtml(item.title || item.quote_no || item.order_no || item.shipment_no || item.raw_command || "高风险动作")}</h3>
+              <p>${escapeHtml(item.status || item.review_status || item.parsed_intent || "manual review required")}</p>
+            </article>
+          `).join("") || empty("暂无被阻止的高风险动作。")}
         </div>
       </section>
     </div>
 
-    <section class="panel" style="margin-top:16px">
-      <div class="panel-header">
-        <div>
-          <h2>Mock CRM 安全规则</h2>
-          <p>系统只能生成草稿、任务和检查清单；正式报价和外发信息必须人工审核。</p>
+    <div class="grid two-col dashboard-workflow-grid" style="margin-top:16px">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>最近指令</h2>
+            <p>从指令中心恢复上下文，继续安全内部流程。</p>
+          </div>
         </div>
-      </div>
-      <div class="panel-body">
-        <div class="process-grid dense">
-          ${[
-            "不自动发送 WhatsApp / Gmail 消息",
-            "不自动发送报价单或 PI",
-            "不确认最终价格、交期、付款条款或银行账号",
-            "所有报价草稿均显示 Manual review required",
-          ]
-            .map((step) => `<div class="process-step">${step}</div>`)
-            .join("")}
+        <div class="panel-body timeline compact-list">
+          ${recentCommands.map((item) => `
+            <article class="timeline-item">
+              <span class="badge ${item.approval_required ? "danger" : "ok"}">${item.approval_required ? "需要人工审核" : "安全内部动作"}</span>
+              <h3>${escapeHtml(item.raw_command || item.original_command || "未命名指令")}</h3>
+              <p>${escapeHtml(commandStatusLabel(item.status))} · ${escapeHtml(item.parsed_intent || "-")}</p>
+              <a class="ghost-link" href="/admin/command-center?command_id=${escapeHtml(item.command_id)}">继续处理流程</a>
+            </article>
+          `).join("") || empty("暂无指令记录。")}
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="panel" style="margin-top:16px">
-      <div class="panel-header">
-        <div>
-          <h2>CBM 执行计划</h2>
-          <p>从当前原型继续升级成可运行系统的开发路线。</p>
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>最新网站询盘</h2>
+            <p>从公开网站进入的前端 CRM 数据，先审核再转项目/报价。</p>
+          </div>
         </div>
-      </div>
-      <div class="panel-body">
-        <div class="timeline">
-          ${state.buildPlan
-            .map(
-              (item) => `
-                <article class="timeline-item">
-                  <h3>${item.phase} · ${item.title} ${statusBadge(item.status)}</h3>
-                  <p><strong>范围：</strong>${item.scope}</p>
-                  <p><strong>目标：</strong>${item.outcome}</p>
-                </article>
-              `,
-            )
-            .join("")}
+        <div class="panel-body timeline compact-list">
+          ${latestInquiries.map((item) => `
+            <article class="timeline-item">
+              ${statusBadge(item.status)}
+              <h3>${escapeHtml(item.title || "Website inquiry")}</h3>
+              <p>${escapeHtml(item.business_line || "-")} · ${escapeHtml(item.source || "-")} · Score ${escapeHtml(item.score || 0)}</p>
+              <button class="link-button" data-view-inquiry="${escapeHtml(item.id)}" type="button">打开询盘详情</button>
+            </article>
+          `).join("") || empty("暂无网站询盘。")}
         </div>
-      </div>
-    </section>
-
-    <section class="panel" style="margin-top:16px">
-      <div class="panel-header">
-        <div>
-          <h2>订单执行总览</h2>
-          <p>从询盘、报价、单证、发货到售后的连续流程</p>
-        </div>
-      </div>
-      <div class="panel-body">
-        <div class="process-grid dense">
-          ${state.orderFlow.map((step) => `<div class="process-step"><strong>${step.stage}</strong><span>${step.automation}</span></div>`).join("")}
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
   `;
 }
 
