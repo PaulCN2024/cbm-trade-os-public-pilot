@@ -63,6 +63,10 @@ import {
 } from "../lib/command-center/context-resolver.js";
 import { buildContextWorkflow } from "../lib/command-center/context-workflow.js";
 import {
+  buildFollowUpDetailModel,
+  groupFollowUpTasks,
+} from "../lib/follow-up-workbench.js";
+import {
   COMMAND_HISTORY_STORAGE_KEY,
   buildDocumentDraftReviewSummary,
   createFollowUpTaskDraft,
@@ -1246,6 +1250,8 @@ function renderActionCenter() {
       ${stat("复购机会", queue.filter((item) => item.stage === "Repeat").length, "repeat business")}
     </div>
 
+    ${followUpWorkbenchSection()}
+
     <section class="panel action-board">
       <div class="panel-header">
         <div>
@@ -1489,76 +1495,243 @@ function actionQueueCard(item) {
 function followUpWorkbenchSection() {
   const today = new Date().toISOString().slice(0, 10);
   const pending = state.follow_up_tasks.filter((item) => item.status === TaskStatus.PENDING);
-  const overdue = pending.filter((item) => item.due_date && item.due_date < today);
-  const highPriorityInquiries = state.inquiries.filter((item) => Number(item.score || 0) >= 85);
-  const leadsNeedingReview = state.leads.filter((item) => ["NEW", "NEED_REVIEW", "QUALIFYING"].includes(item.status || "NEW"));
-  const missingInfoInquiries = state.inquiries.filter(
-    (item) => item.status === InquiryStatus.NEED_MORE_INFO || (item.missing_info || []).length,
+  const workbench = groupFollowUpTasks(
+    pending,
+    { customers: state.customers, leads: state.leads, inquiries: state.inquiries },
+    today,
   );
-  const rows = [
-    ...overdue.slice(0, 4).map((task) => ({
-      type: "Overdue follow-up",
-      title: task.title,
-      status: task.status,
-      detail: `${task.due_date || "-"} · ${task.priority || "normal"}`,
-      view: "dashboard",
-    })),
-    ...leadsNeedingReview.slice(0, 4).map((lead) => ({
-      type: "Lead needs review",
-      title: lead.company || lead.name || lead.title || "Lead",
-      status: lead.status || "NEW",
-      detail: `${lead.source || "-"} · ${lead.country || "-"} · ${lead.business_line || "-"}`,
-      view: "leadPool",
-    })),
-    ...missingInfoInquiries.slice(0, 4).map((inquiry) => ({
-      type: "Missing info inquiry",
-      title: inquiry.title,
-      status: inquiry.status,
-      detail: `${(inquiry.missing_info || []).slice(0, 3).join(", ") || "Checklist review needed"}`,
-      view: "leads",
-    })),
-  ].slice(0, 10);
+  const selectedModel = selectedTaskId
+    ? buildFollowUpDetailModel(
+        pending.find((item) => item.id === selectedTaskId) || {},
+        relatedFollowUpData(selectedTaskId),
+        today,
+      )
+    : null;
+  const columns = [
+    ["today", "今日任务", "今天要处理"],
+    ["overdue", "已逾期", "优先处理"],
+    ["missingInfo", "需要补资料", "先补关键信息"],
+    ["manualReview", "待人工审核", "禁止自动外发"],
+    ["recentConverted", "最近转客户", "安排首次跟进"],
+  ];
 
   return `
-    <section class="panel" style="margin-top:16px">
+    <section class="panel followup-workbench" style="margin-top:16px">
       <div class="panel-header">
         <div>
-          <h2>Follow-up Workbench</h2>
-          <p>Admin-only pilot view for first real website inquiries. No messages are sent automatically.</p>
+          <span class="badge ok">跟进工作台</span>
+          <h2>今天应该先跟进什么？</h2>
+          <p>按任务、缺失信息和人工审核风险组织。这里不会自动发送邮件、WhatsApp、报价或 PI。</p>
         </div>
         <span class="badge">${DATA_MODE === "supabase" ? "Supabase pilot" : "Mock localStorage"}</span>
       </div>
-      <div class="grid stats-grid compact-stats">
-        ${stat("Pending follow-ups", pending.length, "manual tasks")}
-        ${stat("Overdue follow-ups", overdue.length, "needs action")}
-        ${stat("High-priority inquiries", highPriorityInquiries.length, "score 85+")}
-        ${stat("Leads needing review", leadsNeedingReview.length, "NEW / NEED_REVIEW")}
-        ${stat("Missing info inquiries", missingInfoInquiries.length, "checklist gaps")}
+      <div class="followup-summary-bar">
+        ${followUpMetric("今日待跟进", workbench.summary.today, "今日")}
+        ${followUpMetric("已逾期", workbench.summary.overdue, "已逾期")}
+        ${followUpMetric("需要补资料", workbench.summary.missing_info, "补资料")}
+        ${followUpMetric("需要人工审核", workbench.summary.manual_review, "人工审核")}
+        ${followUpMetric("高优先级", workbench.summary.high_priority, "高")}
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Type</th><th>Record</th><th>Status</th><th>Detail</th><th>Open</th></tr></thead>
-          <tbody>
-            ${
-              rows
-                .map(
-                  (row) => `
-                    <tr>
-                      <td>${row.type}</td>
-                      <td>${row.title}</td>
-                      <td>${statusBadge(row.status)}</td>
-                      <td>${row.detail}</td>
-                      <td><button class="ghost-button" data-view-shortcut="${row.view}" type="button">Open</button></td>
-                    </tr>
-                  `,
-                )
-                .join("") || `<tr><td colspan="5">${empty("No urgent follow-up items.")}</td></tr>`
-            }
-          </tbody>
-        </table>
+      <div class="followup-layout">
+        <div class="followup-board">
+          ${columns.map(([key, title, hint]) => followUpColumn(title, hint, workbench.groups[key] || [])).join("")}
+        </div>
+        ${selectedModel ? followUpDetailPanel(selectedModel) : followUpEmptyDetail()}
       </div>
     </section>
   `;
+}
+
+function relatedFollowUpData(taskId) {
+  const task = state.follow_up_tasks.find((item) => item.id === taskId);
+  const inquiry = state.inquiries.find((item) => item.id === task?.inquiry_id) || null;
+  const customer = state.customers.find((item) => item.id === (task?.customer_id || inquiry?.customer_id)) || null;
+  const lead = state.leads.find((item) => item.id === (task?.lead_id || inquiry?.lead_id)) || null;
+  return { task, inquiry, customer, lead };
+}
+
+function followUpMetric(label, value, chip) {
+  return `
+    <div class="followup-metric">
+      <span>${escapeHtml(chip)}</span>
+      <strong>${escapeHtml(value)}</strong>
+      <small>${escapeHtml(label)}</small>
+    </div>
+  `;
+}
+
+function followUpColumn(title, hint, items) {
+  return `
+    <section class="followup-column">
+      <div class="followup-column-head">
+        <h3>${escapeHtml(title)}</h3>
+        <span>${escapeHtml(hint)} · ${items.length}</span>
+      </div>
+      <div class="followup-card-stack">
+        ${items.slice(0, 6).map(followUpTaskCard).join("") || `<div class="followup-empty">${escapeHtml("暂无任务")}</div>`}
+      </div>
+    </section>
+  `;
+}
+
+function followUpTaskCard(item) {
+  const taskId = escapeHtml(item.id);
+  const selected = item.id && item.id === selectedTaskId ? " selected" : "";
+  const priorityLabel = item.priority === "high" ? "高" : item.priority === "low" ? "低" : "中";
+  const priorityClass = item.priority === "high" ? "danger" : item.priority === "low" ? "ok" : "warning";
+  const canUpdate = item.can_update !== false && item.source_type !== "lead";
+  return `
+    <article class="followup-task-card${selected}" data-context-target-type="task" data-context-target-id="${taskId}">
+      <button class="followup-card-open" ${canUpdate ? `data-followup-select="${taskId}"` : `data-view-shortcut="customers"`} type="button" aria-label="查看跟进详情">
+        <div class="followup-card-top">
+          <span class="followup-chip ${priorityClass}">${priorityLabel}</span>
+          <span class="followup-chip">${escapeHtml(item.business_line || "业务线")}</span>
+          ${item.is_test ? `<span class="followup-chip muted">测试数据</span>` : ""}
+        </div>
+        <h4>${escapeHtml(item.customer_name || item.title || "未命名任务")}</h4>
+        <p>${escapeHtml(item.company || item.country || item.inquiry_title || "待补充客户信息")}</p>
+        <div class="followup-card-meta">
+          <span>${escapeHtml(item.due_date || "无日期")}</span>
+          <span>${escapeHtml(item.status || "PENDING")}</span>
+          <span>缺 ${escapeHtml(item.missing_info_count || 0)}</span>
+        </div>
+        <strong>${escapeHtml(item.recommended_next_action || "人工检查下一步。")}</strong>
+      </button>
+      <div class="followup-card-actions">
+        ${canUpdate ? `<button class="mini-button" data-followup-action="done" data-id="${taskId}" type="button">标记完成</button>` : `<button class="mini-button" data-view-shortcut="customers" type="button">查看客户</button>`}
+        ${canUpdate ? `<button class="mini-button" data-followup-action="postpone" data-id="${taskId}" type="button">暂缓</button>` : ""}
+      </div>
+    </article>
+  `;
+}
+
+function followUpDetailPanel(model) {
+  return `
+    <aside class="followup-detail-panel">
+      <div class="followup-detail-head">
+        <span class="badge warning">仅内部处理</span>
+        <h3>${escapeHtml(model.title)}</h3>
+        <p>${escapeHtml(model.customer_name)} · ${escapeHtml(model.country || "国家待补")}</p>
+      </div>
+      <div class="followup-detail-grid">
+        <span>业务线<strong>${escapeHtml(model.business_line || "-")}</strong></span>
+        <span>到期日<strong>${escapeHtml(model.due_date || "-")}</strong></span>
+        <span>状态<strong>${escapeHtml(model.status)}</strong></span>
+        <span>优先级<strong>${escapeHtml(model.priority === "high" ? "高" : model.priority === "low" ? "低" : "中")}</strong></span>
+      </div>
+      <div class="followup-detail-block">
+        <h4>缺失信息</h4>
+        <div class="followup-checklist">
+          ${model.missing_info_checklist.map((item) => `<span class="${item.missing ? "missing" : "ok"}">${escapeHtml(item.label)}</span>`).join("")}
+        </div>
+      </div>
+      <div class="followup-detail-block">
+        <h4>建议下一步</h4>
+        <p>${escapeHtml(model.recommended_next_action)}</p>
+      </div>
+      <div class="followup-detail-block draft">
+        <h4>回复草稿</h4>
+        <p>${escapeHtml(model.reply_draft)}</p>
+        <small>仅为回复草稿，不会自动发送客户。</small>
+      </div>
+      <div class="followup-detail-block blocked">
+        <h4>需要人工审核</h4>
+        <p>不自动发送客户消息、正式报价、PI；不确认价格、交期、付款条款或银行信息。</p>
+      </div>
+      <div class="toolbar-actions">
+        <button class="ghost-button" data-followup-action="copy-draft" data-id="${escapeHtml(model.id)}" type="button">复制草稿</button>
+        <button class="ghost-button" data-followup-action="draft" data-id="${escapeHtml(model.id)}" type="button">创建回复草稿</button>
+        ${model.id ? `<button class="ghost-button" data-followup-action="done" data-id="${escapeHtml(model.id)}" type="button">标记完成</button>` : ""}
+        ${model.id ? `<button class="ghost-button" data-followup-action="postpone" data-id="${escapeHtml(model.id)}" type="button">暂缓</button>` : ""}
+        ${model.id ? `<button class="ghost-button" data-followup-action="open-inquiry" data-id="${escapeHtml(model.id)}" type="button">查看询盘</button>` : ""}
+        ${model.id ? `<button class="ghost-button" data-followup-action="open-customer" data-id="${escapeHtml(model.id)}" type="button">查看客户</button>` : ""}
+        ${model.lead_id ? `<button class="ghost-button" data-followup-action="open-lead" data-id="${escapeHtml(model.id)}" type="button">线索审核</button>` : ""}
+        ${commandCenterContext.command_id ? `<a class="ghost-link" href="/admin/command-center?command_id=${escapeHtml(commandCenterContext.command_id)}">返回指令中心</a>` : `<a class="ghost-link" href="/admin/command-center">指令中心</a>`}
+      </div>
+    </aside>
+  `;
+}
+
+function followUpEmptyDetail() {
+  return `
+    <aside class="followup-detail-panel empty-state">
+      <span class="badge">详情面板</span>
+      <h3>选择一个跟进任务</h3>
+      <p>点击左侧任务卡片后，在这里查看缺失信息、回复草稿和安全下一步。</p>
+      <p class="muted">仅为内部跟进工作台；不会自动发送客户消息、邮件、WhatsApp、报价或 PI。</p>
+    </aside>
+  `;
+}
+
+function handleFollowUpWorkbenchAction(action, taskId) {
+  const task = state.follow_up_tasks.find((item) => item.id === taskId);
+  const related = relatedFollowUpData(taskId);
+  const model = buildFollowUpDetailModel(task || {}, related, new Date().toISOString().slice(0, 10));
+
+  if (action === "select") {
+    selectedTaskId = taskId;
+    render();
+    return;
+  }
+  if (!task && !["copy-draft", "draft"].includes(action)) {
+    showToast("未找到跟进任务。");
+    return;
+  }
+  if (action === "done") {
+    task.status = TaskStatus.DONE;
+    task.completed_at = new Date().toISOString();
+    saveState();
+    showToast("已标记完成。请确认实际跟进已人工完成。");
+    render();
+    return;
+  }
+  if (action === "postpone") {
+    const next = new Date();
+    next.setDate(next.getDate() + 3);
+    task.due_date = next.toISOString().slice(0, 10);
+    task.status = TaskStatus.PENDING;
+    saveState();
+    showToast("已暂缓 3 天。不会自动发送客户消息。");
+    render();
+    return;
+  }
+  if (action === "draft") {
+    showToast("已生成回复草稿占位，仅内部预览，不会自动发送客户。");
+    selectedTaskId = taskId;
+    render();
+    return;
+  }
+  if (action === "copy-draft") {
+    navigator.clipboard?.writeText(model.reply_draft || "").then(
+      () => showToast("回复草稿已复制。发送前必须人工审核。"),
+      () => showToast("复制失败，请手动复制草稿。"),
+    );
+    return;
+  }
+  if (action === "open-customer") {
+    selectedCustomerId = model.customer_id || selectedCustomerId;
+    setView("customers");
+    return;
+  }
+  if (action === "open-inquiry") {
+    selectedInquiryId = model.inquiry_id || selectedInquiryId;
+    setView("leads");
+    return;
+  }
+  if (action === "open-lead") {
+    selectedLeadId = model.lead_id || selectedLeadId;
+    setView("leadPool");
+  }
+}
+
+function showToast(message) {
+  const old = document.querySelector(".app-toast");
+  if (old) old.remove();
+  const toast = document.createElement("div");
+  toast.className = "app-toast";
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  window.setTimeout(() => toast.remove(), 2400);
 }
 
 function renderDashboard() {
@@ -5789,6 +5962,14 @@ function bindViewEvents() {
 
   document.querySelectorAll("[data-view-shortcut]").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.viewShortcut));
+  });
+
+  document.querySelectorAll("[data-followup-select]").forEach((button) => {
+    button.addEventListener("click", () => handleFollowUpWorkbenchAction("select", button.dataset.followupSelect));
+  });
+
+  document.querySelectorAll("[data-followup-action]").forEach((button) => {
+    button.addEventListener("click", () => handleFollowUpWorkbenchAction(button.dataset.followupAction, button.dataset.id));
   });
 
   document.querySelectorAll("[data-lead-filter]").forEach((select) => {

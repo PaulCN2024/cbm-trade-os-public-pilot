@@ -9,6 +9,44 @@ External Review Alignment / GitHub Source Push / Public V5 Verification
 ## Current Status
 Completed. The current CBM Trade OS public pilot source has been pushed to GitHub, and the Vercel public alias has been verified with raw `curl` checks.
 
+## Latest Local Update: Trade OS UI-4 Follow-up Workbench
+Completed locally on 2026-06-13.
+
+Scope:
+- Focused on `Follow-up Workbench / 跟进工作台` inside `/trade-os-prototype`.
+- Did not change public `/trade-website`.
+- Did not change CRM persistence, Supabase schema, backend APIs, RFQ backend behavior or Command Center parser logic.
+- Did not add OpenAI, Gmail, WhatsApp integration or new dependencies.
+
+Changed files:
+- `lib/follow-up-workbench.js`
+- `tests/follow-up-workbench.test.js`
+- `trade-os-prototype/app.js`
+- `trade-os-prototype/styles.css`
+- `package.json`
+- `docs/CODEX_STATUS.md`
+
+UI/UX changes:
+- Replaced the dense Follow-up Workbench table with a task-first Chinese workbench.
+- Added top summary bar: 今日待跟进, 已逾期, 需要补资料, 需要人工审核, 高优先级.
+- Added grouped task board: 今日任务, 已逾期, 需要补资料, 待人工审核, 最近转客户.
+- Added compact task cards with priority, business line, due date, missing information count and recommended next action.
+- Added detail panel with missing information checklist, reply draft placeholder, manual review warning and safe internal actions.
+- Added lightweight toast feedback for copy, done, postpone and draft actions.
+
+Safety:
+- Reply draft remains internal only and is marked `仅为回复草稿，不会自动发送客户`.
+- Blocked actions remain blocked: no automatic email, WhatsApp, quotation, PI, price, delivery time, payment terms or bank information confirmation.
+- Marking reviewed/done does not mean customer message was sent.
+
+Validation:
+- `npm test`: passed, 163 tests passed, 0 failed.
+- `npm run build`: passed.
+- Local browser preview: `/trade-os-prototype` action center loads `styles.css?v=ui4` and `app.js?v=ui4`.
+- Browser UI check: 跟进工作台, 今日任务, 已逾期, 需要补资料, 待人工审核, 最近转客户 all visible.
+- Browser console: no errors.
+- Layout check: no horizontal overflow.
+
 ## Latest Deployment: Website Buyer Conversion V7
 Completed and deployed on 2026-06-13.
 

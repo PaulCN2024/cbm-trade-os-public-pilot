@@ -625,6 +625,313 @@ tr:hover td {
   line-height: 1.4;
 }
 
+.followup-workbench {
+  overflow: hidden;
+}
+
+.followup-summary-bar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.followup-metric {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  background: linear-gradient(180deg, #fff, #f7faf8);
+}
+
+.followup-metric span {
+  width: max-content;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #eaf3ef;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.followup-metric strong {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.followup-metric small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.followup-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(310px, 0.34fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.followup-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(210px, 1fr));
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.followup-column {
+  min-width: 210px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  background: #f8faf9;
+}
+
+.followup-column-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.followup-column-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.followup-column-head span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.followup-card-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.followup-task-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(26, 37, 33, 0.06);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.followup-task-card:hover,
+.followup-task-card.selected {
+  transform: translateY(-2px);
+  border-color: rgba(201, 111, 53, 0.5);
+  box-shadow: 0 14px 30px rgba(26, 37, 33, 0.12);
+}
+
+.followup-card-open {
+  width: 100%;
+  border: 0;
+  padding: 12px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.followup-card-top,
+.followup-card-meta,
+.followup-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.followup-task-card h4 {
+  margin: 10px 0 5px;
+  font-size: 15px;
+}
+
+.followup-task-card p,
+.followup-task-card strong {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.followup-task-card strong {
+  color: var(--ink);
+}
+
+.followup-chip {
+  border-radius: 999px;
+  padding: 4px 7px;
+  background: #edf3f0;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.followup-chip.warning {
+  background: #fff4df;
+  color: #966600;
+}
+
+.followup-chip.danger {
+  background: #ffe8e4;
+  color: #a23b2f;
+}
+
+.followup-chip.ok {
+  background: #e8f5ee;
+  color: #21734d;
+}
+
+.followup-chip.muted {
+  background: #eef0f2;
+  color: var(--muted);
+}
+
+.followup-card-meta span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.followup-card-actions {
+  border-top: 1px solid var(--line);
+  padding: 8px 10px 10px;
+}
+
+.followup-empty {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 18px 10px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 13px;
+}
+
+.followup-detail-panel {
+  position: sticky;
+  top: 82px;
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(40, 74, 64, 0.18);
+  border-radius: 14px;
+  padding: 14px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(26, 37, 33, 0.11);
+  animation: panelIn 0.18s ease;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.followup-detail-head h3 {
+  margin: 8px 0 5px;
+}
+
+.followup-detail-head p,
+.followup-detail-block p,
+.followup-detail-block small {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.followup-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.followup-detail-grid span {
+  display: grid;
+  gap: 4px;
+  border-radius: 9px;
+  padding: 9px;
+  background: #f5f8f6;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.followup-detail-grid strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.followup-detail-block {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.followup-detail-block h4 {
+  margin-bottom: 8px;
+}
+
+.followup-detail-block.draft {
+  border: 1px solid rgba(40, 74, 64, 0.15);
+  border-radius: 10px;
+  padding: 12px;
+  background: #f8fbf9;
+}
+
+.followup-detail-block.blocked {
+  border: 1px solid rgba(162, 59, 47, 0.18);
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff8f6;
+}
+
+.followup-checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.followup-checklist span {
+  border-radius: 999px;
+  padding: 6px 9px;
+  background: #e8f5ee;
+  color: #21734d;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.followup-checklist span.missing {
+  background: #fff4df;
+  color: #966600;
+}
+
+.app-toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 50;
+  max-width: min(420px, calc(100vw - 40px));
+  border: 1px solid rgba(40, 74, 64, 0.18);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #22332e;
+  color: #fff;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .document-center .detail-grid {
   margin-bottom: 16px;
 }
@@ -1655,6 +1962,8 @@ dialog::backdrop {
 
   .stats-grid,
   .task-stats,
+  .followup-summary-bar,
+  .followup-layout,
   .two-col,
   .ops-hero,
   .process-grid,
@@ -1662,6 +1971,10 @@ dialog::backdrop {
   .document-draft-review-grid,
   .stage-strip {
     grid-template-columns: 1fr;
+  }
+
+  .followup-detail-panel {
+    position: static;
   }
 }
 
@@ -1711,6 +2024,20 @@ dialog::backdrop {
   }
 
   .queue-card {
+    grid-template-columns: 1fr;
+  }
+
+  .followup-board {
+    grid-template-columns: 1fr;
+    overflow-x: visible;
+  }
+
+  .followup-column {
+    min-width: 0;
+  }
+
+  .followup-summary-bar,
+  .followup-detail-grid {
     grid-template-columns: 1fr;
   }
 
