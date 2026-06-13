@@ -21,7 +21,7 @@ function renderTradeOsHtml() {
     <meta name="theme-color" content="#10231f" />
     <script>window.__CBM_ENV__=${JSON.stringify(publicEnv)};</script>
     <link rel="manifest" href="/trade-os-prototype/manifest.webmanifest" />
-    <link rel="stylesheet" href="/trade-os-prototype/styles.css" />
+    <link rel="stylesheet" href="/trade-os-prototype/styles.css?v=ui4" />
   </head>
   <body>
     <aside class="sidebar" aria-label="主导航">
@@ -44,6 +44,7 @@ function renderTradeOsHtml() {
         <div>
           <p class="eyebrow">建筑铝型材 · 精密铝制造 · 外贸业务系统</p>
           <p class="deployment-check">DEPLOYMENT_CHECK_TRADE_OS_V5</p>
+          <p class="deployment-check">DEPLOYMENT_CHECK_TRADE_OS_UI4_FOLLOWUP_WORKBENCH</p>
           <h1 id="pageTitle">CBM Trade OS</h1>
           <p class="demo-note">Admin pilot · Supabase front CRM data when configured · downstream mock modules · manual review required</p>
         </div>
@@ -65,10 +66,15 @@ function renderTradeOsHtml() {
         <section class="crawler-fallback" aria-label="CBM Trade OS static overview">
           <p class="eyebrow">Server-rendered fallback for external review tools</p>
           <h2>CBM Trade OS public demo</h2>
+          <p class="deployment-check">DEPLOYMENT_CHECK_TRADE_OS_UI4_FOLLOWUP_WORKBENCH</p>
           <p>
             CBM Trade OS is a foreign trade business operating system prototype for customer acquisition,
             lead management, inquiry analysis, project tracking, quotation drafts, order workflow,
             shipment tracking, after-sales service and repeat business development.
+          </p>
+          <p>
+            Trade OS UI-4 adds a Chinese task-driven Follow-up Workbench with 今日任务, 已逾期,
+            需要补资料, 待人工审核, 最近转客户, safe reply draft placeholders and manual review boundaries.
           </p>
           <p>
             Current mock CRM flow: Acquisition Center for independent website, Alibaba, Gmail, WhatsApp,
@@ -281,7 +287,7 @@ function renderTradeOsHtml() {
       </form>
     </dialog>
 
-    <script type="module" src="/trade-os-prototype/app.js"></script>
+    <script type="module" src="/trade-os-prototype/app.js?v=ui4"></script>
   </body>
 </html>`;
 }
