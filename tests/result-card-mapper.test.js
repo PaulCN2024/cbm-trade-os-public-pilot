@@ -157,12 +157,13 @@ test("archive command maps to archive_path_card", () => {
 
 test("follow-up card includes Follow-up Workbench link", () => {
   const parsed = parseCommand("今天有哪些客户要跟进？");
+  const today = new Date().toISOString().slice(0, 10);
   const cards = mapCommandResultToCards(parsed, {
     ok: true,
     tool_name: "listTodayFollowUps",
     result_summary: "1 follow-up task needs attention.",
     data: {
-      tasks: [{ id: "task_1", title: "Follow up Kevin", customer_id: "cus_1", inquiry_id: "inq_1", due_date: "2026-06-12", status: "PENDING" }],
+      tasks: [{ id: "task_1", title: "Follow up Kevin", customer_id: "cus_1", inquiry_id: "inq_1", due_date: today, status: "PENDING" }],
     },
     approval_required: false,
   });

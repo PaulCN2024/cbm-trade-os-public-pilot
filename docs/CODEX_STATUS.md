@@ -9,6 +9,46 @@ External Review Alignment / GitHub Source Push / Public V5 Verification
 ## Current Status
 Completed. The current CBM Trade OS public pilot source has been pushed to GitHub, and the Vercel public alias has been verified with raw `curl` checks.
 
+## Latest Update: Website Image Accuracy & Conversion Polish
+Completed locally on 2026-06-13.
+
+Scope:
+- Focused only on `/trade-website`.
+- Did not change Trade OS admin, CRM logic, Supabase logic or Command Center logic.
+
+Changes:
+- Reviewed public website image cards and replaced misleading product-card photo usage with neutral aluminum/project/manufacturing visual treatments.
+- Added visible product grouping:
+  - `Architectural Projects`
+  - `Precision Manufacturing`
+  - `Surface Finishing`
+  - `Packing & Shipment`
+- Added a V6 verification marker in the website hero:
+  - `DEPLOYMENT_CHECK_TRADE_WEBSITE_IMAGE_POLISH_V6`
+- Reworked RFQ into a cleaner two-step visual layout:
+  - `Step 1: Business line + contact`
+  - `Step 2: Project / product details`
+- Kept `Submit Inquiry for Manual Review`.
+- Kept manual review safety note.
+- Added a data-URI favicon to avoid preview console noise from `/favicon.ico` 404.
+
+Files changed in this update:
+- `trade-website/index.html`
+- `trade-website/styles.css`
+- `tests/result-card-mapper.test.js`
+- `docs/CODEX_STATUS.md`
+
+Validation:
+- `npm test`: passed, 156 tests passed, 0 failed.
+- `npm run build`: passed.
+- Local Playwright desktop preview: page loaded, product groups visible, RFQ two-step layout visible.
+- Local Playwright mobile check at 390px width: no horizontal overflow.
+- Browser console after favicon fix: 0 errors, 0 warnings.
+- Screenshot generated during local verification and removed from Git-tracked files.
+
+Note:
+- `tests/result-card-mapper.test.js` was adjusted only to make a follow-up date fixture use the current test date instead of stale `2026-06-12`. No Command Center business logic changed.
+
 ## Summary of Completed Work
 - Kept the V5 public website deployment available for external ChatGPT review.
 - Initialized and pushed the full current CBM Trade OS project to GitHub.

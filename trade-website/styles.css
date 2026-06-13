@@ -332,10 +332,46 @@ p {
   padding-top: 34px;
 }
 
+.product-groups {
+  display: grid;
+  gap: 34px;
+}
+
+.product-group {
+  display: grid;
+  gap: 14px;
+}
+
+.group-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.group-heading span {
+  color: var(--brand-dark);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.group-heading p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
+}
+
+.finishing-gallery,
+.shipping-gallery {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .gallery-card {
@@ -347,13 +383,27 @@ p {
 }
 
 .gallery-card > div {
+  position: relative;
   aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: #d8dedb;
   background-position: center;
   background-size: cover;
 }
 
+.gallery-card > div::before,
+.gallery-card > div::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.gallery-card > div::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(9, 20, 18, 0.18));
+}
+
 .gallery-card h3 {
-  min-height: 48px;
+  min-height: 42px;
   margin: 16px 16px 8px;
   font-size: 17px;
 }
@@ -364,43 +414,99 @@ p {
 }
 
 .windows > div {
-  background-image: url("https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=760&q=80");
+  background:
+    linear-gradient(90deg, transparent 0 18%, rgba(255, 255, 255, 0.72) 18% 20%, transparent 20% 38%, rgba(255, 255, 255, 0.72) 38% 40%, transparent 40% 58%, rgba(255, 255, 255, 0.72) 58% 60%, transparent 60%),
+    linear-gradient(0deg, transparent 0 26%, rgba(255, 255, 255, 0.68) 26% 28%, transparent 28% 56%, rgba(255, 255, 255, 0.68) 56% 58%, transparent 58%),
+    linear-gradient(135deg, #6f8b91, #d7e4e2);
 }
 
 .curtain > div {
-  background-image: url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=760&q=80");
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.72) 0 3px, transparent 3px 42px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.5) 0 2px, transparent 2px 54px),
+    linear-gradient(135deg, #31494f, #9bb2b4);
 }
 
 .facade > div {
-  background-image: url("https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=760&q=80");
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0 2px, transparent 2px 24px),
+    linear-gradient(135deg, #7e8d8e, #d8c2a7);
 }
 
 .louvers > div {
-  background-image: url("https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=760&q=80");
+  background:
+    repeating-linear-gradient(165deg, rgba(255, 255, 255, 0.82) 0 8px, rgba(35, 61, 63, 0.36) 8px 18px, transparent 18px 34px),
+    linear-gradient(135deg, #8fa1a0, #d5dad7);
 }
 
 .railings > div {
-  background-image: url("https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=760&q=80");
+  background:
+    linear-gradient(90deg, transparent 0 10%, rgba(255, 255, 255, 0.75) 10% 12%, transparent 12% 30%, rgba(255, 255, 255, 0.75) 30% 32%, transparent 32% 50%, rgba(255, 255, 255, 0.75) 50% 52%, transparent 52%),
+    linear-gradient(0deg, transparent 0 66%, rgba(255, 255, 255, 0.78) 66% 70%, transparent 70%),
+    linear-gradient(135deg, #6d888b, #e2e8e7);
 }
 
 .cnc > div {
-  background-image: url("https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=760&q=80");
+  background:
+    radial-gradient(circle at 34% 48%, #d9ded9 0 16%, transparent 17%),
+    radial-gradient(circle at 68% 45%, #aeb9b7 0 11%, transparent 12%),
+    linear-gradient(90deg, transparent 0 18%, rgba(32, 44, 44, 0.22) 18% 21%, transparent 21%),
+    linear-gradient(135deg, #60757a, #c8d1ce);
 }
 
 .extrusion > div {
-  background-image: url("https://images.unsplash.com/photo-1581092795442-8218827d1d65?auto=format&fit=crop&w=760&q=80");
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.72) 0 10px, rgba(54, 74, 75, 0.3) 10px 13px, transparent 13px 34px),
+    linear-gradient(135deg, #7c8f91, #d9d7cd);
 }
 
 .brackets > div {
-  background-image: url("https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=760&q=80");
+  background:
+    radial-gradient(circle at 32% 38%, #eef1ef 0 7%, transparent 8%),
+    radial-gradient(circle at 66% 64%, #eef1ef 0 7%, transparent 8%),
+    linear-gradient(135deg, transparent 0 44%, rgba(255, 255, 255, 0.66) 44% 56%, transparent 56%),
+    linear-gradient(135deg, #526a6e, #b9c2bc);
 }
 
 .housings > div {
-  background-image: url("https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=760&q=80");
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 20%, rgba(255, 255, 255, 0.72) 21% 28%, transparent 29%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.62) 0 16%, transparent 16% 84%, rgba(255, 255, 255, 0.62) 84%),
+    linear-gradient(135deg, #576f73, #cbd3cf);
+}
+
+.connectors > div {
+  background:
+    radial-gradient(circle at 30% 34%, #eef1ee 0 7%, transparent 8%),
+    radial-gradient(circle at 70% 66%, #eef1ee 0 7%, transparent 8%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 9px, transparent 9px 26px),
+    linear-gradient(135deg, #647b7e, #d8d6ce);
+}
+
+.anodized > div {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.85) 0 12%, transparent 12% 22%, rgba(255, 255, 255, 0.5) 22% 30%, transparent 30%),
+    linear-gradient(135deg, #8d999b, #f0eee7);
 }
 
 .coated > div {
-  background-image: url("https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?auto=format&fit=crop&w=760&q=80");
+  background:
+    linear-gradient(90deg, #0f6b5e 0 25%, #c8793f 25% 50%, #e8e9e4 50% 75%, #4e6872 75%),
+    linear-gradient(135deg, #899799, #f0eee8);
+}
+
+.packing > div {
+  background:
+    repeating-linear-gradient(90deg, rgba(120, 84, 48, 0.28) 0 10px, transparent 10px 44px),
+    repeating-linear-gradient(0deg, rgba(120, 84, 48, 0.2) 0 8px, transparent 8px 36px),
+    linear-gradient(135deg, #bca179, #ece2cf);
+}
+
+.shipment > div {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.58) 0 8%, transparent 8% 92%, rgba(255, 255, 255, 0.58) 92%),
+    repeating-linear-gradient(0deg, rgba(30, 49, 53, 0.22) 0 2px, transparent 2px 30px),
+    linear-gradient(135deg, #546d75, #c7d1cf);
 }
 
 .capability-section {
@@ -529,6 +635,32 @@ p {
   box-shadow: var(--shadow);
 }
 
+.form-step {
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgba(15, 107, 94, 0.16);
+  border-radius: 9px;
+  padding: clamp(16px, 2.4vw, 22px);
+  background:
+    linear-gradient(135deg, rgba(15, 107, 94, 0.06), rgba(255, 255, 255, 0.86));
+}
+
+.form-step h3 {
+  margin-bottom: 0;
+  font-size: 18px;
+}
+
+.step-badge {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -634,6 +766,11 @@ textarea {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .finishing-gallery,
+  .shipping-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .capability-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -668,11 +805,17 @@ textarea {
 
   .business-grid,
   .gallery-grid,
+  .finishing-gallery,
+  .shipping-gallery,
   .capability-grid,
   .process-flow,
   .inquiry-section,
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .group-heading {
+    display: grid;
   }
 
   .card-image {
