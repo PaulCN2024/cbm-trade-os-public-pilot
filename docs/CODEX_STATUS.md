@@ -36,6 +36,18 @@ Build and test:
 - `npm test`: passed, 156 tests passed.
 - `npm run build`: passed.
 
+Changed files:
+- `trade-website/index.html`
+- `trade-website/styles.css`
+- `docs/CODEX_STATUS.md`
+
+Website Buyer Conversion V7 checklist:
+- Application Cases added.
+- Sticky RFQ CTA added.
+- Capability proof chips added.
+- `npm test`: passed, 156 tests passed, 0 failed.
+- `npm run build`: passed.
+
 ## Latest Update: Trade Website Buyer-Oriented Conversion V7
 Completed locally on 2026-06-13.
 
