@@ -9,7 +9,7 @@ External Review Alignment / GitHub Source Push / Public V5 Verification
 ## Current Status
 Completed. The current CBM Trade OS public pilot source has been pushed to GitHub, and the Vercel public alias has been verified with raw `curl` checks.
 
-## Latest Deployment: Trade Website Buyer-Oriented V7
+## Latest Deployment: Website Buyer Conversion V7
 Completed and deployed on 2026-06-13.
 
 Repository:
