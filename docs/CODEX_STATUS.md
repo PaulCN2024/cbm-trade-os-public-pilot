@@ -9,6 +9,33 @@ External Review Alignment / GitHub Source Push / Public V5 Verification
 ## Current Status
 Completed. The current CBM Trade OS public pilot source has been pushed to GitHub, and the Vercel public alias has been verified with raw `curl` checks.
 
+## Latest Deployment: Trade Website Buyer-Oriented V7
+Completed and deployed on 2026-06-13.
+
+Repository:
+- `https://github.com/PaulCN2024/cbm-trade-os-public-pilot`
+
+Commit:
+- `1ae821d` - `Improve trade website buyer conversion`
+
+Vercel:
+- Production deployment: `https://project-7vo99-9p78qdba2-paul-s-projects2026.vercel.app`
+- Public alias for external review: `https://project-7vo99.vercel.app/trade-website?buyer=v7`
+
+Public HTML verification:
+- `DEPLOYMENT_CHECK_TRADE_WEBSITE_BUYER_V7`: present.
+- `Aluminum Projects & Precision Manufacturing`: present.
+- `Application Cases`: present.
+- `Submit Inquiry for Manual Review`: present.
+- Old text `Prepare inquiry email`: absent from grep output.
+- Old text `Export saved leads`: absent from grep output.
+- Old text `China project supplier`: absent from grep output.
+- Old text `Custom aluminum profiles`: absent from grep output.
+
+Build and test:
+- `npm test`: passed, 156 tests passed.
+- `npm run build`: passed.
+
 ## Latest Update: Trade Website Buyer-Oriented Conversion V7
 Completed locally on 2026-06-13.
 
