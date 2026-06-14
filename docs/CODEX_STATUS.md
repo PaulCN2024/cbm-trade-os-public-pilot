@@ -677,3 +677,72 @@ Results:
 ## Recommended Step 2D
 
 After Step 2C-4 review, consider a small admin UI navigation and state consolidation pass before adding any write workflows.
+
+## Step 2D Purpose
+
+Step 2D is a narrow consolidation pass for the Admin UI foundation read-only integrations.
+
+It does not add a new module, connect a new API, or introduce any write workflow.
+
+## Step 2D Changed Files
+
+- `admin/ui-foundation/app.js`
+- `docs/CODEX_STATUS.md`
+
+## Step 2D Consolidation Summary
+
+The duplicated read-only API loading pattern was consolidated for:
+
+- Companies
+- Products
+- Manufacturing Capabilities
+- AI Inquiry Analysis Drafts
+
+Behavior preserved:
+
+- existing API endpoint URLs are unchanged
+- loading / empty / error states remain
+- Preview fallback / local preview data remains clearly marked
+- Companies, Products, Manufacturing Capabilities and AI Drafts remain read-only
+- AI Drafts continue to force `approval_required: true`
+- AI Drafts remain Draft only / Not sent
+
+## Step 2D Boundaries
+
+Confirmed not implemented:
+
+- no new API routes
+- no new API connections
+- no API writes from Admin UI foundation
+- no create, update or delete actions
+- no full CRUD
+- no database schema change
+- no public website change
+- no Command Center change
+- no Document Center change
+- no UI Lab change
+- no quotations, orders, production or shipping workflow
+- no OpenAI integration
+- no email or WhatsApp sending
+- no PI generation
+- no formal quotation sending
+- no automatic business commitments
+- no price, delivery time, payment term, bank account or production feasibility confirmation
+
+## Step 2D Verification
+
+Commands:
+
+```bash
+npm test
+npm run build
+```
+
+Results:
+
+- `npm test`: passed, 178 tests passed.
+- `npm run build`: passed.
+
+## Recommended Next Step
+
+After Step 2D review, create a clean Step 2D commit before planning any Step 2E work.

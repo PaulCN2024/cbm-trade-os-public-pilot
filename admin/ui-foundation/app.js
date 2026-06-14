@@ -101,12 +101,7 @@ const companyPreviewFallback = [
   },
 ];
 
-const companyApiState = {
-  status: "idle",
-  companies: [],
-  error: "",
-  source: "not loaded",
-};
+const companyApiState = createReadOnlyState("companies");
 
 const productPreviewFallback = [
   {
@@ -138,12 +133,7 @@ const productPreviewFallback = [
   },
 ];
 
-const productApiState = {
-  status: "idle",
-  products: [],
-  error: "",
-  source: "not loaded",
-};
+const productApiState = createReadOnlyState("products");
 
 const capabilityPreviewFallback = [
   {
@@ -175,12 +165,7 @@ const capabilityPreviewFallback = [
   },
 ];
 
-const capabilityApiState = {
-  status: "idle",
-  capabilities: [],
-  error: "",
-  source: "not loaded",
-};
+const capabilityApiState = createReadOnlyState("capabilities");
 
 const aiDraftPreviewFallback = [
   {
@@ -215,12 +200,7 @@ const aiDraftPreviewFallback = [
   },
 ];
 
-const aiDraftApiState = {
-  status: "idle",
-  drafts: [],
-  error: "",
-  source: "not loaded",
-};
+const aiDraftApiState = createReadOnlyState("drafts");
 
 function badge(label, type = "") {
   return `<span class="badge ${type}">${escapeHtml(label)}</span>`;
@@ -428,33 +408,54 @@ function renderDataStatus(type, title, message) {
   `;
 }
 
-async function loadCompaniesReadOnly() {
-  companyApiState.status = "loading";
-  companyApiState.error = "";
-  companyApiState.source = "api";
-  refreshCompaniesView();
+function createReadOnlyState(collectionKey) {
+  return {
+    status: "idle",
+    [collectionKey]: [],
+    error: "",
+    source: "not loaded",
+  };
+}
+
+async function loadReadOnlyList({ state, collectionKey, endpoint, payloadKey, fallbackRecords, fallbackSource, refresh, normalize = (records) => records }) {
+  state.status = "loading";
+  state.error = "";
+  state.source = "api";
+  refresh();
 
   try {
     const token = getAdminAccessToken();
-    const response = await fetch("/api/companies", {
+    const response = await fetch(endpoint, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(payload.error || `GET /api/companies failed with ${response.status}`);
+      throw new Error(payload.error || `${endpoint} failed with ${response.status}`);
     }
-    const companies = Array.isArray(payload.companies) ? payload.companies : [];
-    companyApiState.status = companies.length ? "loaded" : "empty";
-    companyApiState.companies = companies;
-    companyApiState.source = "api";
+    const records = Array.isArray(payload[payloadKey]) ? payload[payloadKey] : [];
+    state.status = records.length ? "loaded" : "empty";
+    state[collectionKey] = normalize(records);
+    state.source = "api";
   } catch (error) {
-    companyApiState.status = "error";
-    companyApiState.error = error.message || "Unknown API error";
-    companyApiState.companies = companyPreviewFallback;
-    companyApiState.source = "local preview fallback";
+    state.status = "error";
+    state.error = error.message || "Unknown API error";
+    state[collectionKey] = normalize(fallbackRecords);
+    state.source = fallbackSource;
   }
 
-  refreshCompaniesView();
+  refresh();
+}
+
+function loadCompaniesReadOnly() {
+  return loadReadOnlyList({
+    state: companyApiState,
+    collectionKey: "companies",
+    endpoint: "/api/companies",
+    payloadKey: "companies",
+    fallbackRecords: companyPreviewFallback,
+    fallbackSource: "local preview fallback",
+    refresh: refreshCompaniesView,
+  });
 }
 
 function refreshCompaniesView() {
@@ -555,33 +556,16 @@ function renderReadOnlyProductCard() {
   `;
 }
 
-async function loadProductsReadOnly() {
-  productApiState.status = "loading";
-  productApiState.error = "";
-  productApiState.source = "api";
-  refreshProductsView();
-
-  try {
-    const token = getAdminAccessToken();
-    const response = await fetch("/api/products", {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload.error || `GET /api/products failed with ${response.status}`);
-    }
-    const products = Array.isArray(payload.products) ? payload.products : [];
-    productApiState.status = products.length ? "loaded" : "empty";
-    productApiState.products = products;
-    productApiState.source = "api";
-  } catch (error) {
-    productApiState.status = "error";
-    productApiState.error = error.message || "Unknown API error";
-    productApiState.products = productPreviewFallback;
-    productApiState.source = "Preview fallback / local preview data";
-  }
-
-  refreshProductsView();
+function loadProductsReadOnly() {
+  return loadReadOnlyList({
+    state: productApiState,
+    collectionKey: "products",
+    endpoint: "/api/products",
+    payloadKey: "products",
+    fallbackRecords: productPreviewFallback,
+    fallbackSource: "Preview fallback / local preview data",
+    refresh: refreshProductsView,
+  });
 }
 
 function refreshProductsView() {
@@ -682,33 +666,16 @@ function renderReadOnlyCapabilityCard() {
   `;
 }
 
-async function loadManufacturingCapabilitiesReadOnly() {
-  capabilityApiState.status = "loading";
-  capabilityApiState.error = "";
-  capabilityApiState.source = "api";
-  refreshManufacturingCapabilitiesView();
-
-  try {
-    const token = getAdminAccessToken();
-    const response = await fetch("/api/manufacturing-capabilities", {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload.error || `GET /api/manufacturing-capabilities failed with ${response.status}`);
-    }
-    const capabilities = Array.isArray(payload.manufacturing_capabilities) ? payload.manufacturing_capabilities : [];
-    capabilityApiState.status = capabilities.length ? "loaded" : "empty";
-    capabilityApiState.capabilities = capabilities;
-    capabilityApiState.source = "api";
-  } catch (error) {
-    capabilityApiState.status = "error";
-    capabilityApiState.error = error.message || "Unknown API error";
-    capabilityApiState.capabilities = capabilityPreviewFallback;
-    capabilityApiState.source = "Preview fallback / local preview data";
-  }
-
-  refreshManufacturingCapabilitiesView();
+function loadManufacturingCapabilitiesReadOnly() {
+  return loadReadOnlyList({
+    state: capabilityApiState,
+    collectionKey: "capabilities",
+    endpoint: "/api/manufacturing-capabilities",
+    payloadKey: "manufacturing_capabilities",
+    fallbackRecords: capabilityPreviewFallback,
+    fallbackSource: "Preview fallback / local preview data",
+    refresh: refreshManufacturingCapabilitiesView,
+  });
 }
 
 function refreshManufacturingCapabilitiesView() {
@@ -808,33 +775,17 @@ function renderReadOnlyAiDraftCard() {
   `;
 }
 
-async function loadAiDraftsReadOnly() {
-  aiDraftApiState.status = "loading";
-  aiDraftApiState.error = "";
-  aiDraftApiState.source = "api";
-  refreshAiDraftsView();
-
-  try {
-    const token = getAdminAccessToken();
-    const response = await fetch("/api/ai-inquiry-analyses", {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload.error || `GET /api/ai-inquiry-analyses failed with ${response.status}`);
-    }
-    const drafts = Array.isArray(payload.ai_inquiry_analyses) ? payload.ai_inquiry_analyses : [];
-    aiDraftApiState.status = drafts.length ? "loaded" : "empty";
-    aiDraftApiState.drafts = drafts.map((draft) => ({ ...draft, approval_required: true }));
-    aiDraftApiState.source = "api";
-  } catch (error) {
-    aiDraftApiState.status = "error";
-    aiDraftApiState.error = error.message || "Unknown API error";
-    aiDraftApiState.drafts = aiDraftPreviewFallback.map((draft) => ({ ...draft, approval_required: true }));
-    aiDraftApiState.source = "Preview fallback / local preview data";
-  }
-
-  refreshAiDraftsView();
+function loadAiDraftsReadOnly() {
+  return loadReadOnlyList({
+    state: aiDraftApiState,
+    collectionKey: "drafts",
+    endpoint: "/api/ai-inquiry-analyses",
+    payloadKey: "ai_inquiry_analyses",
+    fallbackRecords: aiDraftPreviewFallback,
+    fallbackSource: "Preview fallback / local preview data",
+    refresh: refreshAiDraftsView,
+    normalize: (drafts) => drafts.map((draft) => ({ ...draft, approval_required: true })),
+  });
 }
 
 function refreshAiDraftsView() {
