@@ -822,3 +822,64 @@ Browser review:
 ## Step 2E Trial Recommendation
 
 Ready for limited internal read-only trial.
+
+## Step 2F Purpose
+
+Step 2F creates a practical limited internal read-only trial checklist and real Supabase/API verification plan.
+
+This is documentation only. It does not start Step 3 and does not add any write workflow.
+
+## Step 2F Changed Files
+
+- `docs/READ_ONLY_INTERNAL_TRIAL_CHECKLIST.md`
+- `docs/CODEX_STATUS.md`
+
+## Step 2F Checklist Summary
+
+Created a dedicated internal trial checklist covering:
+
+- environment readiness
+- local and deployed preview expectations
+- Supabase/admin access requirements
+- expected read-only API routes
+- minimal safe test data for Companies, Products, Manufacturing Capabilities and AI Inquiry Analysis Drafts
+- read-only verification cases
+- permission and auth verification
+- AI Drafts safety verification
+- limited internal read-only trial acceptance criteria
+- issue logging template
+- next-step decision framework
+
+## Step 2F Boundaries
+
+Confirmed not implemented:
+
+- no code changes
+- no new modules
+- no new API connections
+- no API route changes
+- no API writes from Admin UI foundation
+- no create, update or delete actions
+- no approve, reject or send actions
+- no database schema change
+- no public website change
+- no Command Center change
+- no Document Center change
+- no UI Lab change
+- no quotations, orders, production or shipping workflow
+- no OpenAI integration
+- no email or WhatsApp sending
+- no PI generation
+- no formal quotation sending
+- no automatic business commitments
+
+## Recommended Next Step
+
+Run the limited internal read-only trial using `docs/READ_ONLY_INTERNAL_TRIAL_CHECKLIST.md`.
+
+After the trial, choose:
+
+- Step 2G for small read-only polish fixes
+- Step 3A for a broader customer CRM read-only foundation
+- Step 3B for the first low-risk manual write flow
+- or hold development until real data is cleaner
