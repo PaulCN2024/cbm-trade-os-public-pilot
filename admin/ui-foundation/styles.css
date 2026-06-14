@@ -451,6 +451,11 @@ tr:last-child td {
   padding: 9px 11px;
 }
 
+.field input[readonly] {
+  background: var(--surface-muted);
+  color: var(--muted-strong);
+}
+
 .field textarea {
   min-height: 86px;
   resize: vertical;
@@ -545,6 +550,64 @@ tr:last-child td {
 .state-card.error {
   border-color: #fed7c8;
   background: #fff7f3;
+}
+
+.data-status {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 14px;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.data-status strong {
+  font-size: 14px;
+}
+
+.data-status span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.data-status.success {
+  border-color: #b7ead4;
+  background: var(--green-soft);
+}
+
+.data-status.loading {
+  border-color: #bfdbfe;
+  background: var(--blue-soft);
+}
+
+.data-status.empty {
+  border-color: var(--border);
+  background: #ffffff;
+}
+
+.data-status.error {
+  border-color: #fed7c8;
+  background: #fff7f3;
+}
+
+.table-skeleton {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: #ffffff;
+}
+
+.skeleton-row {
+  height: 46px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #eef2f7, #f8fafc, #eef2f7);
+  background-size: 200% 100%;
+}
+
+.read-only-card {
+  background: #ffffff;
 }
 
 .module-preview {

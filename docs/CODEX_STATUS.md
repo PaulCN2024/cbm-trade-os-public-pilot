@@ -388,3 +388,75 @@ After visual review and approval, connect the approved UI foundation to Step 2A 
 4. AI inquiry analysis drafts
 
 Step 2C should still keep AI draft safety boundaries and avoid quotation/order/production/shipping automation.
+
+## Step 2C-1 Purpose
+
+Step 2C-1 connects only the Companies section of the approved Admin UI foundation to the existing Step 2A Companies API as a read-only list.
+
+This is a narrow integration step.
+
+## Step 2C-1 Changed Files
+
+- `admin/ui-foundation/index.html`
+- `admin/ui-foundation/styles.css`
+- `admin/ui-foundation/app.js`
+- `docs/CODEX_STATUS.md`
+
+## Step 2C-1 API Integration
+
+Connected route:
+
+- `GET /api/companies`
+
+Behavior:
+
+- Companies page shows loading state while requesting data.
+- Companies page renders API records when available.
+- Empty API response shows an empty state.
+- API failure or missing admin token shows an error state and local preview fallback for visual review only.
+- No create, update or delete action is connected.
+
+Other sections remain static/mock:
+
+- Dashboard
+- Products
+- Manufacturing capabilities
+- AI inquiry analysis draft review
+- Future module placeholders
+
+## Step 2C-1 Boundaries
+
+Confirmed not implemented:
+
+- no new API routes
+- no API writes from Admin UI foundation
+- no full CRUD
+- no database schema change
+- no public website change
+- no Command Center change
+- no Document Center change
+- no UI Lab change
+- no quotations, orders, production or shipping workflow
+- no OpenAI integration
+- no email or WhatsApp sending
+- no PI generation
+- no formal quotation sending
+- no automatic business commitments
+
+## Step 2C-1 Verification
+
+Commands:
+
+```bash
+npm test
+npm run build
+```
+
+Results:
+
+- `npm test`: passed, 178 tests passed.
+- `npm run build`: passed.
+
+## Recommended Step 2C-2
+
+After Step 2C-1 review, connect Products as a read-only list using the same API adapter pattern.
