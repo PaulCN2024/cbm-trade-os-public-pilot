@@ -52,9 +52,9 @@ const sections = {
   },
   "ai-drafts": {
     title: "AI Drafts",
-    description: "Draft-only AI inquiry analysis review pattern with manual approval.",
-    sectionTitle: "AI Inquiry Analysis Draft Review Sample",
-    sectionHelp: "Suggested replies are draft text only and are never sent automatically.",
+    description: "Read-only AI inquiry analysis draft review list connected to the Step 2A API.",
+    sectionTitle: "AI Inquiry Analysis Draft Review",
+    sectionHelp: "Read-only draft list. Suggested replies are draft text only and are never sent automatically.",
     content: renderAiDrafts,
     review: renderAiDraftReview,
   },
@@ -182,6 +182,46 @@ const capabilityApiState = {
   source: "not loaded",
 };
 
+const aiDraftPreviewFallback = [
+  {
+    detected_business_line: "A_ARCHITECTURAL",
+    extracted_requirements: { product: "hotel facade package", destination_port: "Balboa" },
+    missing_information: ["glass specification", "drawing package", "aluminum color"],
+    risk_flags: ["manual quotation review required"],
+    suggested_reply:
+      "Preview fallback / local preview data. Thank you for your inquiry. Please share drawings, glass specification, aluminum color, quantity and destination port for manual review.",
+    approval_required: true,
+    created_at: "local preview",
+  },
+  {
+    detected_business_line: "B_INDUSTRIAL",
+    extracted_requirements: { product: "CNC aluminum connector", material: "6061 aluminum" },
+    missing_information: ["drawing file", "tolerance", "surface finish", "quantity"],
+    risk_flags: ["draft only", "do not confirm production feasibility"],
+    suggested_reply:
+      "Preview fallback / local preview data. Please send drawing files, tolerance, finish and quantity. Our team will review before any quotation.",
+    approval_required: true,
+    created_at: "local preview",
+  },
+  {
+    detected_business_line: "UNKNOWN",
+    extracted_requirements: { product: "custom aluminum profile" },
+    missing_information: ["application", "drawing", "quantity"],
+    risk_flags: ["business line needs manual routing"],
+    suggested_reply:
+      "Preview fallback / local preview data. Please confirm the application and drawing details so we can route the inquiry correctly.",
+    approval_required: true,
+    created_at: "local preview",
+  },
+];
+
+const aiDraftApiState = {
+  status: "idle",
+  drafts: [],
+  error: "",
+  source: "not loaded",
+};
+
 function badge(label, type = "") {
   return `<span class="badge ${type}">${escapeHtml(label)}</span>`;
 }
@@ -241,6 +281,9 @@ function setSection(sectionId) {
   }
   if (sectionId === "manufacturing-capabilities") {
     loadManufacturingCapabilitiesReadOnly();
+  }
+  if (sectionId === "ai-drafts") {
+    loadAiDraftsReadOnly();
   }
 }
 
@@ -675,38 +718,135 @@ function refreshManufacturingCapabilitiesView() {
 }
 
 function renderAiDrafts() {
+  if (aiDraftApiState.status === "idle" || aiDraftApiState.status === "loading") {
+    return renderAiDraftsLoading();
+  }
+
+  if (aiDraftApiState.status === "empty") {
+    return renderAiDraftsEmpty();
+  }
+
+  const statusNotice =
+    aiDraftApiState.status === "error"
+      ? renderDataStatus("error", "AI inquiry analyses API unavailable", `${aiDraftApiState.error} Showing Preview fallback / local preview data only.`)
+      : renderDataStatus("success", "AI inquiry analysis drafts loaded", `Source: ${aiDraftApiState.source}. Read-only draft list. No send, quote or PI action is connected.`);
+
   return `
-    ${renderTable([
-      ["Inquiry", "Detected Line", "Missing Info", "Risk", "Status"],
-      ["Hotel facade package", businessBadge("A_ARCHITECTURAL"), "Glass spec, area, port", badge("Medium", "risk"), badge("Approval Required", "approval")],
-      ["CNC connector drawing", businessBadge("B_INDUSTRIAL"), "Tolerance, finish, quantity", badge("Low", "active"), badge("Draft", "draft")],
-      ["Aluminum profile inquiry", businessBadge("UNKNOWN"), "Application, drawing, quantity", badge("Manual route", "pending"), badge("Approval Required", "approval")],
-    ])}
-    <div class="form-card">
-      <h3>AI Draft Review Area</h3>
-      <p>Suggested replies are internal draft text only. They are not sent by this UI.</p>
-      <div class="draft-box">
-        Thank you for your inquiry. To prepare a review-ready quotation draft, please confirm drawings, quantity, material, surface finish and destination port.
-      </div>
-      <div class="form-actions">
-        <button class="button secondary" type="button">Copy Draft</button>
-        <button class="button primary" type="button">Mark Reviewed</button>
-      </div>
-    </div>
+    ${statusNotice}
+    ${renderAiDraftTable(aiDraftApiState.drafts, aiDraftApiState.source)}
+    ${renderReadOnlyAiDraftCard()}
   `;
 }
 
 function renderAiDraftReview() {
   return renderReviewDetails({
-    title: "AI Safety Review",
-    badges: [badge("Draft", "draft"), badge("Approval Required", "approval")],
+    title: "AI Draft API Status",
+    badges: [badge("Read-only", "active"), badge("Draft only", "draft"), badge("Approval Required", "approval")],
     rows: [
-      ["Draft status", "Internal only"],
-      ["Suggested reply", "Not sent"],
-      ["Price / lead time", "Not confirmed"],
+      ["API route", "GET /api/ai-inquiry-analyses"],
+      ["Record count", String(aiDraftApiState.drafts.length)],
+      ["Write actions", "Not connected"],
     ],
-    draft: "This area is for review. It must not send customer messages, official quotations, PI, payment terms, bank details, delivery time or production feasibility confirmations.",
+    draft: "AI inquiry analyses are read-only drafts in Step 2C-4. Suggested replies are not sent. This page does not confirm price, delivery time, payment terms, bank account, production feasibility, quotation or PI.",
   });
+}
+
+function renderAiDraftsLoading() {
+  return `
+    ${renderDataStatus("loading", "Loading AI inquiry analysis drafts", "Requesting GET /api/ai-inquiry-analyses with the current admin session when available.")}
+    <div class="table-wrap table-skeleton" aria-label="Loading AI draft rows">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  `;
+}
+
+function renderAiDraftsEmpty() {
+  return `
+    ${renderDataStatus("empty", "No AI inquiry analysis drafts found", "The API returned an empty list. No record is created by this page.")}
+    ${renderReadOnlyAiDraftCard()}
+  `;
+}
+
+function renderAiDraftTable(drafts, source) {
+  const rows = [
+    ["Detected Line", "Missing Info", "Risk Flags", "Approval", "Suggested Reply Draft", "Status / Source"],
+    ...drafts.map((draft) => [
+      businessBadge(draft.detected_business_line),
+      escapeHtml(formatList(draft.missing_information)),
+      escapeHtml(formatList(draft.risk_flags)),
+      draft.approval_required === false ? badge("Approval forced by API", "approval") : badge("Approval Required", "approval"),
+      escapeHtml(draft.suggested_reply || "No suggested reply draft"),
+      `${badge(source === "api" ? "API" : "Preview fallback", source === "api" ? "active" : "pending")} ${badge("Draft only", "draft")} ${badge("Not sent", "pending")}`,
+    ]),
+  ];
+  return renderTable(rows, {
+    firstColumnSubtitle: (draft) => draft.created_at || draft.id || "Read-only AI draft record",
+    bodyData: drafts,
+  });
+}
+
+function renderReadOnlyAiDraftCard() {
+  return `
+    <div class="form-card read-only-card">
+      <h3>AI Draft Safety Review</h3>
+      <p>Suggested replies are internal draft text only. This page does not send or approve any customer-facing action.</p>
+      <div class="form-grid">
+        <label class="field">
+          <span>Draft status</span>
+          <input type="text" value="Draft only / not sent" readonly />
+          <small>No email, WhatsApp or customer message is sent.</small>
+        </label>
+        <label class="field">
+          <span>Approval rule</span>
+          <input type="text" value="Manual approval required" readonly />
+          <small>No quotation, PI, price, delivery, payment or bank information is confirmed.</small>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+async function loadAiDraftsReadOnly() {
+  aiDraftApiState.status = "loading";
+  aiDraftApiState.error = "";
+  aiDraftApiState.source = "api";
+  refreshAiDraftsView();
+
+  try {
+    const token = getAdminAccessToken();
+    const response = await fetch("/api/ai-inquiry-analyses", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `GET /api/ai-inquiry-analyses failed with ${response.status}`);
+    }
+    const drafts = Array.isArray(payload.ai_inquiry_analyses) ? payload.ai_inquiry_analyses : [];
+    aiDraftApiState.status = drafts.length ? "loaded" : "empty";
+    aiDraftApiState.drafts = drafts.map((draft) => ({ ...draft, approval_required: true }));
+    aiDraftApiState.source = "api";
+  } catch (error) {
+    aiDraftApiState.status = "error";
+    aiDraftApiState.error = error.message || "Unknown API error";
+    aiDraftApiState.drafts = aiDraftPreviewFallback.map((draft) => ({ ...draft, approval_required: true }));
+    aiDraftApiState.source = "Preview fallback / local preview data";
+  }
+
+  refreshAiDraftsView();
+}
+
+function refreshAiDraftsView() {
+  if (activeSectionId !== "ai-drafts") return;
+  mainContent.innerHTML = renderAiDrafts();
+  reviewPanel.innerHTML = renderAiDraftReview();
+}
+
+function formatList(value) {
+  if (Array.isArray(value)) return value.length ? value.join(", ") : "None";
+  if (value && typeof value === "object") return Object.entries(value).map(([key, item]) => `${key}: ${item}`).join(", ");
+  return value || "None";
 }
 
 function renderComingSoon(sectionId) {

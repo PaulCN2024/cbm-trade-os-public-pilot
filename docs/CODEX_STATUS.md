@@ -603,3 +603,77 @@ Results:
 ## Recommended Step 2C-4
 
 After Step 2C-3 review, connect AI Inquiry Analysis Drafts as a read-only draft review list with approval-required safety boundaries.
+
+## Step 2C-4 Purpose
+
+Step 2C-4 connects only the AI Inquiry Analysis Drafts section of the approved Admin UI foundation to the existing Step 2A AI Inquiry Analyses API as a read-only draft review list.
+
+This is a narrow read-only integration step. Suggested replies remain draft-only and are not sent.
+
+## Step 2C-4 Changed Files
+
+- `admin/ui-foundation/index.html`
+- `admin/ui-foundation/app.js`
+- `docs/CODEX_STATUS.md`
+
+## Step 2C-4 API Integration
+
+Connected route:
+
+- `GET /api/ai-inquiry-analyses`
+
+Behavior:
+
+- AI Drafts page shows loading state while requesting data.
+- AI Drafts page renders API records when available.
+- Empty API response shows an empty state.
+- API failure or missing admin token shows an error state and clearly marked Preview fallback / local preview data.
+- All displayed records are treated as `approval_required: true`.
+- Suggested replies are displayed as draft text only.
+- No create, update, delete, send, quotation or PI action is connected.
+
+Other sections remain static/mock or unchanged:
+
+- Dashboard remains static.
+- Companies remains read-only API list from Step 2C-1.
+- Products remains read-only API list from Step 2C-2.
+- Manufacturing Capabilities remains read-only API list from Step 2C-3.
+- Future modules remain coming soon.
+
+## Step 2C-4 Boundaries
+
+Confirmed not implemented:
+
+- no new API routes
+- no API writes from Admin UI foundation
+- no full CRUD
+- no database schema change
+- no public website change
+- no Command Center change
+- no Document Center change
+- no UI Lab change
+- no quotations, orders, production or shipping workflow
+- no OpenAI integration
+- no email or WhatsApp sending
+- no PI generation
+- no formal quotation sending
+- no automatic business commitments
+- no price, delivery time, payment term, bank account or production feasibility confirmation
+
+## Step 2C-4 Verification
+
+Commands:
+
+```bash
+npm test
+npm run build
+```
+
+Results:
+
+- `npm test`: passed, 178 tests passed.
+- `npm run build`: passed.
+
+## Recommended Step 2D
+
+After Step 2C-4 review, consider a small admin UI navigation and state consolidation pass before adding any write workflows.
