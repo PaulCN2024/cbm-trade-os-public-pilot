@@ -141,17 +141,78 @@ Actual result:
 
 ## Step 2A Status
 
-Step 2A has not started yet.
+Step 2A API-only foundation is completed locally.
 
-Next planned scope:
+Step 1 baseline commit:
 
-- API-only foundation for:
-  - `companies`
-  - `products`
-  - `manufacturing_capabilities`
-  - `ai_inquiry_analyses`
+- `e3015e0 chore: accept crm mvp step 1 baseline`
 
-Step 2A should not add UI pages unless explicitly approved.
+## Step 2A Changed Files
+
+- `api/companies.js`
+- `api/products.js`
+- `api/manufacturing-capabilities.js`
+- `api/ai-inquiry-analyses.js`
+- `lib/api-validation.js`
+- `tests/step2a-api.test.js`
+- `package.json`
+- `docs/CODEX_STATUS.md`
+
+## Step 2A API Routes Added
+
+API-only foundation routes:
+
+- `api/companies.js`
+- `api/products.js`
+- `api/manufacturing-capabilities.js`
+- `api/ai-inquiry-analyses.js`
+
+Supported safe methods:
+
+- `GET` list
+- `GET ?id=...` by id
+- `POST` create
+- `PATCH` / `PUT` update
+
+Not included:
+
+- no soft delete
+- no archive action
+- no `archived_at`, `deleted_at`, `is_archived`, or `is_deleted` schema changes
+- no UI pages
+
+## Step 2A Validation Summary
+
+API input validation helper:
+
+- `lib/api-validation.js`
+
+Allowed `business_line` values at the API layer:
+
+- `A_ARCHITECTURAL`
+- `B_INDUSTRIAL`
+- `UNKNOWN`
+
+Invalid `business_line` values return validation errors.
+
+Default behavior:
+
+- `products.business_line` defaults to `UNKNOWN` on create if missing.
+- `manufacturing_capabilities.capability_line` defaults to `UNKNOWN` on create if missing.
+- `ai_inquiry_analyses.detected_business_line` defaults to `UNKNOWN` on create if missing.
+- Partial updates do not overwrite existing business line values when omitted.
+
+## Step 2A AI Draft Safety Summary
+
+`ai_inquiry_analyses` remains draft-only.
+
+On create and update:
+
+- `approval_required` is forced to `true`.
+- API clients cannot set `approval_required` to `false`.
+- `suggested_reply` is stored only as draft text.
+- No send action exists.
+- Automatic sending or business commitments are not implemented.
 
 ## Explicitly Not Implemented Yet
 
@@ -169,6 +230,7 @@ The following are intentionally not implemented in the mainline baseline:
 - PI generation
 - formal quotation sending
 - automatic business commitments
+- soft delete/archive for Step 2A foundation objects
 
 ## AI Safety Boundaries
 
@@ -211,15 +273,26 @@ These workstreams are not part of the current mainline baseline:
 - agent prompt library docs
 - UI Lab review ZIP artifact
 
+## Latest Verification
+
+Commands:
+
+```bash
+npm test
+npm run build
+```
+
+Results:
+
+- `npm test`: passed, 178 tests passed.
+- `npm run build`: passed.
+
 ## Recommended Next Step
 
-After confirming this cleaned baseline, proceed to Phase 2A API-only foundation.
+Proceed to Step 2B only after review.
 
-Recommended Phase 2A order:
+Recommended Step 2B:
 
-1. Add business-line validation helper for API input.
-2. Add `api/companies.js`.
-3. Add `api/products.js`.
-4. Add `api/manufacturing-capabilities.js`.
-5. Add `api/ai-inquiry-analyses.js` with draft-only `approval_required = true`.
-6. Add tests for API validation, draft-only analysis saving, and no automatic sending behavior.
+Create or approve a clean B2B SaaS-style admin UI pattern before connecting it to the Step 2A API routes.
+
+Do not add UI pages until Step 2B is explicitly approved.
