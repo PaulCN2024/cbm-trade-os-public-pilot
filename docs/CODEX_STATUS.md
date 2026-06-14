@@ -460,3 +460,73 @@ Results:
 ## Recommended Step 2C-2
 
 After Step 2C-1 review, connect Products as a read-only list using the same API adapter pattern.
+
+## Step 2C-2 Purpose
+
+Step 2C-2 connects only the Products section of the approved Admin UI foundation to the existing Step 2A Products API as a read-only list.
+
+This is another narrow read-only integration step.
+
+## Step 2C-2 Changed Files
+
+- `admin/ui-foundation/app.js`
+- `docs/CODEX_STATUS.md`
+
+## Step 2C-2 API Integration
+
+Connected route:
+
+- `GET /api/products`
+
+Behavior:
+
+- Products page shows loading state while requesting data.
+- Products page renders API records when available.
+- Empty API response shows an empty state.
+- API failure or missing admin token shows an error state and clearly marked Preview fallback / local preview data.
+- No create, update or delete action is connected.
+
+Other sections remain static/mock or unchanged:
+
+- Dashboard remains static.
+- Companies remains read-only API list from Step 2C-1.
+- Manufacturing capabilities remain static/not connected.
+- AI inquiry analysis draft review remains static/mock.
+- Future modules remain coming soon.
+
+## Step 2C-2 Boundaries
+
+Confirmed not implemented:
+
+- no new API routes
+- no API writes from Admin UI foundation
+- no full CRUD
+- no database schema change
+- no public website change
+- no Command Center change
+- no Document Center change
+- no UI Lab change
+- no quotations, orders, production or shipping workflow
+- no OpenAI integration
+- no email or WhatsApp sending
+- no PI generation
+- no formal quotation sending
+- no automatic business commitments
+
+## Step 2C-2 Verification
+
+Commands:
+
+```bash
+npm test
+npm run build
+```
+
+Results:
+
+- `npm test`: passed, 178 tests passed.
+- `npm run build`: passed.
+
+## Recommended Step 2C-3
+
+After Step 2C-2 review, connect Manufacturing Capabilities as a read-only list using the same API adapter pattern.

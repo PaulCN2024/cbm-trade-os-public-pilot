@@ -35,9 +35,9 @@ const sections = {
   },
   products: {
     title: "Products",
-    description: "Product data pattern with business-line badges and review status.",
-    sectionTitle: "Products Management Sample",
-    sectionHelp: "Designed for architectural and industrial aluminum product data.",
+    description: "Read-only product list connected to the Step 2A products API.",
+    sectionTitle: "Products Management",
+    sectionHelp: "Read-only API list. Create, update and delete are not implemented in Step 2C-2.",
     content: renderProducts,
     review: renderProductReview,
   },
@@ -99,6 +99,43 @@ const companyApiState = {
   source: "not loaded",
 };
 
+const productPreviewFallback = [
+  {
+    name_en: "Aluminum Window System",
+    business_line: "A_ARCHITECTURAL",
+    category: "Windows & Doors",
+    product_family: "Architectural systems",
+    material: "6063-T5 aluminum",
+    surface: "Powder coated",
+    notes: "Preview fallback / local preview data. API is unavailable or admin token is missing.",
+  },
+  {
+    name_en: "CNC Aluminum Bracket",
+    business_line: "B_INDUSTRIAL",
+    category: "CNC Parts",
+    product_family: "Machined components",
+    material: "6061 aluminum",
+    surface: "Anodized",
+    notes: "Preview fallback / local preview data. No API writes are enabled.",
+  },
+  {
+    name_en: "Custom Aluminum Profile",
+    business_line: "UNKNOWN",
+    category: "Extrusion",
+    product_family: "Custom profile",
+    material: "Aluminum alloy",
+    surface: "To be confirmed",
+    notes: "Preview fallback / local preview data. Business application needs review.",
+  },
+];
+
+const productApiState = {
+  status: "idle",
+  products: [],
+  error: "",
+  source: "not loaded",
+};
+
 function badge(label, type = "") {
   return `<span class="badge ${type}">${escapeHtml(label)}</span>`;
 }
@@ -152,6 +189,9 @@ function setSection(sectionId) {
   reviewPanel.innerHTML = config.review(sectionId);
   if (sectionId === "companies") {
     loadCompaniesReadOnly();
+  }
+  if (sectionId === "products") {
+    loadProductsReadOnly();
   }
 }
 
@@ -332,33 +372,130 @@ function refreshCompaniesView() {
 }
 
 function renderProducts() {
+  if (productApiState.status === "idle" || productApiState.status === "loading") {
+    return renderProductsLoading();
+  }
+
+  if (productApiState.status === "empty") {
+    return renderProductsEmpty();
+  }
+
+  const statusNotice =
+    productApiState.status === "error"
+      ? renderDataStatus("error", "Products API unavailable", `${productApiState.error} Showing Preview fallback / local preview data only.`)
+      : renderDataStatus("success", "Products loaded", `Source: ${productApiState.source}. Read-only list. No create, update or delete action is connected.`);
+
   return `
-    ${renderTable([
-      ["Product", "Business Line", "Category", "Status", "Review"],
-      ["Aluminum Window System", businessBadge("A_ARCHITECTURAL"), "Windows & Doors", badge("Active", "active"), "Specs needed"],
-      ["CNC Aluminum Bracket", businessBadge("B_INDUSTRIAL"), "Machined Parts", badge("Draft", "draft"), "Drawing required"],
-      ["Custom Aluminum Profile", businessBadge("UNKNOWN"), "Extrusion", badge("Pending", "pending"), "Application unclear"],
-    ])}
-    ${renderFormCard("Product Form Pattern", [
-      ["Code", "CL5437"],
-      ["English Name", "Custom aluminum profile"],
-      ["Business Line", "UNKNOWN"],
-      ["Process Tags", "extrusion, cutting, anodizing"],
-    ])}
+    ${statusNotice}
+    ${renderProductTable(productApiState.products, productApiState.source)}
+    ${renderReadOnlyProductCard()}
   `;
 }
 
 function renderProductReview() {
   return renderReviewDetails({
-    title: "Product Review",
-    badges: [businessBadge("UNKNOWN"), badge("Needs routing", "pending")],
+    title: "Product API Status",
+    badges: [badge("Read-only", "active"), badge(productApiState.source, productApiState.status === "error" ? "pending" : "draft")],
     rows: [
-      ["Category", "Extrusion"],
-      ["Material", "6063-T5"],
-      ["Surface", "Anodized / Powder coated"],
+      ["API route", "GET /api/products"],
+      ["Record count", String(productApiState.products.length)],
+      ["Write actions", "Not connected"],
     ],
-    draft: "Profile or extrusion records should remain Unknown until the application is clear.",
+    draft: "Products are shown as a read-only list in Step 2C-2. Create, update, delete, quotations, PI and message sending are not implemented.",
   });
+}
+
+function renderProductsLoading() {
+  return `
+    ${renderDataStatus("loading", "Loading products", "Requesting GET /api/products with the current admin session when available.")}
+    <div class="table-wrap table-skeleton" aria-label="Loading product rows">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  `;
+}
+
+function renderProductsEmpty() {
+  return `
+    ${renderDataStatus("empty", "No products found", "The API returned an empty list. No record is created by this page.")}
+    ${renderReadOnlyProductCard()}
+  `;
+}
+
+function renderProductTable(products, source) {
+  const rows = [
+    ["Product Name", "Business Line", "Category", "Product Family", "Material", "Surface", "Status / Notes"],
+    ...products.map((product) => [
+      product.name_en || product.name_cn || product.code || "Unnamed product",
+      businessBadge(product.business_line),
+      escapeHtml(product.category || "Unclassified"),
+      escapeHtml(product.product_family || "Not set"),
+      escapeHtml(product.material || "To be confirmed"),
+      escapeHtml(product.surface || "To be confirmed"),
+      `${badge(source === "api" ? "API" : "Preview fallback", source === "api" ? "active" : "pending")} ${escapeHtml(product.notes || "No notes")}`,
+    ]),
+  ];
+  return renderTable(rows, {
+    firstColumnSubtitle: (product) => product.code || product.id || "Read-only product record",
+    bodyData: products,
+  });
+}
+
+function renderReadOnlyProductCard() {
+  return `
+    <div class="form-card read-only-card">
+      <h3>Product Review Pattern</h3>
+      <p>This card remains a static review pattern. It does not submit data or create records.</p>
+      <div class="form-grid">
+        <label class="field">
+          <span>Allowed action</span>
+          <input type="text" value="Read-only product review" readonly />
+          <small>No create, update or delete API call is connected.</small>
+        </label>
+        <label class="field">
+          <span>Business line</span>
+          <input type="text" value="A_ARCHITECTURAL / B_INDUSTRIAL / UNKNOWN" readonly />
+          <small>Business-line labels are display-only in this step.</small>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+async function loadProductsReadOnly() {
+  productApiState.status = "loading";
+  productApiState.error = "";
+  productApiState.source = "api";
+  refreshProductsView();
+
+  try {
+    const token = getAdminAccessToken();
+    const response = await fetch("/api/products", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `GET /api/products failed with ${response.status}`);
+    }
+    const products = Array.isArray(payload.products) ? payload.products : [];
+    productApiState.status = products.length ? "loaded" : "empty";
+    productApiState.products = products;
+    productApiState.source = "api";
+  } catch (error) {
+    productApiState.status = "error";
+    productApiState.error = error.message || "Unknown API error";
+    productApiState.products = productPreviewFallback;
+    productApiState.source = "Preview fallback / local preview data";
+  }
+
+  refreshProductsView();
+}
+
+function refreshProductsView() {
+  if (activeSectionId !== "products") return;
+  mainContent.innerHTML = renderProducts();
+  reviewPanel.innerHTML = renderProductReview();
 }
 
 function renderAiDrafts() {
