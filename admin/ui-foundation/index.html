@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>CBM Trade OS | Admin UI Foundation</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%232563eb'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-size='18' font-family='Arial' font-weight='700' fill='white'%3ECBM%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/admin/ui-foundation/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Admin navigation">
+        <div class="brand">
+          <span class="brand-mark">CBM</span>
+          <div>
+            <strong>Trade OS</strong>
+            <small>Business Operations</small>
+          </div>
+        </div>
+
+        <nav class="nav-list" id="navList" aria-label="Foundation sections"></nav>
+
+        <div class="sidebar-note">
+          <span>Step 2B</span>
+          <p>Static UI foundation only. APIs and CRUD are not connected.</p>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">AI Foreign Trade Business OS</p>
+            <h1 id="pageTitle">Admin Dashboard</h1>
+            <p id="pageDescription">Clean operating interface foundation for CRM, inquiry and AI draft workflows.</p>
+          </div>
+          <div class="topbar-actions">
+            <span class="mode-pill">Static mock</span>
+            <button class="button secondary" type="button">Export view</button>
+            <button class="button primary" type="button">Add New</button>
+          </div>
+        </header>
+
+        <section class="notice-banner" aria-label="Safety boundary">
+          <strong>Manual review required.</strong>
+          <span>No messages, quotations, PI, prices, delivery times, payment terms or shipment actions are sent or confirmed by this UI foundation.</span>
+        </section>
+
+        <section class="metrics-grid" aria-label="Summary metrics">
+          <article class="metric-card">
+            <span>Total Companies</span>
+            <strong>128</strong>
+            <small>42 active this quarter</small>
+          </article>
+          <article class="metric-card">
+            <span>Open Inquiries</span>
+            <strong>36</strong>
+            <small>12 need missing info</small>
+          </article>
+          <article class="metric-card">
+            <span>AI Drafts</span>
+            <strong>18</strong>
+            <small>All require approval</small>
+          </article>
+          <article class="metric-card">
+            <span>Capabilities</span>
+            <strong>7</strong>
+            <small>Published as review-ready data</small>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel main-panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="sectionTitle">Dashboard Overview</h2>
+                <p id="sectionHelp">A reusable page structure for future admin modules.</p>
+              </div>
+              <div class="panel-actions">
+                <button class="button secondary" type="button">Filter</button>
+                <button class="button primary" type="button">Create Draft</button>
+              </div>
+            </div>
+            <div id="mainContent"></div>
+          </article>
+
+          <aside class="panel review-panel">
+            <div class="panel-header compact">
+              <div>
+                <h2 id="reviewTitle">Review Panel</h2>
+                <p>Summary, metadata and AI draft safety checks.</p>
+              </div>
+            </div>
+            <div id="reviewPanel"></div>
+          </aside>
+        </section>
+
+        <section class="state-grid" aria-label="Reusable interface states">
+          <article class="state-card">
+            <span class="state-label">Empty state</span>
+            <h3>No records yet</h3>
+            <p>Create a draft record after the business requirement is confirmed.</p>
+          </article>
+          <article class="state-card loading">
+            <span class="state-label">Loading state</span>
+            <h3>Loading records</h3>
+            <p>Use calm skeleton rows instead of jumping layouts.</p>
+          </article>
+          <article class="state-card error">
+            <span class="state-label">Error state</span>
+            <h3>Unable to load</h3>
+            <p>Show a clear reason and keep all actions safe.</p>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="/admin/ui-foundation/app.js"></script>
+  </body>
+</html>
