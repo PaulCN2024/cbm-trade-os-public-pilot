@@ -6,6 +6,7 @@ const navItems = [
   { id: "companies", label: "Companies" },
   { id: "inquiries", label: "Inquiries", soon: true },
   { id: "products", label: "Products" },
+  { id: "manufacturing-capabilities", label: "Capabilities" },
   { id: "suppliers", label: "Suppliers", soon: true },
   { id: "ai-drafts", label: "AI Drafts" },
   { id: "quotations", label: "Quotations", soon: true },
@@ -40,6 +41,14 @@ const sections = {
     sectionHelp: "Read-only API list. Create, update and delete are not implemented in Step 2C-2.",
     content: renderProducts,
     review: renderProductReview,
+  },
+  "manufacturing-capabilities": {
+    title: "Manufacturing Capabilities",
+    description: "Read-only capability list connected to the Step 2A manufacturing capabilities API.",
+    sectionTitle: "Manufacturing Capabilities",
+    sectionHelp: "Read-only API list. Create, update and delete are not implemented in Step 2C-3.",
+    content: renderManufacturingCapabilities,
+    review: renderManufacturingCapabilityReview,
   },
   "ai-drafts": {
     title: "AI Drafts",
@@ -136,6 +145,43 @@ const productApiState = {
   source: "not loaded",
 };
 
+const capabilityPreviewFallback = [
+  {
+    capability_line: "B_INDUSTRIAL",
+    equipment: "CNC machining centers",
+    quantity: 16,
+    max_length: "To be confirmed",
+    monthly_capacity: "Project-based capacity",
+    public_description: "Preview fallback / local preview data. CNC machining capability for aluminum parts and components.",
+    internal_notes: "Admin preview only. API is unavailable or admin token is missing.",
+  },
+  {
+    capability_line: "A_ARCHITECTURAL",
+    equipment: "Aluminum extrusion lines",
+    quantity: 2,
+    max_length: "Up to project requirement",
+    monthly_capacity: "Around 400 tons",
+    public_description: "Preview fallback / local preview data. Extrusion support for project aluminum profiles.",
+    internal_notes: "Admin preview only. No API writes are enabled.",
+  },
+  {
+    capability_line: "UNKNOWN",
+    equipment: "Surface finishing support",
+    quantity: null,
+    max_length: "Anodizing up to 7.5m / powder coating up to 7m",
+    monthly_capacity: "To be reviewed",
+    public_description: "Preview fallback / local preview data. Surface finish support depends on drawing and color requirement.",
+    internal_notes: "Admin preview only. Capability line needs business review.",
+  },
+];
+
+const capabilityApiState = {
+  status: "idle",
+  capabilities: [],
+  error: "",
+  source: "not loaded",
+};
+
 function badge(label, type = "") {
   return `<span class="badge ${type}">${escapeHtml(label)}</span>`;
 }
@@ -192,6 +238,9 @@ function setSection(sectionId) {
   }
   if (sectionId === "products") {
     loadProductsReadOnly();
+  }
+  if (sectionId === "manufacturing-capabilities") {
+    loadManufacturingCapabilitiesReadOnly();
   }
 }
 
@@ -496,6 +545,133 @@ function refreshProductsView() {
   if (activeSectionId !== "products") return;
   mainContent.innerHTML = renderProducts();
   reviewPanel.innerHTML = renderProductReview();
+}
+
+function renderManufacturingCapabilities() {
+  if (capabilityApiState.status === "idle" || capabilityApiState.status === "loading") {
+    return renderManufacturingCapabilitiesLoading();
+  }
+
+  if (capabilityApiState.status === "empty") {
+    return renderManufacturingCapabilitiesEmpty();
+  }
+
+  const statusNotice =
+    capabilityApiState.status === "error"
+      ? renderDataStatus("error", "Manufacturing capabilities API unavailable", `${capabilityApiState.error} Showing Preview fallback / local preview data only.`)
+      : renderDataStatus("success", "Manufacturing capabilities loaded", `Source: ${capabilityApiState.source}. Read-only list. No create, update or delete action is connected.`);
+
+  return `
+    ${statusNotice}
+    ${renderManufacturingCapabilityTable(capabilityApiState.capabilities, capabilityApiState.source)}
+    ${renderReadOnlyCapabilityCard()}
+  `;
+}
+
+function renderManufacturingCapabilityReview() {
+  return renderReviewDetails({
+    title: "Capability API Status",
+    badges: [badge("Read-only", "active"), badge(capabilityApiState.source, capabilityApiState.status === "error" ? "pending" : "draft")],
+    rows: [
+      ["API route", "GET /api/manufacturing-capabilities"],
+      ["Record count", String(capabilityApiState.capabilities.length)],
+      ["Write actions", "Not connected"],
+    ],
+    draft: "Manufacturing capabilities are shown as a read-only admin list in Step 2C-3. This page does not confirm production feasibility, quotation, delivery time or supplier commitments.",
+  });
+}
+
+function renderManufacturingCapabilitiesLoading() {
+  return `
+    ${renderDataStatus("loading", "Loading manufacturing capabilities", "Requesting GET /api/manufacturing-capabilities with the current admin session when available.")}
+    <div class="table-wrap table-skeleton" aria-label="Loading manufacturing capability rows">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  `;
+}
+
+function renderManufacturingCapabilitiesEmpty() {
+  return `
+    ${renderDataStatus("empty", "No manufacturing capabilities found", "The API returned an empty list. No record is created by this page.")}
+    ${renderReadOnlyCapabilityCard()}
+  `;
+}
+
+function renderManufacturingCapabilityTable(capabilities, source) {
+  const rows = [
+    ["Capability Line", "Equipment", "Quantity", "Max Length", "Monthly Capacity", "Public Description", "Status / Notes"],
+    ...capabilities.map((capability) => [
+      businessBadge(capability.capability_line),
+      capability.equipment || "Unnamed equipment",
+      escapeHtml(capability.quantity ?? "Not set"),
+      escapeHtml(capability.max_length || "To be confirmed"),
+      escapeHtml(capability.monthly_capacity || "To be confirmed"),
+      escapeHtml(capability.public_description || "No public description"),
+      `${badge(source === "api" ? "API" : "Preview fallback", source === "api" ? "active" : "pending")} ${escapeHtml(capability.internal_notes || "No internal notes")}`,
+    ]),
+  ];
+  return renderTable(rows, {
+    firstColumnSubtitle: (capability) => capability.id || "Read-only capability record",
+    bodyData: capabilities,
+  });
+}
+
+function renderReadOnlyCapabilityCard() {
+  return `
+    <div class="form-card read-only-card">
+      <h3>Capability Review Pattern</h3>
+      <p>This card remains a static review pattern. It does not submit data or create capability records.</p>
+      <div class="form-grid">
+        <label class="field">
+          <span>Allowed action</span>
+          <input type="text" value="Read-only capability review" readonly />
+          <small>No create, update or delete API call is connected.</small>
+        </label>
+        <label class="field">
+          <span>Safety boundary</span>
+          <input type="text" value="No production or delivery commitment" readonly />
+          <small>Capability display does not confirm feasibility, price or delivery time.</small>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+async function loadManufacturingCapabilitiesReadOnly() {
+  capabilityApiState.status = "loading";
+  capabilityApiState.error = "";
+  capabilityApiState.source = "api";
+  refreshManufacturingCapabilitiesView();
+
+  try {
+    const token = getAdminAccessToken();
+    const response = await fetch("/api/manufacturing-capabilities", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `GET /api/manufacturing-capabilities failed with ${response.status}`);
+    }
+    const capabilities = Array.isArray(payload.manufacturing_capabilities) ? payload.manufacturing_capabilities : [];
+    capabilityApiState.status = capabilities.length ? "loaded" : "empty";
+    capabilityApiState.capabilities = capabilities;
+    capabilityApiState.source = "api";
+  } catch (error) {
+    capabilityApiState.status = "error";
+    capabilityApiState.error = error.message || "Unknown API error";
+    capabilityApiState.capabilities = capabilityPreviewFallback;
+    capabilityApiState.source = "Preview fallback / local preview data";
+  }
+
+  refreshManufacturingCapabilitiesView();
+}
+
+function refreshManufacturingCapabilitiesView() {
+  if (activeSectionId !== "manufacturing-capabilities") return;
+  mainContent.innerHTML = renderManufacturingCapabilities();
+  reviewPanel.innerHTML = renderManufacturingCapabilityReview();
 }
 
 function renderAiDrafts() {
