@@ -80,24 +80,28 @@ const reviewPanel = document.querySelector("#reviewPanel");
 
 let activeSectionId = "dashboard";
 
+const fallbackLabel = "Preview fallback / local preview data - not live Supabase data";
+const apiUnavailableMessage =
+  "Real API data is unavailable. You may not be logged in, the API may not be deployed, or this is local preview mode.";
+
 const companyPreviewFallback = [
   {
     company_name: "Panama Project Buyer",
     country: "Panama",
     business_type: "Project contractor",
-    notes: "Local preview fallback. API is unavailable or admin token is missing.",
+    notes: `${fallbackLabel}. API is unavailable or admin token is missing.`,
   },
   {
     company_name: "ABC Industries Ltd.",
     country: "United States",
     business_type: "Industrial buyer",
-    notes: "Local preview fallback. No API writes are enabled.",
+    notes: `${fallbackLabel}. No API writes are enabled.`,
   },
   {
     company_name: "Blue Horizon SA",
     country: "Brazil",
     business_type: "Facade distributor",
-    notes: "Local preview fallback for visual review only.",
+    notes: `${fallbackLabel}. Visual review only.`,
   },
 ];
 
@@ -111,7 +115,7 @@ const productPreviewFallback = [
     product_family: "Architectural systems",
     material: "6063-T5 aluminum",
     surface: "Powder coated",
-    notes: "Preview fallback / local preview data. API is unavailable or admin token is missing.",
+    notes: `${fallbackLabel}. API is unavailable or admin token is missing.`,
   },
   {
     name_en: "CNC Aluminum Bracket",
@@ -120,7 +124,7 @@ const productPreviewFallback = [
     product_family: "Machined components",
     material: "6061 aluminum",
     surface: "Anodized",
-    notes: "Preview fallback / local preview data. No API writes are enabled.",
+    notes: `${fallbackLabel}. No API writes are enabled.`,
   },
   {
     name_en: "Custom Aluminum Profile",
@@ -129,7 +133,7 @@ const productPreviewFallback = [
     product_family: "Custom profile",
     material: "Aluminum alloy",
     surface: "To be confirmed",
-    notes: "Preview fallback / local preview data. Business application needs review.",
+    notes: `${fallbackLabel}. Business application needs review.`,
   },
 ];
 
@@ -142,7 +146,7 @@ const capabilityPreviewFallback = [
     quantity: 16,
     max_length: "To be confirmed",
     monthly_capacity: "Project-based capacity",
-    public_description: "Preview fallback / local preview data. CNC machining capability for aluminum parts and components.",
+    public_description: `${fallbackLabel}. CNC machining capability for aluminum parts and components.`,
     internal_notes: "Admin preview only. API is unavailable or admin token is missing.",
   },
   {
@@ -151,7 +155,7 @@ const capabilityPreviewFallback = [
     quantity: 2,
     max_length: "Up to project requirement",
     monthly_capacity: "Around 400 tons",
-    public_description: "Preview fallback / local preview data. Extrusion support for project aluminum profiles.",
+    public_description: `${fallbackLabel}. Extrusion support for project aluminum profiles.`,
     internal_notes: "Admin preview only. No API writes are enabled.",
   },
   {
@@ -160,7 +164,7 @@ const capabilityPreviewFallback = [
     quantity: null,
     max_length: "Anodizing up to 7.5m / powder coating up to 7m",
     monthly_capacity: "To be reviewed",
-    public_description: "Preview fallback / local preview data. Surface finish support depends on drawing and color requirement.",
+    public_description: `${fallbackLabel}. Surface finish support depends on drawing and color requirement.`,
     internal_notes: "Admin preview only. Capability line needs business review.",
   },
 ];
@@ -174,7 +178,7 @@ const aiDraftPreviewFallback = [
     missing_information: ["glass specification", "drawing package", "aluminum color"],
     risk_flags: ["manual quotation review required"],
     suggested_reply:
-      "Preview fallback / local preview data. Thank you for your inquiry. Please share drawings, glass specification, aluminum color, quantity and destination port for manual review.",
+      `${fallbackLabel}. Thank you for your inquiry. Please share drawings, glass specification, aluminum color, quantity and destination port for manual review.`,
     approval_required: true,
     created_at: "local preview",
   },
@@ -184,7 +188,7 @@ const aiDraftPreviewFallback = [
     missing_information: ["drawing file", "tolerance", "surface finish", "quantity"],
     risk_flags: ["draft only", "do not confirm production feasibility"],
     suggested_reply:
-      "Preview fallback / local preview data. Please send drawing files, tolerance, finish and quantity. Our team will review before any quotation.",
+      `${fallbackLabel}. Please send drawing files, tolerance, finish and quantity. Our team will review before any quotation.`,
     approval_required: true,
     created_at: "local preview",
   },
@@ -194,7 +198,7 @@ const aiDraftPreviewFallback = [
     missing_information: ["application", "drawing", "quantity"],
     risk_flags: ["business line needs manual routing"],
     suggested_reply:
-      "Preview fallback / local preview data. Please confirm the application and drawing details so we can route the inquiry correctly.",
+      `${fallbackLabel}. Please confirm the application and drawing details so we can route the inquiry correctly.`,
     approval_required: true,
     created_at: "local preview",
   },
@@ -320,7 +324,7 @@ function renderCompanies() {
 
   const statusNotice =
     companyApiState.status === "error"
-      ? renderDataStatus("error", "Companies API unavailable", `${companyApiState.error} Showing local preview fallback only.`)
+      ? renderDataStatus("error", "Companies API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${companyApiState.error}`)
       : renderDataStatus("success", "Companies loaded", `Source: ${companyApiState.source}. Read-only list. No create, update or delete action is connected.`);
 
   return `
@@ -356,7 +360,7 @@ function renderCompaniesLoading() {
 
 function renderCompaniesEmpty() {
   return `
-    ${renderDataStatus("empty", "No companies found", "The API returned an empty list. No record is created by this page.")}
+    ${renderDataStatus("empty", "No live companies found", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
     ${renderReadOnlyCompanyCard()}
   `;
 }
@@ -368,7 +372,7 @@ function renderCompanyTable(companies, source) {
       company.company_name || "Unnamed company",
       escapeHtml(company.country || "Unknown"),
       escapeHtml(company.business_type || "Not classified"),
-      badge(source === "api" ? "API" : "Preview fallback", source === "api" ? "active" : "pending"),
+      badge(source === "api" ? "API" : fallbackLabel, source === "api" ? "active" : "pending"),
       escapeHtml(company.notes || "No notes"),
     ]),
   ];
@@ -453,7 +457,7 @@ function loadCompaniesReadOnly() {
     endpoint: "/api/companies",
     payloadKey: "companies",
     fallbackRecords: companyPreviewFallback,
-    fallbackSource: "local preview fallback",
+    fallbackSource: fallbackLabel,
     refresh: refreshCompaniesView,
   });
 }
@@ -475,7 +479,7 @@ function renderProducts() {
 
   const statusNotice =
     productApiState.status === "error"
-      ? renderDataStatus("error", "Products API unavailable", `${productApiState.error} Showing Preview fallback / local preview data only.`)
+      ? renderDataStatus("error", "Products API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${productApiState.error}`)
       : renderDataStatus("success", "Products loaded", `Source: ${productApiState.source}. Read-only list. No create, update or delete action is connected.`);
 
   return `
@@ -511,7 +515,7 @@ function renderProductsLoading() {
 
 function renderProductsEmpty() {
   return `
-    ${renderDataStatus("empty", "No products found", "The API returned an empty list. No record is created by this page.")}
+    ${renderDataStatus("empty", "No live products found", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
     ${renderReadOnlyProductCard()}
   `;
 }
@@ -526,7 +530,7 @@ function renderProductTable(products, source) {
       escapeHtml(product.product_family || "Not set"),
       escapeHtml(product.material || "To be confirmed"),
       escapeHtml(product.surface || "To be confirmed"),
-      `${badge(source === "api" ? "API" : "Preview fallback", source === "api" ? "active" : "pending")} ${escapeHtml(product.notes || "No notes")}`,
+      `${badge(source === "api" ? "API" : fallbackLabel, source === "api" ? "active" : "pending")} ${escapeHtml(product.notes || "No notes")}`,
     ]),
   ];
   return renderTable(rows, {
@@ -563,7 +567,7 @@ function loadProductsReadOnly() {
     endpoint: "/api/products",
     payloadKey: "products",
     fallbackRecords: productPreviewFallback,
-    fallbackSource: "Preview fallback / local preview data",
+    fallbackSource: fallbackLabel,
     refresh: refreshProductsView,
   });
 }
@@ -585,7 +589,7 @@ function renderManufacturingCapabilities() {
 
   const statusNotice =
     capabilityApiState.status === "error"
-      ? renderDataStatus("error", "Manufacturing capabilities API unavailable", `${capabilityApiState.error} Showing Preview fallback / local preview data only.`)
+      ? renderDataStatus("error", "Manufacturing capabilities API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${capabilityApiState.error}`)
       : renderDataStatus("success", "Manufacturing capabilities loaded", `Source: ${capabilityApiState.source}. Read-only list. No create, update or delete action is connected.`);
 
   return `
@@ -621,7 +625,7 @@ function renderManufacturingCapabilitiesLoading() {
 
 function renderManufacturingCapabilitiesEmpty() {
   return `
-    ${renderDataStatus("empty", "No manufacturing capabilities found", "The API returned an empty list. No record is created by this page.")}
+    ${renderDataStatus("empty", "No live manufacturing capabilities found", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
     ${renderReadOnlyCapabilityCard()}
   `;
 }
@@ -636,12 +640,13 @@ function renderManufacturingCapabilityTable(capabilities, source) {
       escapeHtml(capability.max_length || "To be confirmed"),
       escapeHtml(capability.monthly_capacity || "To be confirmed"),
       escapeHtml(capability.public_description || "No public description"),
-      `${badge(source === "api" ? "API" : "Preview fallback", source === "api" ? "active" : "pending")} ${escapeHtml(capability.internal_notes || "No internal notes")}`,
+      `${badge(source === "api" ? "API" : fallbackLabel, source === "api" ? "active" : "pending")} ${escapeHtml(capability.internal_notes || "No internal notes")}`,
     ]),
   ];
   return renderTable(rows, {
     firstColumnSubtitle: (capability) => capability.id || "Read-only capability record",
     bodyData: capabilities,
+    firstColumnHtml: true,
   });
 }
 
@@ -673,7 +678,7 @@ function loadManufacturingCapabilitiesReadOnly() {
     endpoint: "/api/manufacturing-capabilities",
     payloadKey: "manufacturing_capabilities",
     fallbackRecords: capabilityPreviewFallback,
-    fallbackSource: "Preview fallback / local preview data",
+    fallbackSource: fallbackLabel,
     refresh: refreshManufacturingCapabilitiesView,
   });
 }
@@ -695,7 +700,7 @@ function renderAiDrafts() {
 
   const statusNotice =
     aiDraftApiState.status === "error"
-      ? renderDataStatus("error", "AI inquiry analyses API unavailable", `${aiDraftApiState.error} Showing Preview fallback / local preview data only.`)
+      ? renderDataStatus("error", "AI inquiry analyses API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${aiDraftApiState.error}`)
       : renderDataStatus("success", "AI inquiry analysis drafts loaded", `Source: ${aiDraftApiState.source}. Read-only draft list. No send, quote or PI action is connected.`);
 
   return `
@@ -708,13 +713,13 @@ function renderAiDrafts() {
 function renderAiDraftReview() {
   return renderReviewDetails({
     title: "AI Draft API Status",
-    badges: [badge("Read-only", "active"), badge("Draft only", "draft"), badge("Approval Required", "approval")],
+    badges: [badge("Read-only", "active"), badge("Draft only", "draft"), badge("Approval Required", "approval"), badge("Human review required", "approval"), badge("Not sent", "pending")],
     rows: [
       ["API route", "GET /api/ai-inquiry-analyses"],
       ["Record count", String(aiDraftApiState.drafts.length)],
       ["Write actions", "Not connected"],
     ],
-    draft: "AI inquiry analyses are read-only drafts in Step 2C-4. Suggested replies are not sent. This page does not confirm price, delivery time, payment terms, bank account, production feasibility, quotation or PI.",
+    draft: "AI inquiry analyses are read-only drafts in Step 2C-4. Suggested replies are draft text only and are not sent. Human review is required. This page does not confirm price, delivery time, payment terms, bank account, production feasibility, quotation or PI.",
   });
 }
 
@@ -731,7 +736,7 @@ function renderAiDraftsLoading() {
 
 function renderAiDraftsEmpty() {
   return `
-    ${renderDataStatus("empty", "No AI inquiry analysis drafts found", "The API returned an empty list. No record is created by this page.")}
+    ${renderDataStatus("empty", "No live AI inquiry analysis drafts found", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
     ${renderReadOnlyAiDraftCard()}
   `;
 }
@@ -745,12 +750,13 @@ function renderAiDraftTable(drafts, source) {
       escapeHtml(formatList(draft.risk_flags)),
       draft.approval_required === false ? badge("Approval forced by API", "approval") : badge("Approval Required", "approval"),
       escapeHtml(draft.suggested_reply || "No suggested reply draft"),
-      `${badge(source === "api" ? "API" : "Preview fallback", source === "api" ? "active" : "pending")} ${badge("Draft only", "draft")} ${badge("Not sent", "pending")}`,
+      `${badge(source === "api" ? "API" : fallbackLabel, source === "api" ? "active" : "pending")} ${badge("Draft only", "draft")} ${badge("Approval Required", "approval")} ${badge("Not sent", "pending")} ${badge("Human review required", "approval")}`,
     ]),
   ];
   return renderTable(rows, {
     firstColumnSubtitle: (draft) => draft.created_at || draft.id || "Read-only AI draft record",
     bodyData: drafts,
+    firstColumnHtml: true,
   });
 }
 
@@ -782,7 +788,7 @@ function loadAiDraftsReadOnly() {
     endpoint: "/api/ai-inquiry-analyses",
     payloadKey: "ai_inquiry_analyses",
     fallbackRecords: aiDraftPreviewFallback,
-    fallbackSource: "Preview fallback / local preview data",
+    fallbackSource: fallbackLabel,
     refresh: refreshAiDraftsView,
     normalize: (drafts) => drafts.map((draft) => ({ ...draft, approval_required: true })),
   });
@@ -840,8 +846,9 @@ function renderTable(rows, options = {}) {
                       const subtitle = options.firstColumnSubtitle
                         ? options.firstColumnSubtitle(sourceRecord)
                         : "Static sample";
+                      const title = options.firstColumnHtml ? cell : escapeHtml(cell);
                       return index === 0
-                        ? `<td><span class="row-title"><strong>${escapeHtml(cell)}</strong><span>${escapeHtml(subtitle)}</span></span></td>`
+                        ? `<td><span class="row-title"><strong>${title}</strong><span>${escapeHtml(subtitle)}</span></span></td>`
                         : `<td>${cell}</td>`;
                     })
                     .join("")}

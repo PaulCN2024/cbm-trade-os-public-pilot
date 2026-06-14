@@ -746,3 +746,79 @@ Results:
 ## Recommended Next Step
 
 After Step 2D review, create a clean Step 2D commit before planning any Step 2E work.
+
+## Step 2E Purpose
+
+Step 2E is a small read-only Admin UI business usability polish pass.
+
+It improves clarity for internal trial users without adding new APIs, write workflows or business automation.
+
+## Step 2E Changed Files
+
+- `admin/ui-foundation/index.html`
+- `admin/ui-foundation/app.js`
+- `admin/ui-foundation/styles.css`
+- `docs/CODEX_STATUS.md`
+
+## Step 2E Polish Summary
+
+Completed polish:
+
+- fixed raw HTML badge display in Manufacturing Capabilities and AI Drafts tables
+- marked top actions as not connected / coming later / mock only
+- kept top actions disabled and unwired
+- standardized fallback wording as `Preview fallback / local preview data - not live Supabase data`
+- replaced business-facing API errors with a friendlier unavailable-data explanation
+- kept technical API error details secondary in the status message
+- strengthened AI Drafts safety wording with Draft only, Approval Required, Not sent and Human review required
+- improved empty state wording to clarify no live data exists, the page is read-only, and write/create support comes later
+
+## Step 2E Boundaries
+
+Confirmed not implemented:
+
+- no new modules
+- no new API connections
+- no API route changes
+- no API writes from Admin UI foundation
+- no create, update or delete actions
+- no approve, reject or send actions
+- no database schema change
+- no public website change
+- no Command Center change
+- no Document Center change
+- no UI Lab change
+- no quotations, orders, production or shipping workflow
+- no OpenAI integration
+- no email or WhatsApp sending
+- no PI generation
+- no formal quotation sending
+- no automatic business commitments
+- no price, delivery time, payment term, bank account or production feasibility confirmation
+
+## Step 2E Verification
+
+Commands:
+
+```bash
+npm test
+npm run build
+```
+
+Results:
+
+- `npm test`: passed, 178 tests passed.
+- `npm run build`: passed.
+
+Browser review:
+
+- Companies, Products, Manufacturing Capabilities and AI Drafts still load as read-only sections.
+- Manufacturing Capabilities and AI Drafts no longer show raw HTML badge text.
+- Top action buttons are disabled and labeled as not connected / coming later / mock only.
+- Fallback data is labeled as `Preview fallback / local preview data - not live Supabase data`.
+- AI Drafts visibly show Draft only, Approval Required, Not sent and Human review required.
+- No console errors were observed during local browser verification.
+
+## Step 2E Trial Recommendation
+
+Ready for limited internal read-only trial.

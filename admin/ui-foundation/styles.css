@@ -291,6 +291,19 @@ p {
   background: var(--surface-muted);
 }
 
+.button:disabled,
+.button.mock-action {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.button.mock-action,
+.button.mock-action:hover {
+  border-color: var(--border);
+  background: var(--surface-muted);
+  color: var(--muted-strong);
+}
+
 .notice-banner {
   display: flex;
   gap: 10px;

@@ -22,8 +22,8 @@
         <nav class="nav-list" id="navList" aria-label="Foundation sections"></nav>
 
         <div class="sidebar-note">
-          <span>Step 2B</span>
-          <p>Step 2C connects Companies, Products, Capabilities and AI Drafts as read-only API lists. Future sections remain static.</p>
+          <span>Step 2E</span>
+          <p>Companies, Products, Capabilities and AI Drafts are read-only. Write actions come in a later approved phase.</p>
         </div>
       </aside>
 
@@ -36,8 +36,8 @@
           </div>
           <div class="topbar-actions">
             <span class="mode-pill">Static mock</span>
-            <button class="button secondary" type="button">Export view</button>
-            <button class="button primary" type="button">Add New</button>
+            <button class="button secondary mock-action" type="button" disabled title="Not connected in this read-only phase">Export view - Not connected</button>
+            <button class="button primary mock-action" type="button" disabled title="Coming in a later approved phase">Add New - Coming later</button>
           </div>
         </header>
 
@@ -78,7 +78,7 @@
               </div>
               <div class="panel-actions">
                 <button class="button secondary" type="button">Filter</button>
-                <button class="button primary" type="button">Create Draft</button>
+                <button class="button primary mock-action" type="button" disabled title="Mock only in this read-only phase">Create Draft - Mock only</button>
               </div>
             </div>
             <div id="mainContent"></div>
@@ -99,7 +99,7 @@
           <article class="state-card">
             <span class="state-label">Empty state</span>
             <h3>No records yet</h3>
-            <p>Create a draft record after the business requirement is confirmed.</p>
+            <p>No live data is currently available. This page is read-only; create support comes later.</p>
           </article>
           <article class="state-card loading">
             <span class="state-label">Loading state</span>
