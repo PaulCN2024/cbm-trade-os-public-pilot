@@ -924,3 +924,34 @@ Behavior preserved:
 - No database schema was changed.
 - No new business module was added.
 - No automatic sending, quotation, PI, price, delivery time, payment term, bank account, order or shipment commitment was added.
+
+## Step 2G Preparation
+
+Date: 2026-06-14
+
+Purpose:
+
+- Prepare safe demo seed data for the production read-only Admin UI trial.
+- Keep the trial focused on live Supabase reads for Companies, Products, Manufacturing Capabilities and AI Inquiry Analysis Drafts.
+
+Changed files:
+
+- `docs/READ_ONLY_TRIAL_SEED_DATA.md`
+- `docs/CODEX_STATUS.md`
+
+Scope:
+
+- Documentation and SQL snippet only.
+- SQL uses non-destructive `INSERT` statements only.
+- Seed records are fake and identifiable with `TEST_` or `DEMO_` labels.
+- No real customer private information is included.
+- No SQL has been executed as part of this documentation update.
+
+Safety:
+
+- No UI write features were added.
+- No create, update or delete UI action was added.
+- No API route was changed.
+- No database schema was changed.
+- No public website, Command Center, Document Center or UI Lab file was changed.
+- No OpenAI, email, WhatsApp, quotation, PI, order, production, shipping, formal quotation or automatic business commitment feature was added.
