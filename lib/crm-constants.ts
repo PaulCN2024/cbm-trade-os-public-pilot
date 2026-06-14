@@ -1,5 +1,8 @@
 export const BusinessLine = {
   ARCHITECTURAL: "A_ARCHITECTURAL",
+  INDUSTRIAL: "B_INDUSTRIAL",
+  UNKNOWN: "UNKNOWN",
+  // Legacy value kept for existing mock CRM data and tests.
   PRECISION: "B_PRECISION",
 } as const;
 
