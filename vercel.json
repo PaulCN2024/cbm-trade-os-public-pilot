@@ -26,6 +26,22 @@
       "dest": "/api/admin-system-check?page=command-center"
     },
     {
+      "src": "^/api/companies$",
+      "dest": "/api/customers?crm_resource=companies"
+    },
+    {
+      "src": "^/api/products$",
+      "dest": "/api/customers?crm_resource=products"
+    },
+    {
+      "src": "^/api/manufacturing-capabilities$",
+      "dest": "/api/customers?crm_resource=manufacturing-capabilities"
+    },
+    {
+      "src": "^/api/ai-inquiry-analyses$",
+      "dest": "/api/customers?crm_resource=ai-inquiry-analyses"
+    },
+    {
       "handle": "filesystem"
     }
   ]

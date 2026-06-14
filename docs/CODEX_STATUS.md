@@ -883,3 +883,44 @@ After the trial, choose:
 - Step 3A for a broader customer CRM read-only foundation
 - Step 3B for the first low-risk manual write flow
 - or hold development until real data is cleaner
+
+## Deployment Compatibility Fix
+
+Date: 2026-06-14
+
+Purpose:
+
+- Make the accepted Step 2 read-only trial deployable on the current Vercel Hobby project.
+- Vercel production deploy failed because the project exceeded the Hobby plan Serverless Function limit.
+
+Changed files:
+
+- `api/customers.js`
+- `vercel.json`
+- `package.json`
+- `docs/CODEX_STATUS.md`
+
+Removed standalone function files after merging their behavior into the existing `api/customers.js` function:
+
+- `api/companies.js`
+- `api/products.js`
+- `api/manufacturing-capabilities.js`
+- `api/ai-inquiry-analyses.js`
+
+Public API paths preserved:
+
+- `GET /api/companies`
+- `GET /api/products`
+- `GET /api/manufacturing-capabilities`
+- `GET /api/ai-inquiry-analyses`
+
+Behavior preserved:
+
+- Companies, Products, Manufacturing Capabilities and AI Inquiry Analyses keep the same API response shapes.
+- Admin UI Foundation still calls the same public paths.
+- AI inquiry analyses remain draft-only.
+- `approval_required` is still forced to `true`.
+- No UI pages were added.
+- No database schema was changed.
+- No new business module was added.
+- No automatic sending, quotation, PI, price, delivery time, payment term, bank account, order or shipment commitment was added.
