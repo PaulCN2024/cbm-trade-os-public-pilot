@@ -28,6 +28,65 @@ Examples:
 - Medium
 - High
 
+# Autopilot
+
+State one:
+
+- Allowed
+- Not Allowed
+
+# Auto-commit
+
+State one:
+
+- Allowed
+- Not Allowed
+
+# Commit Message
+
+Required only when auto-commit is allowed.
+
+Example:
+
+`feat: add small utility`
+
+# Approval Requirement
+
+State whether Codex must wait for approval before editing.
+
+Examples:
+
+- Plan first and wait for approval.
+- Low-risk Autopilot allowed; no approval plan required.
+
+# Autopilot Safety Conditions
+
+Autopilot is allowed only when all are true:
+
+- Risk Level is Low.
+- Action Type is Small code implementation or documentation-only.
+- Allowed files are explicitly listed.
+- Forbidden files are explicitly listed.
+- No schema/API/UI/Supabase/OpenAI/package.json changes are allowed.
+- Codex modifies only allowed files.
+- Codex does not inspect or modify forbidden files.
+- Codex does not scan the whole repository.
+- Codex runs only the test command required by this task card.
+- Codex reports files changed, test result, final git status, and warnings.
+
+Autopilot must never be used for:
+
+- database schema changes
+- migrations
+- API behavior changes
+- UI behavior changes
+- auth/permission changes
+- approval workflow changes
+- OpenAI/AI SDK integration
+- Supabase access
+- email/WhatsApp sending
+- quotation, PI, order, payment, shipment, or production logic
+
 # Allowed Files
 
 Files Codex may create or modify:

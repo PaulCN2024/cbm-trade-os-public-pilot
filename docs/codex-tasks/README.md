@@ -15,6 +15,59 @@ The purpose is to let Codex execute one small, controlled task by reading a sing
 - Codex must keep changes minimal and business-focused.
 - Codex must preserve existing safety boundaries.
 
+## Low-risk Autopilot Mode
+
+For tasks marked:
+
+- Risk Level: Low
+- Action Type: Small code implementation or documentation-only
+- Allowed files are explicitly listed
+- Forbidden files are explicitly listed
+- No schema/API/UI/Supabase/OpenAI/package.json changes are allowed
+
+Codex may execute directly without waiting for an approval plan, if and only if:
+
+1. It reads the task card.
+2. It confirms the task is Low Risk.
+3. It modifies only allowed files.
+4. It does not inspect or modify forbidden files.
+5. It does not scan the whole repository.
+6. It runs only the test command required by the task card.
+7. It reports files changed, test result, final git status, and warnings.
+
+For Low-risk Autopilot tasks, the task card may include:
+
+```text
+Autopilot:
+Allowed
+
+Auto-commit:
+Allowed only if:
+- tests pass
+- only allowed files changed
+- commit message is provided in the task card
+```
+
+For medium-risk or high-risk tasks, Codex must still:
+
+- provide a plan first
+- wait for human approval
+- never auto-commit
+- never modify files outside the task card
+
+Autopilot must never be used for:
+
+- database schema changes
+- migrations
+- API behavior changes
+- UI behavior changes
+- auth/permission changes
+- approval workflow changes
+- OpenAI/AI SDK integration
+- Supabase access
+- email/WhatsApp sending
+- quotation, PI, order, payment, shipment, or production logic
+
 ## Required Final Report
 
 After execution, Codex must report:
