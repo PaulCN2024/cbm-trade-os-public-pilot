@@ -63,7 +63,7 @@ The numbering service should:
 - `communication_thread`
 - `task`
 - `knowledge_article`
-- `approval_request`
+- `approval_review`
 
 ## 7. Suggested Input Contract
 
