@@ -955,3 +955,50 @@ Safety:
 - No database schema was changed.
 - No public website, Command Center, Document Center or UI Lab file was changed.
 - No OpenAI, email, WhatsApp, quotation, PI, order, production, shipping, formal quotation or automatic business commitment feature was added.
+
+## Step 3A Status
+
+Date: 2026-06-14
+
+Purpose:
+
+- Add the read-only foundation for Customer CRM and Inquiry Center inside the existing Admin UI Foundation.
+- Keep the system safe for internal review before any write workflow is approved.
+
+Files changed:
+
+- `admin/ui-foundation/app.js`
+- `admin/ui-foundation/index.html`
+- `docs/CODEX_STATUS.md`
+
+Customers read-only status:
+
+- Added a Customers section in `admin/ui-foundation`.
+- Uses `GET /api/customers`.
+- Shows loading, empty, error and preview fallback states.
+- Displays missing fields as `—`.
+- Does not connect customer import, create, update or delete actions.
+
+Inquiries read-only status:
+
+- Added an Inquiries section in `admin/ui-foundation`.
+- Uses `GET /api/inquiries`.
+- Reads and displays only the `inquiries` collection from the API response.
+- Shows loading, empty, error and preview fallback states.
+- Displays missing fields as `—`.
+- Does not connect inquiry creation, POST, PATCH or AI auto-processing actions.
+
+Step 3A boundaries:
+
+- No API route was modified.
+- No database schema was modified.
+- No public website, Command Center, Document Center or UI Lab file was changed.
+- No create, update or delete UI action was added.
+- No customer import was added.
+- No inquiry creation was added.
+- No send, approve, reject, quotation, PI, order, production, shipping, payment, email, WhatsApp, OpenAI, formal quotation or automatic business commitment feature was added.
+
+Recommended next step:
+
+- Review the Customers and Inquiries sections in the deployed Admin UI.
+- If the field display is acceptable, continue with Step 3A-2 seed data or Step 3B first low-risk manual write flow after explicit approval.

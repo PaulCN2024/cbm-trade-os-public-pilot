@@ -2,9 +2,9 @@ import { getAdminAccessToken } from "../../lib/admin-auth.js";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard" },
-  { id: "customers", label: "Customers", soon: true },
+  { id: "customers", label: "Customers" },
   { id: "companies", label: "Companies" },
-  { id: "inquiries", label: "Inquiries", soon: true },
+  { id: "inquiries", label: "Inquiries" },
   { id: "products", label: "Products" },
   { id: "manufacturing-capabilities", label: "Capabilities" },
   { id: "suppliers", label: "Suppliers", soon: true },
@@ -33,6 +33,22 @@ const sections = {
     sectionHelp: "Read-only API list. Create, update and delete are not implemented in Step 2C-1.",
     content: renderCompanies,
     review: renderCompanyReview,
+  },
+  customers: {
+    title: "Customers",
+    description: "Read-only customer CRM list connected to the existing customers API.",
+    sectionTitle: "Customer CRM",
+    sectionHelp: "Read-only API list. Create, update, delete and import are not implemented in Step 3A.",
+    content: renderCustomers,
+    review: renderCustomerReview,
+  },
+  inquiries: {
+    title: "Inquiries",
+    description: "Read-only Inquiry Center list connected to the existing inquiries API.",
+    sectionTitle: "Inquiry Center",
+    sectionHelp: "Read-only API list. Inquiry creation, AI processing and outbound actions are not implemented in Step 3A.",
+    content: renderInquiries,
+    review: renderInquiryReview,
   },
   products: {
     title: "Products",
@@ -106,6 +122,70 @@ const companyPreviewFallback = [
 ];
 
 const companyApiState = createReadOnlyState("companies");
+
+const customerPreviewFallback = [
+  {
+    name: "DEMO Customer Contact",
+    aliases: "DEMO Customer Company",
+    country: "Panama",
+    language: "English",
+    email: "demo@example.com",
+    whatsapp: "+000000000",
+    source: "local preview",
+    stage: "read-only preview",
+    business_line: "A_ARCHITECTURAL",
+    last_contact_at: "",
+    next_follow_up_at: "",
+    notes: `${fallbackLabel}. Local preview customer only.`,
+  },
+  {
+    name: "TEST Industrial Buyer",
+    aliases: "TEST Industrial Company",
+    country: "United States",
+    language: "English",
+    email: "industrial-demo@example.com",
+    whatsapp: "",
+    source: "local preview",
+    stage: "read-only preview",
+    business_line: "B_INDUSTRIAL",
+    last_contact_at: "",
+    next_follow_up_at: "",
+    notes: `${fallbackLabel}. No customer import or write action is connected.`,
+  },
+];
+
+const customerApiState = createReadOnlyState("customers");
+
+const inquiryPreviewFallback = [
+  {
+    inquiry_type: "website inquiry",
+    title: "DEMO hotel window package inquiry",
+    lead_info: { name: "DEMO Contact", company: "DEMO Project Buyer" },
+    business_line: "A_ARCHITECTURAL",
+    product_category: "Windows and Doors",
+    status: "NEED_REVIEW",
+    original_message: `${fallbackLabel}. Preview inquiry only.`,
+    ai_summary: "Local preview summary only.",
+    missing_info: ["drawing package", "glass specification"],
+    next_follow_up_at: "",
+    created_at: "local preview",
+  },
+  {
+    inquiry_type: "drawing inquiry",
+    title: "TEST CNC aluminum bracket inquiry",
+    lead_info: { name: "TEST Buyer", company: "TEST Industrial Company" },
+    business_line: "B_INDUSTRIAL",
+    product_category: "CNC Aluminum Parts",
+    status: "NEW",
+    original_message: `${fallbackLabel}. No inquiry creation is connected.`,
+    ai_summary: "Local preview summary only.",
+    missing_info: ["drawing file", "tolerance"],
+    next_follow_up_at: "",
+    created_at: "local preview",
+  },
+];
+
+const inquiryApiState = createReadOnlyState("inquiries");
 
 const productPreviewFallback = [
   {
@@ -260,6 +340,12 @@ function setSection(sectionId) {
   if (sectionId === "companies") {
     loadCompaniesReadOnly();
   }
+  if (sectionId === "customers") {
+    loadCustomersReadOnly();
+  }
+  if (sectionId === "inquiries") {
+    loadInquiriesReadOnly();
+  }
   if (sectionId === "products") {
     loadProductsReadOnly();
   }
@@ -401,6 +487,234 @@ function renderReadOnlyCompanyCard() {
       </div>
     </div>
   `;
+}
+
+function renderCustomers() {
+  if (customerApiState.status === "idle" || customerApiState.status === "loading") {
+    return renderCustomersLoading();
+  }
+
+  if (customerApiState.status === "empty") {
+    return renderCustomersEmpty();
+  }
+
+  const statusNotice =
+    customerApiState.status === "error"
+      ? renderDataStatus("error", "Customers API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${customerApiState.error}`)
+      : renderDataStatus("success", "Customers loaded", `Source: ${customerApiState.source}. Read-only CRM list. No create, update, import or delete action is connected.`);
+
+  return `
+    ${statusNotice}
+    ${renderCustomerTable(customerApiState.customers, customerApiState.source)}
+    ${renderReadOnlyCustomerCard()}
+  `;
+}
+
+function renderCustomerReview() {
+  return renderReviewDetails({
+    title: "Customer CRM API Status",
+    badges: [badge("Read-only", "active"), badge(customerApiState.source, customerApiState.status === "error" ? "pending" : "draft")],
+    rows: [
+      ["API route", "GET /api/customers"],
+      ["Record count", String(customerApiState.customers.length)],
+      ["Write actions", "Not connected"],
+    ],
+    draft: "Customers are shown as a read-only CRM list in Step 3A. Add customer, import, edit, delete, message sending, quotation, PI and order actions are not implemented.",
+  });
+}
+
+function renderCustomersLoading() {
+  return `
+    ${renderDataStatus("loading", "Loading customers", "Requesting GET /api/customers with the current admin session when available.")}
+    <div class="table-wrap table-skeleton" aria-label="Loading customer rows">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  `;
+}
+
+function renderCustomersEmpty() {
+  return `
+    ${renderDataStatus("empty", "No live customers found", "No live data is currently available. This page is read-only; customer import and create support will come in a later approved phase.")}
+    ${renderReadOnlyCustomerCard()}
+  `;
+}
+
+function renderCustomerTable(customers, source) {
+  const rows = [
+    ["Customer Name", "Company", "Country", "Language", "Email", "WhatsApp", "Source", "Stage", "Business Line", "Last Contact", "Next Follow-up", "Notes"],
+    ...customers.map((customer) => [
+      displayValue(customer.name || customer.contact_name),
+      escapeHtml(displayValue(customer.company_name || customer.company || customer.aliases || customer.company_id)),
+      escapeHtml(displayValue(customer.country)),
+      escapeHtml(displayValue(customer.language)),
+      escapeHtml(displayValue(customer.email)),
+      escapeHtml(displayValue(customer.whatsapp || customer.phone)),
+      escapeHtml(displayValue(customer.source || customer.metadata?.source)),
+      escapeHtml(displayValue(customer.stage || customer.status)),
+      businessBadge(customer.business_line),
+      escapeHtml(formatDateValue(customer.last_contact_at)),
+      escapeHtml(formatDateValue(customer.next_follow_up_at)),
+      `${badge(source === "api" ? "API" : fallbackLabel, source === "api" ? "active" : "pending")} ${escapeHtml(displayValue(customer.notes || customer.summary))}`,
+    ]),
+  ];
+  return renderTable(rows, {
+    firstColumnSubtitle: (customer) => customer.id || "Read-only customer record",
+    bodyData: customers,
+  });
+}
+
+function renderReadOnlyCustomerCard() {
+  return `
+    <div class="form-card read-only-card">
+      <h3>Customer CRM Read-Only Boundary</h3>
+      <p>This section reviews customer records only. It does not create, import, update or delete customers.</p>
+      <div class="form-grid">
+        <label class="field">
+          <span>Allowed action</span>
+          <input type="text" value="Read-only customer review" readonly />
+          <small>No customer import, create or edit API call is connected.</small>
+        </label>
+        <label class="field">
+          <span>Blocked actions</span>
+          <input type="text" value="No send / quote / PI / order" readonly />
+          <small>Commercial actions require a later approved phase and manual review.</small>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+function loadCustomersReadOnly() {
+  return loadReadOnlyList({
+    state: customerApiState,
+    collectionKey: "customers",
+    endpoint: "/api/customers",
+    payloadKey: "customers",
+    fallbackRecords: customerPreviewFallback,
+    fallbackSource: fallbackLabel,
+    refresh: refreshCustomersView,
+  });
+}
+
+function refreshCustomersView() {
+  if (activeSectionId !== "customers") return;
+  mainContent.innerHTML = renderCustomers();
+  reviewPanel.innerHTML = renderCustomerReview();
+}
+
+function renderInquiries() {
+  if (inquiryApiState.status === "idle" || inquiryApiState.status === "loading") {
+    return renderInquiriesLoading();
+  }
+
+  if (inquiryApiState.status === "empty") {
+    return renderInquiriesEmpty();
+  }
+
+  const statusNotice =
+    inquiryApiState.status === "error"
+      ? renderDataStatus("error", "Inquiries API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${inquiryApiState.error}`)
+      : renderDataStatus("success", "Inquiries loaded", `Source: ${inquiryApiState.source}. Read-only Inquiry Center list. No create, AI processing, send, quote or PI action is connected.`);
+
+  return `
+    ${statusNotice}
+    ${renderInquiryTable(inquiryApiState.inquiries, inquiryApiState.source)}
+    ${renderReadOnlyInquiryCard()}
+  `;
+}
+
+function renderInquiryReview() {
+  return renderReviewDetails({
+    title: "Inquiry Center API Status",
+    badges: [badge("Read-only", "active"), badge(inquiryApiState.source, inquiryApiState.status === "error" ? "pending" : "draft")],
+    rows: [
+      ["API route", "GET /api/inquiries"],
+      ["Record count", String(inquiryApiState.inquiries.length)],
+      ["Write actions", "Not connected"],
+    ],
+    draft: "Inquiries are shown as a read-only Inquiry Center list in Step 3A. Inquiry creation, AI auto-processing, send, quote, PI, order, production and shipping actions are not implemented.",
+  });
+}
+
+function renderInquiriesLoading() {
+  return `
+    ${renderDataStatus("loading", "Loading inquiries", "Requesting GET /api/inquiries with the current admin session when available.")}
+    <div class="table-wrap table-skeleton" aria-label="Loading inquiry rows">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  `;
+}
+
+function renderInquiriesEmpty() {
+  return `
+    ${renderDataStatus("empty", "No live inquiries found", "No live data is currently available. This page is read-only; inquiry creation and AI processing will come in a later approved phase.")}
+    ${renderReadOnlyInquiryCard()}
+  `;
+}
+
+function renderInquiryTable(inquiries, source) {
+  const rows = [
+    ["Inquiry Type", "Customer", "Company", "Business Line", "Product Category", "Status", "Original Message / Summary", "Missing Info", "Next Follow-up", "Created At"],
+    ...inquiries.map((inquiry) => [
+      displayValue(inquiry.inquiry_type || inquiry.project_type || inquiry.source),
+      escapeHtml(displayValue(inquiry.lead_info?.name || inquiry.customer_name || inquiry.customer_id)),
+      escapeHtml(displayValue(inquiry.lead_info?.company || inquiry.company_name || inquiry.company_id)),
+      businessBadge(inquiry.business_line),
+      escapeHtml(displayValue(inquiry.product_category || inquiry.project_type)),
+      escapeHtml(displayValue(inquiry.status)),
+      escapeHtml(displayValue(inquiry.original_message || inquiry.project_description || inquiry.ai_summary || inquiry.title)),
+      escapeHtml(formatList(inquiry.missing_info)),
+      escapeHtml(formatDateValue(inquiry.next_follow_up_at)),
+      escapeHtml(formatDateValue(inquiry.created_at)),
+    ]),
+  ];
+  return renderTable(rows, {
+    firstColumnSubtitle: (inquiry) => `${source === "api" ? "API" : fallbackLabel} · ${inquiry.id || "Read-only inquiry record"}`,
+    bodyData: inquiries,
+  });
+}
+
+function renderReadOnlyInquiryCard() {
+  return `
+    <div class="form-card read-only-card">
+      <h3>Inquiry Center Read-Only Boundary</h3>
+      <p>This section reviews existing inquiries only. It does not create inquiries or run AI auto-processing.</p>
+      <div class="form-grid">
+        <label class="field">
+          <span>Allowed action</span>
+          <input type="text" value="Read-only inquiry review" readonly />
+          <small>No inquiry creation, POST or PATCH action is connected from this UI.</small>
+        </label>
+        <label class="field">
+          <span>Blocked actions</span>
+          <input type="text" value="No send / quote / PI / order" readonly />
+          <small>No outbound message, quotation, PI or business commitment is executed.</small>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+function loadInquiriesReadOnly() {
+  return loadReadOnlyList({
+    state: inquiryApiState,
+    collectionKey: "inquiries",
+    endpoint: "/api/inquiries",
+    payloadKey: "inquiries",
+    fallbackRecords: inquiryPreviewFallback,
+    fallbackSource: fallbackLabel,
+    refresh: refreshInquiriesView,
+  });
+}
+
+function refreshInquiriesView() {
+  if (activeSectionId !== "inquiries") return;
+  mainContent.innerHTML = renderInquiries();
+  reviewPanel.innerHTML = renderInquiryReview();
 }
 
 function renderDataStatus(type, title, message) {
@@ -801,9 +1115,21 @@ function refreshAiDraftsView() {
 }
 
 function formatList(value) {
-  if (Array.isArray(value)) return value.length ? value.join(", ") : "None";
+  if (Array.isArray(value)) return value.length ? value.join(", ") : "—";
   if (value && typeof value === "object") return Object.entries(value).map(([key, item]) => `${key}: ${item}`).join(", ");
-  return value || "None";
+  return value || "—";
+}
+
+function displayValue(value) {
+  return value === undefined || value === null || value === "" ? "—" : String(value);
+}
+
+function formatDateValue(value) {
+  if (!value) return "—";
+  if (value === "local preview") return value;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toISOString().slice(0, 10);
 }
 
 function renderComingSoon(sectionId) {
