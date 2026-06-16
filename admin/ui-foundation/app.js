@@ -27,10 +27,10 @@ const sections = {
     review: renderDashboardReview,
   },
   companies: {
-    title: "Companies",
-    description: "Read-only company list connected to the Step 2A companies API.",
-    sectionTitle: "Companies Management",
-    sectionHelp: "Read-only API list. Create, update and delete are not implemented in Step 2C-1.",
+    title: "公司",
+    description: "只读公司列表，连接 Step 2A 公司 API。",
+    sectionTitle: "公司管理",
+    sectionHelp: "只读 API 列表。当前不支持创建、更新或删除。",
     content: renderCompanies,
     review: renderCompanyReview,
   },
@@ -410,8 +410,8 @@ function renderCompanies() {
 
   const statusNotice =
     companyApiState.status === "error"
-      ? renderDataStatus("error", "Companies API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${companyApiState.error}`)
-      : renderDataStatus("success", "Companies loaded", `Source: ${companyApiState.source}. Read-only list. No create, update or delete action is connected.`);
+      ? renderDataStatus("error", "公司 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${companyApiState.error}`)
+      : renderDataStatus("success", "公司数据已加载", `Source: ${companyApiState.source}. Read-only list. No create, update or delete action is connected.`);
 
   return `
     ${statusNotice}
@@ -422,7 +422,7 @@ function renderCompanies() {
 
 function renderCompanyReview() {
   return renderReviewDetails({
-    title: "Company API Status",
+    title: "公司 API 状态",
     badges: [badge("Read-only", "active"), badge(companyApiState.source, companyApiState.status === "error" ? "pending" : "draft")],
     rows: [
       ["API route", "GET /api/companies"],
@@ -435,7 +435,7 @@ function renderCompanyReview() {
 
 function renderCompaniesLoading() {
   return `
-    ${renderDataStatus("loading", "Loading companies", "Requesting GET /api/companies with the current admin session when available.")}
+    ${renderDataStatus("loading", "正在加载公司", "Requesting GET /api/companies with the current admin session when available.")}
     <div class="table-wrap table-skeleton" aria-label="Loading company rows">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -446,14 +446,14 @@ function renderCompaniesLoading() {
 
 function renderCompaniesEmpty() {
   return `
-    ${renderDataStatus("empty", "No live companies found", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
+    ${renderDataStatus("empty", "暂无实时公司数据", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
     ${renderReadOnlyCompanyCard()}
   `;
 }
 
 function renderCompanyTable(companies, source) {
   const rows = [
-    ["Company", "Country", "Type", "Source", "Notes"],
+    ["公司", "国家", "类型", "来源", "备注"],
     ...companies.map((company) => [
       company.company_name || "Unnamed company",
       escapeHtml(company.country || "Unknown"),
@@ -471,17 +471,17 @@ function renderCompanyTable(companies, source) {
 function renderReadOnlyCompanyCard() {
   return `
     <div class="form-card read-only-card">
-      <h3>Company Review Pattern</h3>
+      <h3>公司查看模式</h3>
       <p>This card remains a static review pattern. It does not submit data or create records.</p>
       <div class="form-grid">
         <label class="field">
-          <span>Allowed action</span>
-          <input type="text" value="Read-only review" readonly />
+          <span>允许动作</span>
+          <input type="text" value="只读查看" readonly />
           <small>No create or update API call is connected.</small>
         </label>
         <label class="field">
-          <span>Safety boundary</span>
-          <input type="text" value="No automatic sending or commitments" readonly />
+          <span>安全边界</span>
+          <input type="text" value="不自动发送或承诺" readonly />
           <small>Messages, quotations and PI are not sent.</small>
         </label>
       </div>
