@@ -4,7 +4,7 @@ const navItems = [
   { id: "dashboard", label: "Dashboard" },
   { id: "customers", label: "客户" },
   { id: "companies", label: "Companies" },
-  { id: "inquiries", label: "Inquiries" },
+  { id: "inquiries", label: "询盘" },
   { id: "products", label: "Products" },
   { id: "manufacturing-capabilities", label: "Capabilities" },
   { id: "suppliers", label: "Suppliers", soon: true },
@@ -43,10 +43,10 @@ const sections = {
     review: renderCustomerReview,
   },
   inquiries: {
-    title: "Inquiries",
-    description: "Read-only Inquiry Center list connected to the existing inquiries API.",
-    sectionTitle: "Inquiry Center",
-    sectionHelp: "Read-only API list. Inquiry creation, AI processing and outbound actions are not implemented in Step 3A.",
+    title: "询盘",
+    description: "只读询盘列表，连接现有询盘 API。",
+    sectionTitle: "询盘中心",
+    sectionHelp: "只读 API 列表。当前不支持创建询盘、AI 自动处理或外发动作。",
     content: renderInquiries,
     review: renderInquiryReview,
   },
@@ -615,8 +615,8 @@ function renderInquiries() {
 
   const statusNotice =
     inquiryApiState.status === "error"
-      ? renderDataStatus("error", "Inquiries API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${inquiryApiState.error}`)
-      : renderDataStatus("success", "Inquiries loaded", `Source: ${inquiryApiState.source}. Read-only Inquiry Center list. No create, AI processing, send, quote or PI action is connected.`);
+      ? renderDataStatus("error", "询盘 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${inquiryApiState.error}`)
+      : renderDataStatus("success", "询盘数据已加载", `Source: ${inquiryApiState.source}. 只读询盘列表，未连接创建、AI 自动处理、发送、报价或 PI 动作。`);
 
   return `
     ${statusNotice}
@@ -627,21 +627,21 @@ function renderInquiries() {
 
 function renderInquiryReview() {
   return renderReviewDetails({
-    title: "Inquiry Center API Status",
-    badges: [badge("Read-only", "active"), badge(inquiryApiState.source, inquiryApiState.status === "error" ? "pending" : "draft")],
+    title: "询盘 API 状态",
+    badges: [badge("只读", "active"), badge(inquiryApiState.source, inquiryApiState.status === "error" ? "pending" : "draft")],
     rows: [
       ["API route", "GET /api/inquiries"],
       ["Record count", String(inquiryApiState.inquiries.length)],
       ["Write actions", "Not connected"],
     ],
-    draft: "Inquiries are shown as a read-only Inquiry Center list in Step 3A. Inquiry creation, AI auto-processing, send, quote, PI, order, production and shipping actions are not implemented.",
+    draft: "询盘在 Step 3A 中仅作为只读询盘中心列表展示。当前不支持创建询盘、AI 自动处理、发送、报价、PI、订单、生产或出运动作。",
   });
 }
 
 function renderInquiriesLoading() {
   return `
-    ${renderDataStatus("loading", "Loading inquiries", "Requesting GET /api/inquiries with the current admin session when available.")}
-    <div class="table-wrap table-skeleton" aria-label="Loading inquiry rows">
+    ${renderDataStatus("loading", "正在加载询盘", "正在使用当前管理员会话请求 GET /api/inquiries。")}
+    <div class="table-wrap table-skeleton" aria-label="正在加载询盘行">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -651,14 +651,14 @@ function renderInquiriesLoading() {
 
 function renderInquiriesEmpty() {
   return `
-    ${renderDataStatus("empty", "No live inquiries found", "No live data is currently available. This page is read-only; inquiry creation and AI processing will come in a later approved phase.")}
+    ${renderDataStatus("empty", "暂无实时询盘数据", "当前没有可用实时数据。本页面为只读；询盘创建和 AI 处理将在后续批准阶段加入。")}
     ${renderReadOnlyInquiryCard()}
   `;
 }
 
 function renderInquiryTable(inquiries, source) {
   const rows = [
-    ["Inquiry Type", "Customer", "Company", "Business Line", "Product Category", "Status", "Original Message / Summary", "Missing Info", "Next Follow-up", "Created At"],
+    ["询盘类型", "客户", "公司", "业务线", "产品分类", "状态", "原始消息 / 摘要", "缺失信息", "下次跟进", "创建时间"],
     ...inquiries.map((inquiry) => [
       displayValue(inquiry.inquiry_type || inquiry.project_type || inquiry.source),
       escapeHtml(displayValue(inquiry.lead_info?.name || inquiry.customer_name || inquiry.customer_id)),
@@ -673,7 +673,7 @@ function renderInquiryTable(inquiries, source) {
     ]),
   ];
   return renderTable(rows, {
-    firstColumnSubtitle: (inquiry) => `${source === "api" ? "API" : fallbackLabel} · ${inquiry.id || "Read-only inquiry record"}`,
+    firstColumnSubtitle: (inquiry) => `${source === "api" ? "API" : fallbackLabel} · ${inquiry.id || "只读询盘记录"}`,
     bodyData: inquiries,
   });
 }
@@ -681,18 +681,18 @@ function renderInquiryTable(inquiries, source) {
 function renderReadOnlyInquiryCard() {
   return `
     <div class="form-card read-only-card">
-      <h3>Inquiry Center Read-Only Boundary</h3>
-      <p>This section reviews existing inquiries only. It does not create inquiries or run AI auto-processing.</p>
+      <h3>询盘中心只读边界</h3>
+      <p>本区域仅用于查看现有询盘，不会创建询盘或运行 AI 自动处理。</p>
       <div class="form-grid">
         <label class="field">
-          <span>Allowed action</span>
-          <input type="text" value="Read-only inquiry review" readonly />
-          <small>No inquiry creation, POST or PATCH action is connected from this UI.</small>
+          <span>允许动作</span>
+          <input type="text" value="只读询盘查看" readonly />
+          <small>本界面未连接询盘创建、POST 或 PATCH 动作。</small>
         </label>
         <label class="field">
-          <span>Blocked actions</span>
+          <span>禁止动作</span>
           <input type="text" value="No send / quote / PI / order" readonly />
-          <small>No outbound message, quotation, PI or business commitment is executed.</small>
+          <small>不会执行外发消息、报价、PI 或业务承诺。</small>
         </label>
       </div>
     </div>
