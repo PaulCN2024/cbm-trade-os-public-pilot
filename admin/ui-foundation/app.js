@@ -8,7 +8,7 @@ const navItems = [
   { id: "products", label: "Products" },
   { id: "manufacturing-capabilities", label: "Capabilities" },
   { id: "suppliers", label: "Suppliers", soon: true },
-  { id: "ai-drafts", label: "AI Drafts" },
+  { id: "ai-drafts", label: "AI 草稿" },
   { id: "quotations", label: "Quotations", soon: true },
   { id: "orders", label: "Orders", soon: true },
   { id: "production", label: "Production", soon: true },
@@ -67,10 +67,10 @@ const sections = {
     review: renderManufacturingCapabilityReview,
   },
   "ai-drafts": {
-    title: "AI Drafts",
-    description: "Read-only AI inquiry analysis draft review list connected to the Step 2A API.",
-    sectionTitle: "AI Inquiry Analysis Draft Review",
-    sectionHelp: "Read-only draft list. Suggested replies are draft text only and are never sent automatically.",
+    title: "AI 草稿",
+    description: "只读 AI 询盘分析草稿审核列表，连接 Step 2A API。",
+    sectionTitle: "AI 询盘分析草稿审核",
+    sectionHelp: "只读草稿列表。建议回复仅为草稿文本，不会自动发送。",
     content: renderAiDrafts,
     review: renderAiDraftReview,
   },
@@ -1014,8 +1014,8 @@ function renderAiDrafts() {
 
   const statusNotice =
     aiDraftApiState.status === "error"
-      ? renderDataStatus("error", "AI inquiry analyses API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${aiDraftApiState.error}`)
-      : renderDataStatus("success", "AI inquiry analysis drafts loaded", `Source: ${aiDraftApiState.source}. Read-only draft list. No send, quote or PI action is connected.`);
+      ? renderDataStatus("error", "AI 询盘分析 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${aiDraftApiState.error}`)
+      : renderDataStatus("success", "AI 询盘分析草稿已加载", `Source: ${aiDraftApiState.source}. 只读草稿列表，未连接发送、报价或 PI 动作。`);
 
   return `
     ${statusNotice}
@@ -1027,20 +1027,20 @@ function renderAiDrafts() {
 function renderAiDraftReview() {
   return renderReviewDetails({
     title: "AI Draft API Status",
-    badges: [badge("Read-only", "active"), badge("Draft only", "draft"), badge("Approval Required", "approval"), badge("Human review required", "approval"), badge("Not sent", "pending")],
+    badges: [badge("只读", "active"), badge("仅草稿", "draft"), badge("需要人工审核", "approval"), badge("需要人工复核", "approval"), badge("未发送", "pending")],
     rows: [
       ["API route", "GET /api/ai-inquiry-analyses"],
       ["Record count", String(aiDraftApiState.drafts.length)],
       ["Write actions", "Not connected"],
     ],
-    draft: "AI inquiry analyses are read-only drafts in Step 2C-4. Suggested replies are draft text only and are not sent. Human review is required. This page does not confirm price, delivery time, payment terms, bank account, production feasibility, quotation or PI.",
+    draft: "AI 询盘分析在 Step 2C-4 中仅作为只读草稿展示。建议回复只是草稿文本，不会发送。需要人工审核。本页面不确认价格、交期、付款条款、银行信息、生产可行性、报价或 PI。",
   });
 }
 
 function renderAiDraftsLoading() {
   return `
-    ${renderDataStatus("loading", "Loading AI inquiry analysis drafts", "Requesting GET /api/ai-inquiry-analyses with the current admin session when available.")}
-    <div class="table-wrap table-skeleton" aria-label="Loading AI draft rows">
+    ${renderDataStatus("loading", "正在加载 AI 询盘分析草稿", "正在使用当前管理员会话请求 GET /api/ai-inquiry-analyses。")}
+    <div class="table-wrap table-skeleton" aria-label="正在加载 AI 草稿行">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -1050,25 +1050,25 @@ function renderAiDraftsLoading() {
 
 function renderAiDraftsEmpty() {
   return `
-    ${renderDataStatus("empty", "No live AI inquiry analysis drafts found", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
+    ${renderDataStatus("empty", "暂无实时 AI 询盘分析草稿", "当前没有可用实时数据。本页面为只读；写入和创建支持将在后续批准阶段加入。")}
     ${renderReadOnlyAiDraftCard()}
   `;
 }
 
 function renderAiDraftTable(drafts, source) {
   const rows = [
-    ["Detected Line", "Missing Info", "Risk Flags", "Approval", "Suggested Reply Draft", "Status / Source"],
+    ["识别业务线", "缺失信息", "风险标记", "审核", "建议回复草稿", "状态 / 来源"],
     ...drafts.map((draft) => [
       businessBadge(draft.detected_business_line),
       escapeHtml(formatList(draft.missing_information)),
       escapeHtml(formatList(draft.risk_flags)),
-      draft.approval_required === false ? badge("Approval forced by API", "approval") : badge("Approval Required", "approval"),
+      draft.approval_required === false ? badge("API 强制需要审核", "approval") : badge("需要人工审核", "approval"),
       escapeHtml(draft.suggested_reply || "No suggested reply draft"),
-      `${badge(source === "api" ? "API" : fallbackLabel, source === "api" ? "active" : "pending")} ${badge("Draft only", "draft")} ${badge("Approval Required", "approval")} ${badge("Not sent", "pending")} ${badge("Human review required", "approval")}`,
+      `${badge(source === "api" ? "API" : fallbackLabel, source === "api" ? "active" : "pending")} ${badge("仅草稿", "draft")} ${badge("需要人工审核", "approval")} ${badge("未发送", "pending")} ${badge("需要人工复核", "approval")}`,
     ]),
   ];
   return renderTable(rows, {
-    firstColumnSubtitle: (draft) => draft.created_at || draft.id || "Read-only AI draft record",
+    firstColumnSubtitle: (draft) => draft.created_at || draft.id || "只读 AI 草稿记录",
     bodyData: drafts,
     firstColumnHtml: true,
   });
@@ -1077,18 +1077,18 @@ function renderAiDraftTable(drafts, source) {
 function renderReadOnlyAiDraftCard() {
   return `
     <div class="form-card read-only-card">
-      <h3>AI Draft Safety Review</h3>
-      <p>Suggested replies are internal draft text only. This page does not send or approve any customer-facing action.</p>
+      <h3>AI 草稿安全审核</h3>
+      <p>建议回复仅为内部草稿文本。本页面不会发送或批准任何面向客户的动作。</p>
       <div class="form-grid">
         <label class="field">
-          <span>Draft status</span>
-          <input type="text" value="Draft only / not sent" readonly />
-          <small>No email, WhatsApp or customer message is sent.</small>
+          <span>草稿状态</span>
+          <input type="text" value="仅草稿 / 未发送" readonly />
+          <small>不会发送邮件、WhatsApp 或客户消息。</small>
         </label>
         <label class="field">
-          <span>Approval rule</span>
-          <input type="text" value="Manual approval required" readonly />
-          <small>No quotation, PI, price, delivery, payment or bank information is confirmed.</small>
+          <span>审核规则</span>
+          <input type="text" value="发送前需要人工审核" readonly />
+          <small>不确认报价、PI、价格、交期、付款或银行信息。</small>
         </label>
       </div>
     </div>
