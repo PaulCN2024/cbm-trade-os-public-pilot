@@ -425,9 +425,9 @@ function renderCompanyReview() {
     title: "公司 API 状态",
     badges: [badge("Read-only", "active"), badge(companyApiState.source, companyApiState.status === "error" ? "pending" : "draft")],
     rows: [
-      ["API route", "GET /api/companies"],
-      ["Record count", String(companyApiState.companies.length)],
-      ["Write actions", "Not connected"],
+      ["API 路由", "GET /api/companies"],
+      ["记录数量", String(companyApiState.companies.length)],
+      ["写入动作", "未连接"],
     ],
     draft: "Companies are shown as a read-only list in Step 2C-1. Create, update, delete, quotations, PI and message sending are not implemented.",
   });
@@ -515,9 +515,9 @@ function renderCustomerReview() {
     title: "客户 API 状态",
     badges: [badge("只读", "active"), badge(customerApiState.source, customerApiState.status === "error" ? "pending" : "draft")],
     rows: [
-      ["API route", "GET /api/customers"],
-      ["Record count", String(customerApiState.customers.length)],
-      ["Write actions", "Not connected"],
+      ["API 路由", "GET /api/customers"],
+      ["记录数量", String(customerApiState.customers.length)],
+      ["写入动作", "未连接"],
     ],
     draft: "客户在 Step 3A 中仅作为只读 CRM 列表展示。当前不支持新增客户、导入、编辑、删除、消息发送、报价、PI 或订单动作。",
   });
@@ -630,9 +630,9 @@ function renderInquiryReview() {
     title: "询盘 API 状态",
     badges: [badge("只读", "active"), badge(inquiryApiState.source, inquiryApiState.status === "error" ? "pending" : "draft")],
     rows: [
-      ["API route", "GET /api/inquiries"],
-      ["Record count", String(inquiryApiState.inquiries.length)],
-      ["Write actions", "Not connected"],
+      ["API 路由", "GET /api/inquiries"],
+      ["记录数量", String(inquiryApiState.inquiries.length)],
+      ["写入动作", "未连接"],
     ],
     draft: "询盘在 Step 3A 中仅作为只读询盘中心列表展示。当前不支持创建询盘、AI 自动处理、发送、报价、PI、订单、生产或出运动作。",
   });
@@ -808,9 +808,9 @@ function renderProductReview() {
     title: "产品 API 状态",
     badges: [badge("Read-only", "active"), badge(productApiState.source, productApiState.status === "error" ? "pending" : "draft")],
     rows: [
-      ["API route", "GET /api/products"],
-      ["Record count", String(productApiState.products.length)],
-      ["Write actions", "Not connected"],
+      ["API 路由", "GET /api/products"],
+      ["记录数量", String(productApiState.products.length)],
+      ["写入动作", "未连接"],
     ],
     draft: "Products are shown as a read-only list in Step 2C-2. Create, update, delete, quotations, PI and message sending are not implemented.",
   });
@@ -918,9 +918,9 @@ function renderManufacturingCapabilityReview() {
     title: "制造能力 API 状态",
     badges: [badge("Read-only", "active"), badge(capabilityApiState.source, capabilityApiState.status === "error" ? "pending" : "draft")],
     rows: [
-      ["API route", "GET /api/manufacturing-capabilities"],
-      ["Record count", String(capabilityApiState.capabilities.length)],
-      ["Write actions", "Not connected"],
+      ["API 路由", "GET /api/manufacturing-capabilities"],
+      ["记录数量", String(capabilityApiState.capabilities.length)],
+      ["写入动作", "未连接"],
     ],
     draft: "Manufacturing capabilities are shown as a read-only admin list in Step 2C-3. This page does not confirm production feasibility, quotation, delivery time or supplier commitments.",
   });
@@ -1029,9 +1029,9 @@ function renderAiDraftReview() {
     title: "AI Draft API Status",
     badges: [badge("只读", "active"), badge("仅草稿", "draft"), badge("需要人工审核", "approval"), badge("需要人工复核", "approval"), badge("未发送", "pending")],
     rows: [
-      ["API route", "GET /api/ai-inquiry-analyses"],
-      ["Record count", String(aiDraftApiState.drafts.length)],
-      ["Write actions", "Not connected"],
+      ["API 路由", "GET /api/ai-inquiry-analyses"],
+      ["记录数量", String(aiDraftApiState.drafts.length)],
+      ["写入动作", "未连接"],
     ],
     draft: "AI 询盘分析在 Step 2C-4 中仅作为只读草稿展示。建议回复只是草稿文本，不会发送。需要人工审核。本页面不确认价格、交期、付款条款、银行信息、生产可行性、报价或 PI。",
   });
