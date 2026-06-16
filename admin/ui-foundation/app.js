@@ -2,7 +2,7 @@ import { getAdminAccessToken } from "../../lib/admin-auth.js";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard" },
-  { id: "customers", label: "Customers" },
+  { id: "customers", label: "客户" },
   { id: "companies", label: "Companies" },
   { id: "inquiries", label: "Inquiries" },
   { id: "products", label: "Products" },
@@ -35,10 +35,10 @@ const sections = {
     review: renderCompanyReview,
   },
   customers: {
-    title: "Customers",
-    description: "Read-only customer CRM list connected to the existing customers API.",
-    sectionTitle: "Customer CRM",
-    sectionHelp: "Read-only API list. Create, update, delete and import are not implemented in Step 3A.",
+    title: "客户",
+    description: "只读客户列表，连接现有客户 API。",
+    sectionTitle: "客户管理",
+    sectionHelp: "只读 API 列表。当前不支持创建、更新、删除或导入。",
     content: renderCustomers,
     review: renderCustomerReview,
   },
@@ -500,8 +500,8 @@ function renderCustomers() {
 
   const statusNotice =
     customerApiState.status === "error"
-      ? renderDataStatus("error", "Customers API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${customerApiState.error}`)
-      : renderDataStatus("success", "Customers loaded", `Source: ${customerApiState.source}. Read-only CRM list. No create, update, import or delete action is connected.`);
+      ? renderDataStatus("error", "客户 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${customerApiState.error}`)
+      : renderDataStatus("success", "客户数据已加载", `Source: ${customerApiState.source}. 只读 CRM 列表，未连接创建、更新、导入或删除动作。`);
 
   return `
     ${statusNotice}
@@ -512,21 +512,21 @@ function renderCustomers() {
 
 function renderCustomerReview() {
   return renderReviewDetails({
-    title: "Customer CRM API Status",
-    badges: [badge("Read-only", "active"), badge(customerApiState.source, customerApiState.status === "error" ? "pending" : "draft")],
+    title: "客户 API 状态",
+    badges: [badge("只读", "active"), badge(customerApiState.source, customerApiState.status === "error" ? "pending" : "draft")],
     rows: [
       ["API route", "GET /api/customers"],
       ["Record count", String(customerApiState.customers.length)],
       ["Write actions", "Not connected"],
     ],
-    draft: "Customers are shown as a read-only CRM list in Step 3A. Add customer, import, edit, delete, message sending, quotation, PI and order actions are not implemented.",
+    draft: "客户在 Step 3A 中仅作为只读 CRM 列表展示。当前不支持新增客户、导入、编辑、删除、消息发送、报价、PI 或订单动作。",
   });
 }
 
 function renderCustomersLoading() {
   return `
-    ${renderDataStatus("loading", "Loading customers", "Requesting GET /api/customers with the current admin session when available.")}
-    <div class="table-wrap table-skeleton" aria-label="Loading customer rows">
+    ${renderDataStatus("loading", "正在加载客户", "正在使用当前管理员会话请求 GET /api/customers。")}
+    <div class="table-wrap table-skeleton" aria-label="正在加载客户行">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -536,14 +536,14 @@ function renderCustomersLoading() {
 
 function renderCustomersEmpty() {
   return `
-    ${renderDataStatus("empty", "No live customers found", "No live data is currently available. This page is read-only; customer import and create support will come in a later approved phase.")}
+    ${renderDataStatus("empty", "暂无实时客户数据", "当前没有可用实时数据。本页面为只读；客户导入和创建支持将在后续批准阶段加入。")}
     ${renderReadOnlyCustomerCard()}
   `;
 }
 
 function renderCustomerTable(customers, source) {
   const rows = [
-    ["Customer Name", "Company", "Country", "Language", "Email", "WhatsApp", "Source", "Stage", "Business Line", "Last Contact", "Next Follow-up", "Notes"],
+    ["客户姓名", "公司", "国家", "语言", "Email", "WhatsApp", "来源", "阶段", "业务线", "上次联系", "下次跟进", "备注"],
     ...customers.map((customer) => [
       displayValue(customer.name || customer.contact_name),
       escapeHtml(displayValue(customer.company_name || customer.company || customer.aliases || customer.company_id)),
@@ -560,7 +560,7 @@ function renderCustomerTable(customers, source) {
     ]),
   ];
   return renderTable(rows, {
-    firstColumnSubtitle: (customer) => customer.id || "Read-only customer record",
+    firstColumnSubtitle: (customer) => customer.id || "只读客户记录",
     bodyData: customers,
   });
 }
@@ -568,18 +568,18 @@ function renderCustomerTable(customers, source) {
 function renderReadOnlyCustomerCard() {
   return `
     <div class="form-card read-only-card">
-      <h3>Customer CRM Read-Only Boundary</h3>
-      <p>This section reviews customer records only. It does not create, import, update or delete customers.</p>
+      <h3>客户管理只读边界</h3>
+      <p>本区域仅用于查看客户记录，不会创建、导入、更新或删除客户。</p>
       <div class="form-grid">
         <label class="field">
-          <span>Allowed action</span>
-          <input type="text" value="Read-only customer review" readonly />
-          <small>No customer import, create or edit API call is connected.</small>
+          <span>允许动作</span>
+          <input type="text" value="只读客户查看" readonly />
+          <small>未连接客户导入、创建或编辑 API 调用。</small>
         </label>
         <label class="field">
-          <span>Blocked actions</span>
+          <span>禁止动作</span>
           <input type="text" value="No send / quote / PI / order" readonly />
-          <small>Commercial actions require a later approved phase and manual review.</small>
+          <small>商业动作需要后续批准阶段和人工审核。</small>
         </label>
       </div>
     </div>
