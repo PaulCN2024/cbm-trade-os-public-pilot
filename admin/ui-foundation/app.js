@@ -51,10 +51,10 @@ const sections = {
     review: renderInquiryReview,
   },
   products: {
-    title: "Products",
-    description: "Read-only product list connected to the Step 2A products API.",
-    sectionTitle: "Products Management",
-    sectionHelp: "Read-only API list. Create, update and delete are not implemented in Step 2C-2.",
+    title: "产品",
+    description: "只读产品列表，连接 Step 2A 产品 API。",
+    sectionTitle: "产品管理",
+    sectionHelp: "只读 API 列表。当前不支持创建、更新或删除。",
     content: renderProducts,
     review: renderProductReview,
   },
@@ -793,8 +793,8 @@ function renderProducts() {
 
   const statusNotice =
     productApiState.status === "error"
-      ? renderDataStatus("error", "Products API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${productApiState.error}`)
-      : renderDataStatus("success", "Products loaded", `Source: ${productApiState.source}. Read-only list. No create, update or delete action is connected.`);
+      ? renderDataStatus("error", "产品 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${productApiState.error}`)
+      : renderDataStatus("success", "产品数据已加载", `Source: ${productApiState.source}. Read-only list. No create, update or delete action is connected.`);
 
   return `
     ${statusNotice}
@@ -805,7 +805,7 @@ function renderProducts() {
 
 function renderProductReview() {
   return renderReviewDetails({
-    title: "Product API Status",
+    title: "产品 API 状态",
     badges: [badge("Read-only", "active"), badge(productApiState.source, productApiState.status === "error" ? "pending" : "draft")],
     rows: [
       ["API route", "GET /api/products"],
@@ -818,7 +818,7 @@ function renderProductReview() {
 
 function renderProductsLoading() {
   return `
-    ${renderDataStatus("loading", "Loading products", "Requesting GET /api/products with the current admin session when available.")}
+    ${renderDataStatus("loading", "正在加载产品", "Requesting GET /api/products with the current admin session when available.")}
     <div class="table-wrap table-skeleton" aria-label="Loading product rows">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -829,14 +829,14 @@ function renderProductsLoading() {
 
 function renderProductsEmpty() {
   return `
-    ${renderDataStatus("empty", "No live products found", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
+    ${renderDataStatus("empty", "暂无实时产品数据", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
     ${renderReadOnlyProductCard()}
   `;
 }
 
 function renderProductTable(products, source) {
   const rows = [
-    ["Product Name", "Business Line", "Category", "Product Family", "Material", "Surface", "Status / Notes"],
+    ["产品名称", "业务线", "分类", "产品系列", "材质", "表面处理", "状态 / 备注"],
     ...products.map((product) => [
       product.name_en || product.name_cn || product.code || "Unnamed product",
       businessBadge(product.business_line),
@@ -856,16 +856,16 @@ function renderProductTable(products, source) {
 function renderReadOnlyProductCard() {
   return `
     <div class="form-card read-only-card">
-      <h3>Product Review Pattern</h3>
+      <h3>产品查看模式</h3>
       <p>This card remains a static review pattern. It does not submit data or create records.</p>
       <div class="form-grid">
         <label class="field">
-          <span>Allowed action</span>
-          <input type="text" value="Read-only product review" readonly />
+          <span>允许动作</span>
+          <input type="text" value="只读产品查看" readonly />
           <small>No create, update or delete API call is connected.</small>
         </label>
         <label class="field">
-          <span>Business line</span>
+          <span>业务线</span>
           <input type="text" value="A_ARCHITECTURAL / B_INDUSTRIAL / UNKNOWN" readonly />
           <small>Business-line labels are display-only in this step.</small>
         </label>
