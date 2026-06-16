@@ -59,10 +59,10 @@ const sections = {
     review: renderProductReview,
   },
   "manufacturing-capabilities": {
-    title: "Manufacturing Capabilities",
-    description: "Read-only capability list connected to the Step 2A manufacturing capabilities API.",
-    sectionTitle: "Manufacturing Capabilities",
-    sectionHelp: "Read-only API list. Create, update and delete are not implemented in Step 2C-3.",
+    title: "制造能力",
+    description: "只读制造能力列表，连接 Step 2A 制造能力 API。",
+    sectionTitle: "制造能力",
+    sectionHelp: "只读 API 列表。当前不支持创建、更新或删除。",
     content: renderManufacturingCapabilities,
     review: renderManufacturingCapabilityReview,
   },
@@ -903,8 +903,8 @@ function renderManufacturingCapabilities() {
 
   const statusNotice =
     capabilityApiState.status === "error"
-      ? renderDataStatus("error", "Manufacturing capabilities API unavailable", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${capabilityApiState.error}`)
-      : renderDataStatus("success", "Manufacturing capabilities loaded", `Source: ${capabilityApiState.source}. Read-only list. No create, update or delete action is connected.`);
+      ? renderDataStatus("error", "制造能力 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${capabilityApiState.error}`)
+      : renderDataStatus("success", "制造能力数据已加载", `Source: ${capabilityApiState.source}. Read-only list. No create, update or delete action is connected.`);
 
   return `
     ${statusNotice}
@@ -915,7 +915,7 @@ function renderManufacturingCapabilities() {
 
 function renderManufacturingCapabilityReview() {
   return renderReviewDetails({
-    title: "Capability API Status",
+    title: "制造能力 API 状态",
     badges: [badge("Read-only", "active"), badge(capabilityApiState.source, capabilityApiState.status === "error" ? "pending" : "draft")],
     rows: [
       ["API route", "GET /api/manufacturing-capabilities"],
@@ -928,7 +928,7 @@ function renderManufacturingCapabilityReview() {
 
 function renderManufacturingCapabilitiesLoading() {
   return `
-    ${renderDataStatus("loading", "Loading manufacturing capabilities", "Requesting GET /api/manufacturing-capabilities with the current admin session when available.")}
+    ${renderDataStatus("loading", "正在加载制造能力", "Requesting GET /api/manufacturing-capabilities with the current admin session when available.")}
     <div class="table-wrap table-skeleton" aria-label="Loading manufacturing capability rows">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -939,14 +939,14 @@ function renderManufacturingCapabilitiesLoading() {
 
 function renderManufacturingCapabilitiesEmpty() {
   return `
-    ${renderDataStatus("empty", "No live manufacturing capabilities found", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
+    ${renderDataStatus("empty", "暂无实时制造能力数据", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
     ${renderReadOnlyCapabilityCard()}
   `;
 }
 
 function renderManufacturingCapabilityTable(capabilities, source) {
   const rows = [
-    ["Capability Line", "Equipment", "Quantity", "Max Length", "Monthly Capacity", "Public Description", "Status / Notes"],
+    ["能力线", "设备", "数量", "最大长度", "月产能", "公开描述", "状态 / 备注"],
     ...capabilities.map((capability) => [
       businessBadge(capability.capability_line),
       capability.equipment || "Unnamed equipment",
@@ -967,17 +967,17 @@ function renderManufacturingCapabilityTable(capabilities, source) {
 function renderReadOnlyCapabilityCard() {
   return `
     <div class="form-card read-only-card">
-      <h3>Capability Review Pattern</h3>
+      <h3>制造能力查看模式</h3>
       <p>This card remains a static review pattern. It does not submit data or create capability records.</p>
       <div class="form-grid">
         <label class="field">
-          <span>Allowed action</span>
-          <input type="text" value="Read-only capability review" readonly />
+          <span>允许动作</span>
+          <input type="text" value="只读制造能力查看" readonly />
           <small>No create, update or delete API call is connected.</small>
         </label>
         <label class="field">
-          <span>Safety boundary</span>
-          <input type="text" value="No production or delivery commitment" readonly />
+          <span>安全边界</span>
+          <input type="text" value="不承诺生产或交期" readonly />
           <small>Capability display does not confirm feasibility, price or delivery time.</small>
         </label>
       </div>
