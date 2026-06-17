@@ -284,6 +284,24 @@ const aiDraftPreviewFallback = [
   },
 ];
 
+const registryMetadataPreviewCards = [
+  {
+    title: "AI 草稿复核",
+    description: "用于展示 AI 草稿的风险、审核状态和禁用能力。",
+    safetyLabels: ["仅预览", "只读", "不执行助手", "不可发送", "不可审批"],
+  },
+  {
+    title: "沟通复核",
+    description: "用于展示沟通内容、附件类型、敏感信息和人工复核提示。",
+    safetyLabels: ["仅预览", "只读", "不自动回复", "不创建任务", "不上传或归档文件"],
+  },
+  {
+    title: "询盘复核",
+    description: "用于展示询盘、沟通复核、AI 草稿复核、缺失信息和风险标记。",
+    safetyLabels: ["仅预览", "只读", "不生成报价", "不生成 PI", "不创建订单", "不触发付款 / 生产 / 发货"],
+  },
+];
+
 const aiDraftApiState = createReadOnlyState("drafts");
 
 function badge(label, type = "") {
@@ -1021,6 +1039,7 @@ function renderAiDrafts() {
     ${statusNotice}
     ${renderAiDraftTable(aiDraftApiState.drafts, aiDraftApiState.source)}
     ${renderReadOnlyAiDraftCard()}
+    ${renderRegistryMetadataPreviewPanel()}
   `;
 }
 
@@ -1052,6 +1071,7 @@ function renderAiDraftsEmpty() {
   return `
     ${renderDataStatus("empty", "暂无实时 AI 询盘分析草稿", "当前没有可用实时数据。本页面为只读；写入和创建支持将在后续批准阶段加入。")}
     ${renderReadOnlyAiDraftCard()}
+    ${renderRegistryMetadataPreviewPanel()}
   `;
 }
 
@@ -1092,6 +1112,36 @@ function renderReadOnlyAiDraftCard() {
         </label>
       </div>
     </div>
+  `;
+}
+
+function renderRegistryMetadataPreviewPanel() {
+  const panelBadges = ["仅预览", "只读", "不执行助手", "不调用 API", "不写入数据", "不发送", "不审批"]
+    .map((label) => badge(label, label === "仅预览" || label === "只读" ? "active" : "pending"))
+    .join(" ");
+
+  return `
+    <div class="form-card read-only-card" aria-label="复核助手预览">
+      <h3>复核助手预览</h3>
+      <p>静态只读预览，不执行助手、不调用 API、不写入数据。</p>
+      <p>所有复核助手仅用于未来展示规划，不代表可以发送、审批、创建任务、生成报价、PI 或订单。</p>
+      <p>${panelBadges}</p>
+      <div class="module-preview">
+        ${registryMetadataPreviewCards.map(renderRegistryMetadataPreviewCard).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderRegistryMetadataPreviewCard(card) {
+  return `
+    <article class="module-card">
+      <h3>${escapeHtml(card.title)}</h3>
+      <p>${escapeHtml(card.description)}</p>
+      <p>
+        ${card.safetyLabels.map((label) => badge(label, label === "仅预览" || label === "只读" ? "active" : "pending")).join(" ")}
+      </p>
+    </article>
   `;
 }
 
