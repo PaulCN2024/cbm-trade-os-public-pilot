@@ -2,21 +2,22 @@
 
 ## 1. Current Progress Summary
 
-- Full product vision progress: 23%
-- Internal MVP / foundation progress: 48%
-- Current phase: Phase 0B - Pure Local Orchestration Layer Frozen; next stage is Display Adapter Planning for Admin UI
-- Current status: foundations, pure local review summary helpers, and orchestration checkpoint completed; no schema/API/write/external channel integration yet
+- Full product vision progress: 24%
+- Internal MVP / foundation progress: 51%
+- Current phase: Phase 0B - Display Adapter Layer Frozen; next stage is Admin UI Display Adapter Wiring Planning
+- Current status: foundations, pure local review summary helpers, orchestration checkpoint, and display adapter checkpoint completed; no schema/API/write/external channel integration yet
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
-- Full vision: 23% `[█████░░░░░░░░░░░░░░░]`
-- Internal MVP: 48% `[██████████░░░░░░░░░░]`
+- Full vision: 24% `[█████░░░░░░░░░░░░░░░]`
+- Internal MVP: 51% `[██████████░░░░░░░░░░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
 - Review summary helper registry: 90% `[██████████████████░░]`
+- Display Adapter Layer: 90% `[██████████████████░░]`
 
 ## 3. Completed Major Milestones
 
@@ -34,6 +35,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Review Summary Helper Registry
 - Review Summary Registry Usage Examples
 - Phase 0B Orchestration Layer Final Checkpoint
+- Phase 0B Display Adapter Layer Final Checkpoint
 
 ## 4. Current Frozen Foundations
 
@@ -42,11 +44,12 @@ These percentages are planning estimates. They should move only after milestone 
 - Phase 0B review summary helpers
 - Review summary helper registry
 - Phase 0B pure local orchestration layer
+- Phase 0B display adapter layer
 
 ## 5. Current Active Area
 
-- Current active area: Display Adapter Planning for Admin UI
-- Phase 0B pure local orchestration layer is temporarily frozen
+- Current active area: Admin UI Display Adapter Wiring Planning
+- Phase 0B display adapter layer is temporarily frozen
 
 ## 6. Not Yet Started / Still Early
 
@@ -78,7 +81,7 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. Display Adapter Planning for Admin UI
+1. Admin UI Display Adapter Wiring Plan
 2. Display Adapter Readiness Review
 3. Schema Planning for review summary persistence
 4. API Read-only Integration Planning
