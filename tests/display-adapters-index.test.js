@@ -7,8 +7,32 @@ test("index exports registryMetadataDisplayAdapter", () => {
   assert.equal(typeof displayAdapters.registryMetadataDisplayAdapter, "function");
 });
 
+test("index exports aiDraftReviewDisplayAdapter", () => {
+  assert.equal(typeof displayAdapters.aiDraftReviewDisplayAdapter, "function");
+});
+
 test("index exports listRegistryMetadataDisplayModels", () => {
   assert.equal(typeof displayAdapters.listRegistryMetadataDisplayModels, "function");
+});
+
+test("aiDraftReviewDisplayAdapter works through index export", () => {
+  const viewModel = displayAdapters.aiDraftReviewDisplayAdapter({
+    normalized_draft: {
+      draft_type: "customer_reply_draft",
+      task_type: "communication_summary",
+    },
+    risk_level: "high",
+    action_boundary: "review_required",
+    approval_required: true,
+    needs_human_review: true,
+    warnings: [],
+    draft_only: true,
+    can_send: false,
+    can_auto_approve: false,
+  });
+
+  assert.equal(viewModel.title, "AI 草稿复核");
+  assert.equal(viewModel.technicalDetails.risk_level, "high");
 });
 
 test("registryMetadataDisplayAdapter works through index export", () => {
