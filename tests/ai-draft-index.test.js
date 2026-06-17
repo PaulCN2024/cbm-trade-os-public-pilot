@@ -37,3 +37,7 @@ test("ai draft index exports safety classifier helpers", () => {
   assert.equal(typeof aiDrafts.classifyAiDraftActionBoundary, "function");
   assert.equal(typeof aiDrafts.classifyAiDraftSafety, "function");
 });
+
+test("ai draft index exports review summary helper", () => {
+  assert.equal(typeof aiDrafts.prepareAiDraftReviewSummary, "function");
+});
