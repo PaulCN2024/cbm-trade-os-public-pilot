@@ -3,10 +3,10 @@ import { getAdminAccessToken } from "../../lib/admin-auth.js";
 const navItems = [
   { id: "dashboard", label: "Dashboard" },
   { id: "customers", label: "客户" },
-  { id: "companies", label: "Companies" },
+  { id: "companies", label: "公司" },
   { id: "inquiries", label: "询盘" },
-  { id: "products", label: "Products" },
-  { id: "manufacturing-capabilities", label: "Capabilities" },
+  { id: "products", label: "产品" },
+  { id: "manufacturing-capabilities", label: "制造能力" },
   { id: "suppliers", label: "Suppliers", soon: true },
   { id: "ai-drafts", label: "AI 草稿" },
   { id: "quotations", label: "Quotations", soon: true },
@@ -335,7 +335,7 @@ function setSection(sectionId) {
   sectionTitle.textContent = config.sectionTitle;
   sectionHelp.textContent = config.sectionHelp;
   mainContent.innerHTML = config.content(sectionId);
-  reviewTitle.textContent = config.title === "Coming Soon" ? "Module Status" : "Review Panel";
+  reviewTitle.textContent = config.title === "Coming Soon" ? "Module Status" : "复核面板";
   reviewPanel.innerHTML = config.review(sectionId);
   if (sectionId === "companies") {
     loadCompaniesReadOnly();
