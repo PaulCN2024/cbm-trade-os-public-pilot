@@ -34,3 +34,7 @@ test("communication index exports classification helpers", () => {
   assert.equal(typeof communication.classifyAttachmentName, "function");
   assert.equal(typeof communication.detectSensitiveCommunication, "function");
 });
+
+test("communication index exports review summary helper", () => {
+  assert.equal(typeof communication.prepareCommunicationReviewSummary, "function");
+});
