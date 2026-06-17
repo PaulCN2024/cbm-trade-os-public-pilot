@@ -3,21 +3,22 @@
 ## 1. Current Progress Summary
 
 - Full product vision progress: 24%
-- Internal MVP / foundation progress: 51%
-- Current phase: Phase 0B - Display Adapter Layer Frozen; next stage is Admin UI Display Adapter Wiring Planning
-- Current status: foundations, pure local review summary helpers, orchestration checkpoint, and display adapter checkpoint completed; no schema/API/write/external channel integration yet
+- Internal MVP / foundation progress: 52%
+- Current phase: Phase 0B - Admin UI Display Adapter Wiring Preview Started
+- Current status: foundations, pure local review summary helpers, orchestration checkpoint, display adapter checkpoint, and first static Admin UI display adapter preview completed; no schema/API/write/external channel integration yet
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
 - Full vision: 24% `[█████░░░░░░░░░░░░░░░]`
-- Internal MVP: 51% `[██████████░░░░░░░░░░]`
+- Internal MVP: 52% `[██████████░░░░░░░░░░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
 - Review summary helper registry: 90% `[██████████████████░░]`
 - Display Adapter Layer: 90% `[██████████████████░░]`
+- Admin UI Display Adapter Wiring Preview: 15% `[███░░░░░░░░░░░░░░░░░]`
 
 ## 3. Completed Major Milestones
 
@@ -36,6 +37,8 @@ These percentages are planning estimates. They should move only after milestone 
 - Review Summary Registry Usage Examples
 - Phase 0B Orchestration Layer Final Checkpoint
 - Phase 0B Display Adapter Layer Final Checkpoint
+- Registry Metadata Read-only UI Preview Panel
+- Registry Metadata UI Preview Browser Review
 
 ## 4. Current Frozen Foundations
 
@@ -48,8 +51,8 @@ These percentages are planning estimates. They should move only after milestone 
 
 ## 5. Current Active Area
 
-- Current active area: Admin UI Display Adapter Wiring Planning
-- Phase 0B display adapter layer is temporarily frozen
+- Current active area: Admin UI Display Adapter Wiring Preview
+- Display Adapter layer is frozen, and first static UI preview has passed browser review
 
 ## 6. Not Yet Started / Still Early
 
@@ -81,7 +84,7 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. Admin UI Display Adapter Wiring Plan
+1. Decide next read-only UI preview target or create usage notes for registry metadata UI preview
 2. Display Adapter Readiness Review
 3. Schema Planning for review summary persistence
 4. API Read-only Integration Planning
