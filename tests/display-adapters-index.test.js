@@ -15,6 +15,10 @@ test("index exports communicationReviewDisplayAdapter", () => {
   assert.equal(typeof displayAdapters.communicationReviewDisplayAdapter, "function");
 });
 
+test("index exports inquiryReviewDisplayAdapter", () => {
+  assert.equal(typeof displayAdapters.inquiryReviewDisplayAdapter, "function");
+});
+
 test("index exports listRegistryMetadataDisplayModels", () => {
   assert.equal(typeof displayAdapters.listRegistryMetadataDisplayModels, "function");
 });
@@ -60,6 +64,32 @@ test("communicationReviewDisplayAdapter works through index export", () => {
 
   assert.equal(viewModel.title, "沟通复核");
   assert.equal(viewModel.technicalDetails.channel, "email");
+});
+
+test("inquiryReviewDisplayAdapter works through index export", () => {
+  const viewModel = displayAdapters.inquiryReviewDisplayAdapter({
+    normalized_inquiry: {
+      inquiry_type: "website",
+      customer_name: "Demo Customer",
+      business_line: "A_ARCHITECTURAL",
+      status: "new",
+    },
+    missing_information: ["drawing"],
+    risk_flags: ["delivery_related"],
+    warnings: [],
+    review_required: true,
+    needs_human_review: true,
+    inquiry_only: true,
+    can_send: false,
+    can_create_quote: false,
+    can_create_pi: false,
+    can_create_order: false,
+    can_trigger_production: false,
+    can_trigger_shipment: false,
+  });
+
+  assert.equal(viewModel.title, "询盘复核");
+  assert.equal(viewModel.technicalDetails.can_create_quote, false);
 });
 
 test("registryMetadataDisplayAdapter works through index export", () => {
