@@ -302,6 +302,77 @@ const registryMetadataPreviewCards = [
   },
 ];
 
+const workbenchOverviewCards = [
+  {
+    label: "新询盘",
+    value: "5",
+    subtitle: "今日新增待查看询盘",
+  },
+  {
+    label: "需要人工复核",
+    value: "8",
+    subtitle: "AI 草稿、沟通或询盘需要复核",
+  },
+  {
+    label: "缺失信息",
+    value: "4",
+    subtitle: "图纸、规格、数量或交期信息缺失",
+  },
+  {
+    label: "今日跟进",
+    value: "6",
+    subtitle: "需要联系客户或供应商",
+  },
+  {
+    label: "高风险提醒",
+    value: "2",
+    subtitle: "涉及价格、付款、交期或质量责任",
+  },
+  {
+    label: "AI 草稿待审",
+    value: "3",
+    subtitle: "仅草稿，发送前必须人工确认",
+  },
+];
+
+const workbenchQueueItems = [
+  {
+    title: "秘鲁客户询盘：缺少图纸 / 规格",
+    category: "询盘",
+    badges: ["缺失信息", "需要复核"],
+    recommendedAction: "补充图纸和产品规格后再继续报价判断",
+    disabledCapabilities: ["不可发送", "不可报价", "不可生成 PI"],
+  },
+  {
+    title: "AI 回复草稿：涉及价格，需要复核",
+    category: "AI 草稿",
+    badges: ["高风险", "需要人工复核"],
+    recommendedAction: "人工确认价格、交期和付款条款后再使用",
+    disabledCapabilities: ["不可发送", "不可审批"],
+  },
+  {
+    title: "供应商报价附件：需要人工查看",
+    category: "附件 / 供应商",
+    badges: ["附件复核", "供应商报价"],
+    recommendedAction: "确认报价有效期、币种、交期和规格",
+    disabledCapabilities: ["不可生成客户报价", "不可确认订单"],
+  },
+  {
+    title: "客户跟进：已超过计划跟进时间",
+    category: "客户跟进",
+    badges: ["待跟进"],
+    recommendedAction: "人工决定是否发送跟进消息",
+    disabledCapabilities: ["不可自动发送", "不可创建任务"],
+  },
+  {
+    title: "制造能力问题：不得承诺交期",
+    category: "制造能力",
+    badges: ["需要复核", "不承诺交期"],
+    recommendedAction: "人工核实产能、设备和供应商反馈",
+    disabledCapabilities: ["不可确认生产", "不可确认交期", "不可发货"],
+  },
+];
+
 const aiDraftApiState = createReadOnlyState("drafts");
 
 function badge(label, type = "") {
@@ -377,22 +448,37 @@ function setSection(sectionId) {
 
 function renderDashboard() {
   return `
-    <div class="module-preview">
-      <article class="module-card">
-        <h3>Foundation Objects</h3>
-        <p>Companies, products, capabilities and AI draft reviews use the same page rhythm.</p>
-        ${badge("Consistent layout", "active")}
-      </article>
-      <article class="module-card">
-        <h3>Business Lines</h3>
-        <p>Every major record can show Architectural, Industrial or Unknown clearly.</p>
-        ${businessBadge("A_ARCHITECTURAL")} ${businessBadge("B_INDUSTRIAL")}
-      </article>
-      <article class="module-card">
-        <h3>Manual Review</h3>
-        <p>Drafts stay internal until a human approves the next action.</p>
-        ${badge("Approval Required", "approval")}
-      </article>
+    <div class="workbench-preview" aria-label="静态工作台预览">
+      <div class="workbench-header">
+        <div>
+          <span class="state-label">工作台</span>
+          <h3>今日待处理</h3>
+          <p>静态预览数据，不代表实时客户或询盘状态。</p>
+          <p>仅用于界面验证，不调用 API、不执行助手、不写入数据。</p>
+        </div>
+        <div class="workbench-badges" aria-label="工作台预览状态">
+          ${badge("静态预览", "active")}
+          ${badge("只读", "active")}
+          ${badge("不执行动作", "pending")}
+        </div>
+      </div>
+
+      <div class="workbench-summary-grid" aria-label="今日概览">
+        ${workbenchOverviewCards.map(renderWorkbenchCard).join("")}
+      </div>
+
+      <div class="workbench-layout">
+        <section class="workbench-queue" aria-label="静态待处理队列">
+          <div class="workbench-section-header">
+            <h3>待处理队列</h3>
+            <span>5 条静态示例</span>
+          </div>
+          ${workbenchQueueItems.map(renderWorkbenchQueueItem).join("")}
+        </section>
+        <aside class="workbench-review-panel" aria-label="只读复核预览">
+          ${renderWorkbenchStaticReview()}
+        </aside>
+      </div>
     </div>
   `;
 }
@@ -401,17 +487,85 @@ function renderDashboardReview() {
   return `
     <div class="review-stack">
       <div class="review-card">
-        <h3>Step 2B Boundary</h3>
+        <h3>工作台只读边界</h3>
         <ul class="check-list">
-          <li>No API connection</li>
-          <li>No CRUD submission</li>
-          <li>No business automation</li>
-          <li>No OpenAI or outbound message integration</li>
+          <li>静态预览数据，不代表实时客户或询盘状态</li>
+          <li>不调用 API，不执行助手，不写入数据库</li>
+          <li>不发送、不审批、不创建任务</li>
+          <li>不生成报价、PI、订单，不触发付款 / 生产 / 发货</li>
         </ul>
       </div>
       <div class="review-card">
-        <h3>Reusable Patterns</h3>
-        <p>Sidebar, topbar, metric cards, tables, form cards, detail panels, badges and state cards.</p>
+        <h3>预览目标</h3>
+        <p>先验证工作台、今日待处理、复核队列和只读详情面板的产品方向，再进入任何真实数据或业务流程。</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderWorkbenchCard(card) {
+  return `
+    <article class="workbench-card">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderWorkbenchQueueItem(item) {
+  const badgeHtml = item.badges
+    .map((label) => badge(label, label.includes("高风险") ? "risk" : "approval"))
+    .join(" ");
+  const disabledHtml = item.disabledCapabilities
+    .map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`)
+    .join("");
+
+  return `
+    <article class="workbench-queue-item">
+      <div>
+        <span class="workbench-category">${escapeHtml(item.category)}</span>
+        <h4>${escapeHtml(item.title)}</h4>
+      </div>
+      <div class="workbench-badges">${badgeHtml}</div>
+      <p><strong>推荐人工动作：</strong>${escapeHtml(item.recommendedAction)}</p>
+      <div class="disabled-chip-row" aria-label="禁用能力">${disabledHtml}</div>
+    </article>
+  `;
+}
+
+function renderWorkbenchStaticReview() {
+  return `
+    <h3>只读复核预览</h3>
+    <p class="workbench-review-note">固定示例：秘鲁客户询盘，缺少图纸 / 规格。</p>
+
+    <dl class="workbench-review-list">
+      <dt>摘要</dt>
+      <dd>客户询盘需要补充图纸、规格和目标数量后，才能进入报价判断。</dd>
+      <dt>推荐人工动作</dt>
+      <dd>先补齐关键信息，再由人工决定是否进入供应商询价或报价准备。</dd>
+      <dt>技术说明</dt>
+      <dd>静态预览数据。当前不调用 API、不执行助手、不写入数据库。</dd>
+    </dl>
+
+    <div class="workbench-review-group">
+      <h4>风险 / 缺失信息</h4>
+      <ul class="check-list">
+        <li>缺少图纸</li>
+        <li>缺少产品规格</li>
+        <li>未确认目标数量</li>
+        <li>不应直接承诺价格或交期</li>
+      </ul>
+    </div>
+
+    <div class="workbench-review-group">
+      <h4>禁用能力</h4>
+      <div class="disabled-chip-row">
+        <span class="disabled-chip">不可发送</span>
+        <span class="disabled-chip">不可报价</span>
+        <span class="disabled-chip">不可生成 PI</span>
+        <span class="disabled-chip">不可下单</span>
+        <span class="disabled-chip">不可触发付款 / 生产 / 发货</span>
       </div>
     </div>
   `;
