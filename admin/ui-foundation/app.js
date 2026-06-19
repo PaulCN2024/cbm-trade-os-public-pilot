@@ -169,6 +169,7 @@ const CUSTOMERS_ENDPOINT = "/api/admin-read/customers";
 const INQUIRIES_ENDPOINT = "/api/admin-read/inquiries";
 const AI_REVIEW_ENDPOINT = "/api/admin-read/ai-review";
 const SUPPLIER_CAPABILITIES_ENDPOINT = "/api/admin-read/supplier-capabilities";
+const DOCUMENTS_ENDPOINT = "/api/admin-read/documents";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
 
@@ -1196,6 +1197,7 @@ const capabilityWorkflowItems = [
 ];
 
 const aiDraftApiState = createReadOnlyState("drafts");
+const documentApiState = createReadOnlyState("documents");
 
 function badge(label, type = "") {
   return `<span class="badge ${type}">${escapeHtml(label)}</span>`;
@@ -1283,6 +1285,9 @@ function setSection(sectionId) {
   }
   if (sectionId === "ai-drafts") {
     loadAiDraftsReadOnly();
+  }
+  if (sectionId === "files") {
+    loadDocumentsReadOnly();
   }
   if (sectionId === "quotations") {
     loadInquiriesReadOnly();
@@ -3768,21 +3773,128 @@ function renderRegistryMetadataPreviewCard(card) {
   `;
 }
 
+function getFileCenterViewModel() {
+  const isLive = documentApiState.status === "loaded" && documentApiState.documents.length > 0;
+  const items = isLive
+    ? documentApiState.documents.map(mapDocumentRecordToFileItem)
+    : fileCenterQueueItems.map(normalizeStaticFileCenterItem);
+  return {
+    isLive,
+    items,
+    selectedItem: items[0] || normalizeStaticFileCenterItem(fileCenterQueueItems[0]),
+    summaryCards: isLive ? buildFileSummaryCardsFromRecords(items) : fileCenterSummaryCards,
+    sourceLabel: isLive
+      ? "实时只读数据"
+      : documentApiState.status === "error"
+        ? "API 暂不可用，显示静态预览"
+        : "静态预览 fallback",
+    queueCountLabel: isLive ? `${items.length} 条只读文件元数据` : "6 条静态示例",
+  };
+}
+
+function normalizeStaticFileCenterItem(item) {
+  return {
+    ...item,
+    reviewNote: item.reviewNote || item.aiSuggestion || "静态文件复核示例，仅用于界面验证。",
+    humanNextStep: item.humanNextStep || "人工确认文件类型、关联业务和风险边界后再推进。",
+    disabledCapabilities: item.disabledCapabilities || ["不可上传", "不可下载", "不可删除", "不可解析"],
+  };
+}
+
+function mapDocumentRecordToFileItem(record, index) {
+  record = record || {};
+  const title = firstDisplayValue([record.title, record.name, `只读文件元数据 ${index + 1}`]);
+  const fileType = firstDisplayValue([record.file_type, record.document_type, "文件资料"]);
+  const linkedBusinessType = firstDisplayValue([record.linked_business_type, "未关联"]);
+  const linkedBusinessId = firstDisplayValue([record.linked_business_id, ""]);
+  const source = firstDisplayValue([record.source, "admin-read documents"]);
+  const status = firstDisplayValue([record.status, "待人工复核"]);
+  const risk = normalizeFileRisk(record.risk);
+  const missingInfo = getDocumentMissingMetadata(record);
+  const createdAt = formatDateValue(record.created_at);
+  const updatedAt = formatDateValue(record.updated_at);
+  const fileSize = formatFileSize(record.file_size);
+
+  return {
+    title,
+    type: fileType,
+    linkedBusiness: linkedBusinessId === "—" ? linkedBusinessType : `${linkedBusinessType} / ${linkedBusinessId}`,
+    status,
+    risk: risk.level,
+    riskTone: risk.tone,
+    missingInfo,
+    reviewNote: `仅展示文件元数据：来源 ${source}，创建 ${createdAt}，更新 ${updatedAt}，大小 ${fileSize}。不读取文件内容。`,
+    humanNextStep: "人工确认文件类型、关联业务和风险边界后，再决定是否进入文件归档、供应商询价或报价准备。",
+    disabledCapabilities: ["不可上传", "不可下载", "不可删除", "不可解析 / OCR", "不可生成报价", "不可生成 PI"],
+  };
+}
+
+function normalizeFileRisk(value) {
+  const risk = String(value ?? "").trim();
+  const lowerRisk = risk.toLowerCase();
+  if (risk.includes("高") || lowerRisk.includes("high")) return { level: "高", tone: "danger" };
+  if (risk.includes("中") || lowerRisk.includes("medium") || lowerRisk.includes("review")) return { level: "中", tone: "warning" };
+  return { level: risk || "暂无风险等级", tone: "neutral" };
+}
+
+function getDocumentMissingMetadata(record) {
+  const missing = [];
+  if (!hasDisplayValue([record.title, record.name])) missing.push("文件名称");
+  if (!hasDisplayValue([record.file_type, record.document_type])) missing.push("文件类型");
+  if (!hasDisplayValue([record.linked_business_type])) missing.push("关联类型");
+  if (!hasDisplayValue([record.linked_business_id])) missing.push("关联业务 ID");
+  return missing.length ? missing : ["需要人工确认"];
+}
+
+function formatFileSize(value) {
+  const size = Number(value);
+  if (!Number.isFinite(size) || size <= 0) return "未提供";
+  if (size >= 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)} MB`;
+  if (size >= 1024) return `${Math.round(size / 1024)} KB`;
+  return `${Math.round(size)} B`;
+}
+
+function buildFileSummaryCardsFromRecords(items) {
+  const highRiskCount = items.filter((item) => item.risk === "高").length;
+  const missingCount = items.filter((item) => !item.missingInfo.includes("需要人工确认")).length;
+  const quoteDocCount = items.filter((item) => /报价|PI|合同|quotation|contract/i.test(`${item.title} ${item.type}`)).length;
+  const drawingCount = items.filter((item) => /图纸|技术|drawing|cad|pdf/i.test(`${item.title} ${item.type}`)).length;
+  return [
+    { label: "只读文件", value: String(items.length), subtitle: "来自 admin-read 文件元数据", tone: "info" },
+    { label: "缺失元数据", value: String(missingCount), subtitle: "名称、类型或关联业务待确认", tone: "warning" },
+    { label: "图纸 / 技术资料", value: String(drawingCount), subtitle: "仅按文件名和类型保守识别", tone: "info" },
+    { label: "报价 / PI / 合同", value: String(quoteDocCount), subtitle: "业务单据必须人工复核", tone: "danger" },
+    { label: "高风险提醒", value: String(highRiskCount), subtitle: "价格、付款、交期或责任相关", tone: "danger" },
+    { label: "写入动作", value: "0", subtitle: "不上传、下载、删除、解析或 OCR", tone: "neutral" },
+  ];
+}
+
 function renderFiles() {
+  const model = getFileCenterViewModel();
+  const statusNotice =
+    documentApiState.status === "loading"
+      ? renderDataStatus("loading", "正在加载文件元数据", `正在使用当前管理员会话请求 GET ${DOCUMENTS_ENDPOINT}。`)
+      : documentApiState.status === "error"
+      ? renderDataStatus("error", "文件元数据 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${documentApiState.error}`)
+      : documentApiState.status === "empty"
+      ? renderDataStatus("empty", "暂无实时文件元数据", "当前没有可用文件元数据，继续显示静态预览 fallback。")
+      : "";
+
   return `
     <div class="file-center-preview" aria-label="文件中心静态工作流预览">
+      ${statusNotice}
       <div class="file-center-header">
         <div>
           <span class="state-label">文件中心</span>
           <h3>文件中心</h3>
           <p>集中查看询盘附件、图纸资料、合同单据、质量证据和缺失文件。</p>
-          <p class="file-center-safety-note">静态预览数据，仅用于界面验证；所有文件解析、报价、PI、合同、订单、赔付和交期承诺必须人工复核。</p>
+          <p class="file-center-safety-note">${model.isLive ? "实时只读文件元数据，仅用于人工复核；不读取文件内容、不展示存储路径或下载链接。" : "静态预览数据，仅用于界面验证；所有文件解析、报价、PI、合同、订单、赔付和交期承诺必须人工复核。"}</p>
         </div>
         <div class="file-center-badges">
-          ${badge("静态预览", "draft")}
+          ${badge(model.sourceLabel, model.isLive ? "active" : "draft")}
           ${badge("只读", "active")}
           ${badge("人工复核", "approval")}
-          ${badge("不自动解析", "pending")}
+          ${badge("不上传 / 下载 / 解析", "pending")}
         </div>
       </div>
 
@@ -3792,10 +3904,10 @@ function renderFiles() {
             <span>FILE REVIEW SUMMARY</span>
             <h3>文件复核概览</h3>
           </div>
-          <p>所有文件记录均为静态示例，不代表真实客户文件。</p>
+          <p>${escapeHtml(model.isLive ? "只读统计来自文件元数据，不代表文件内容已读取或业务动作可执行。" : "所有文件记录均为静态示例，不代表真实客户文件。")}</p>
         </div>
         <div class="file-summary-grid">
-          ${renderSummaryCards(fileCenterSummaryCards, renderFileSummaryCard)}
+          ${renderSummaryCards(model.summaryCards, renderFileSummaryCard)}
         </div>
       </section>
 
@@ -3805,10 +3917,10 @@ function renderFiles() {
             <span>FILE REVIEW QUEUE</span>
             <h3>文件复核队列</h3>
           </div>
-          <p>按文件类型、风险和缺失资料整理，帮助操作员先复核再进入业务动作。</p>
+          <p>按文件类型、风险和缺失资料整理，帮助操作员先复核再进入业务动作。${escapeHtml(model.queueCountLabel)}</p>
         </div>
         <div class="file-review-queue">
-          ${fileCenterQueueItems.map(renderFileQueueItem).join("")}
+          ${model.items.map(renderFileQueueItem).join("")}
         </div>
       </section>
     </div>
@@ -3828,6 +3940,7 @@ function renderFileSummaryCard(card) {
 function renderFileQueueItem(item) {
   const missingInfoHtml = renderChipList(item.missingInfo, "file-chip");
   const disabledHtml = renderDisabledCapabilities(item.disabledCapabilities);
+  const reviewNote = item.reviewNote || item.aiSuggestion || "需要人工确认文件元数据和业务边界。";
 
   return `
     <article class="file-review-queue-item">
@@ -3842,7 +3955,7 @@ function renderFileQueueItem(item) {
         </div>
       </div>
       <p><strong>关联业务：</strong>${escapeHtml(item.linkedBusiness)}</p>
-      <p><strong>AI 建议：</strong>${escapeHtml(item.aiSuggestion)}</p>
+      <p><strong>复核说明：</strong>${escapeHtml(reviewNote)}</p>
       <p><strong>人工下一步：</strong>${escapeHtml(item.humanNextStep)}</p>
       <div class="file-row-group">
         <span>缺失资料</span>
@@ -3857,24 +3970,25 @@ function renderFileQueueItem(item) {
 }
 
 function renderFileReview() {
-  const selected = fileCenterQueueItems[0];
+  const { selectedItem: selected, isLive } = getFileCenterViewModel();
+  const reviewNote = selected.reviewNote || selected.aiSuggestion || "需要人工确认文件元数据和业务边界。";
   return `
     <div class="review-card file-review-card" aria-label="文件复核预览">
       <div class="file-review-heading">
         <div>
           <span class="state-label">文件复核预览</span>
           <h3>文件复核预览</h3>
-          <p>固定示例：秘鲁轻钢龙骨规格资料。</p>
+          <p>${isLive ? "实时只读记录：" : "固定示例："}${escapeHtml(selected.title)}。</p>
         </div>
         <div class="file-review-meta">
-          ${badge("静态预览", "draft")}
+          ${badge(isLive ? "实时只读数据" : "静态预览", isLive ? "active" : "draft")}
           ${badge("只读", "active")}
-          ${badge("不自动解析", "pending")}
+          ${badge("不上传 / 下载 / 解析", "pending")}
         </div>
       </div>
       <dl>
         <dt>文件摘要</dt>
-        <dd>客户提供的规格资料不足以直接报价，需要补齐厚度、锌层、包装和装柜重量后再进入人工判断。</dd>
+        <dd>${escapeHtml(reviewNote)}</dd>
         <dt>文件类型</dt>
         <dd>${escapeHtml(selected.type)}</dd>
         <dt>关联业务</dt>
@@ -3885,8 +3999,8 @@ function renderFileReview() {
         <dd><span class="file-risk file-risk-${escapeHtml(selected.riskTone)}">风险 ${escapeHtml(selected.risk)}</span></dd>
         <dt>缺失资料</dt>
         <dd>${renderChipList(selected.missingInfo, "file-chip")}</dd>
-        <dt>AI 建议</dt>
-        <dd>${escapeHtml(selected.aiSuggestion)}</dd>
+        <dt>复核说明</dt>
+        <dd>${escapeHtml(reviewNote)}</dd>
         <dt>人工下一步</dt>
         <dd>${escapeHtml(selected.humanNextStep)}</dd>
       </dl>
@@ -3898,7 +4012,7 @@ function renderFileReview() {
       </div>
       <div class="file-review-group">
         <h4>安全边界</h4>
-        <p>本页只展示静态文件复核预览；不读取真实文件、不上传、不删除、不解析、不归档，也不生成报价、PI、合同或订单。</p>
+        <p>${isLive ? "本页只展示实时只读文件元数据；不读取文件内容、不展示存储路径或下载链接、不上传、不删除、不解析、不归档，也不生成报价、PI、合同或订单。" : "本页只展示静态文件复核预览；不读取真实文件、不上传、不删除、不解析、不归档，也不生成报价、PI、合同或订单。"}</p>
       </div>
     </div>
   `;
@@ -4342,6 +4456,24 @@ function renderCommercialWorkflowReview(sectionId) {
       </div>
     </div>
   `;
+}
+
+function loadDocumentsReadOnly() {
+  return loadReadOnlyList({
+    state: documentApiState,
+    collectionKey: "documents",
+    endpoint: DOCUMENTS_ENDPOINT,
+    payloadKey: "documents",
+    fallbackRecords: fileCenterQueueItems,
+    fallbackSource: fallbackLabel,
+    refresh: refreshDocumentsView,
+  });
+}
+
+function refreshDocumentsView() {
+  if (activeSectionId !== "files") return;
+  mainContent.innerHTML = renderFiles();
+  reviewPanel.innerHTML = renderFileReview();
 }
 
 function loadAiDraftsReadOnly() {

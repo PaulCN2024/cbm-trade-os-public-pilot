@@ -3,16 +3,16 @@
 ## 1. Current Progress Summary
 
 - Full product vision progress: 34%
-- Internal MVP / foundation progress: 78%
-- Current phase: Phase UI-2B - File Metadata Admin-read Resource Added
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, and File Metadata admin-read resource completed; still no write actions, external channel integration, approval execution, or business execution
+- Internal MVP / foundation progress: 79%
+- Current phase: Phase UI-2B - File Center UI Migrated To Admin Read Documents
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, and File Center admin-read UI migration completed; still no write actions, external channel integration, approval execution, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
 - Full vision: 34% `[███████░░░░░░░░░░░░░]`
-- Internal MVP: 78% `[████████████████░░░░]`
+- Internal MVP: 79% `[████████████████░░░░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
@@ -26,6 +26,7 @@ These percentages are planning estimates. They should move only after milestone 
 - UI-2 Read-only Data Wiring: 35% `[███████░░░░░░░░░░░░░]`
 - Admin-read AI/Supplier Capability Resource Expansion: 100% `[████████████████████]`
 - Admin-read File Metadata Resource: 100% `[████████████████████]`
+- File Center Admin-read Migration: 100% `[████████████████████]`
 - AI/Supplier Capability Admin-read Migration: 100% `[████████████████████]`
 - Read-only Inquiry Data Wiring: 100% `[████████████████████]`
 - Read-only Customer Data Wiring: 100% `[████████████████████]`
@@ -85,6 +86,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Production Admin-read Path Coverage Audit
 - File/Quotation Admin-read Planning
 - Admin-read File Metadata Resource
+- File Center Admin-read UI Migration
 
 ## 4. Current Frozen Foundations
 
@@ -105,6 +107,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Admin Read Dispatcher now supports `GET /api/admin-read/ai-review`
 - Admin Read Dispatcher now supports `GET /api/admin-read/supplier-capabilities`
 - Admin Read Dispatcher now supports `GET /api/admin-read/documents`
+- File Center UI now targets `GET /api/admin-read/documents`
 - AI Review Center UI now targets `GET /api/admin-read/ai-review`
 - Supplier and Manufacturing Capability UI now targets `GET /api/admin-read/supplier-capabilities`
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
@@ -140,11 +143,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-RELEASE-022 - Deploy File Metadata Admin-read Resource And Smoke Test
-2. CBM-CODEX-SPRINT-DATA-013 - Migrate File Center UI To Admin Read Documents Path
+1. CBM-CODEX-RELEASE-022 - Deploy File Metadata Admin-read Resource And File Center Migration Smoke Test
+2. CBM-CODEX-SPRINT-API-PLAN-003 - Pre-Quotation Admin-read Resource Plan
 3. CBM-CODEX-RELEASE-013 - Authenticated Admin API Smoke Test Execution if safe token exists
-4. CBM-CODEX-SPRINT-API-PLAN-003 - Pre-Quotation Admin-read Resource Plan
-5. CBM-CODEX-SPRINT-API-READONLY-010 - Add Pre-Quotation Review Admin-read Resource
+4. CBM-CODEX-SPRINT-API-READONLY-010 - Add Pre-Quotation Review Admin-read Resource
+5. CBM-CODEX-SPRINT-DATA-014 - Migrate Pre-Quotation UI To Admin Read Path
 
 ## 9. How To Update This File
 
