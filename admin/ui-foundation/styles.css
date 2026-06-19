@@ -924,6 +924,231 @@ tr:last-child td {
   margin: 0;
 }
 
+.ai-review-preview {
+  display: grid;
+  gap: 16px;
+}
+
+.ai-review-preview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #d7e3f8;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(239, 246, 255, 0.82), rgba(255, 255, 255, 0.94)),
+    var(--surface);
+}
+
+.ai-review-preview-header h3 {
+  margin: 6px 0 8px;
+  font-size: 22px;
+}
+
+.ai-review-preview-header p {
+  max-width: 760px;
+  margin: 3px 0;
+}
+
+.ai-review-safety-note {
+  color: var(--muted-strong);
+  font-size: 13px;
+}
+
+.ai-review-preview-badges,
+.ai-review-queue-meta,
+.ai-chip-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ai-review-section {
+  display: grid;
+  gap: 10px;
+}
+
+.ai-review-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ai-review-summary-card {
+  position: relative;
+  min-height: 108px;
+  padding: 13px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.ai-review-summary-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--border);
+}
+
+.ai-review-summary-info::before {
+  background: var(--blue);
+}
+
+.ai-review-summary-warning::before {
+  background: var(--amber);
+}
+
+.ai-review-summary-danger::before {
+  background: var(--red);
+}
+
+.ai-review-summary-neutral::before {
+  background: var(--green);
+}
+
+.ai-review-summary-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ai-review-summary-card strong {
+  display: block;
+  margin: 7px 0 4px;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.ai-review-summary-card small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.ai-review-queue {
+  display: grid;
+  gap: 10px;
+}
+
+.ai-review-queue-item {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid #dde7f4;
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.ai-review-queue-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ai-review-queue-title {
+  min-width: 0;
+}
+
+.ai-review-queue-title h4 {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.ai-review-queue-item p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 13px;
+}
+
+.ai-review-row-group {
+  display: grid;
+  gap: 6px;
+}
+
+.ai-review-row-group > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ai-risk,
+.ai-status,
+.ai-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ai-risk-warning {
+  border-color: #f7d78d;
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.ai-risk-danger {
+  border-color: #fdc4ad;
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.ai-review-card dl,
+.ai-review-technical {
+  grid-template-columns: 96px 1fr;
+}
+
+.ai-review-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ai-review-heading h3 {
+  margin: 0 0 4px;
+}
+
+.ai-review-heading p,
+.ai-review-group p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.ai-review-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.ai-review-group {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.ai-review-group h4 {
+  margin: 0;
+}
+
 .supplier-workflow-preview,
 .capability-workflow-preview {
   display: grid;
@@ -1714,6 +1939,7 @@ tr:last-child td {
   }
 
   .workbench-summary-grid,
+  .ai-review-summary-grid,
   .supplier-summary-grid,
   .capability-summary-grid,
   .customer-summary-grid,
@@ -1741,12 +1967,15 @@ tr:last-child td {
 
   .form-grid,
   .module-preview,
-  .nav-list,
-  .workbench-summary-grid,
-  .workbench-review-list,
-  .supplier-summary-grid,
-  .supplier-review-card dl,
-  .supplier-boundary-grid,
+    .nav-list,
+    .workbench-summary-grid,
+    .workbench-review-list,
+    .ai-review-summary-grid,
+    .ai-review-card dl,
+    .ai-review-technical,
+    .supplier-summary-grid,
+    .supplier-review-card dl,
+    .supplier-boundary-grid,
   .capability-summary-grid,
   .capability-review-card dl,
   .capability-boundary-grid,
@@ -1760,6 +1989,7 @@ tr:last-child td {
   }
 
   .workbench-header,
+  .ai-review-preview-header,
   .supplier-workflow-header,
   .capability-workflow-header,
   .customer-workflow-header,
@@ -1770,6 +2000,8 @@ tr:last-child td {
   .workbench-section-header,
   .workbench-queue-topline,
   .workbench-review-heading,
+  .ai-review-queue-main,
+  .ai-review-heading,
   .supplier-queue-main,
   .supplier-review-heading,
   .capability-queue-main,

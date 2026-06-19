@@ -75,10 +75,10 @@ const sections = {
     review: renderManufacturingCapabilityReview,
   },
   "ai-drafts": {
-    title: "AI 草稿",
-    description: "只读 AI 询盘分析草稿审核列表，连接 Step 2A API。",
-    sectionTitle: "AI 询盘分析草稿审核",
-    sectionHelp: "只读草稿列表。建议回复仅为草稿文本，不会自动发送。",
+    title: "AI 复核中心",
+    description: "静态复核 AI 草稿、风险提醒、缺失信息和人工下一步建议。",
+    sectionTitle: "AI 复核中心",
+    sectionHelp: "静态只读预览。AI 仅提供建议和草稿，不自动发送、审批、报价或生成 PI。",
     content: renderAiDrafts,
     review: renderAiDraftReview,
   },
@@ -307,6 +307,84 @@ const registryMetadataPreviewCards = [
     title: "询盘复核",
     description: "用于展示询盘、沟通复核、AI 草稿复核、缺失信息和风险标记。",
     safetyLabels: ["仅预览", "只读", "不生成报价", "不生成 PI", "不创建订单", "不触发付款 / 生产 / 发货"],
+  },
+];
+
+const aiReviewSummaryCards = [
+  { label: "待复核草稿", value: "8", subtitle: "AI 草稿、建议回复和分析结果", tone: "warning" },
+  { label: "高风险建议", value: "3", subtitle: "涉及质量、价格、赔付或交期", tone: "danger" },
+  { label: "缺失信息提醒", value: "6", subtitle: "规格、图纸、认证或供应商反馈缺失", tone: "warning" },
+  { label: "沟通建议", value: "5", subtitle: "仅作为内部回复草稿参考", tone: "info" },
+  { label: "报价前风险", value: "4", subtitle: "进入报价前必须人工核算", tone: "neutral" },
+  { label: "禁止自动执行", value: "12", subtitle: "发送、审批和商业动作均禁用", tone: "danger" },
+];
+
+const aiReviewQueueItems = [
+  {
+    title: "秘鲁轻钢龙骨询盘 AI 初判",
+    type: "询盘分析",
+    risk: "中",
+    riskTone: "warning",
+    status: "待人工复核",
+    missingInfo: ["厚度", "锌层", "包装", "装柜重量"],
+    aiSuggestion: "客户缺少厚度、锌层、包装和装柜重量信息，建议先补充信息再询价。",
+    humanNextStep: "整理客户确认清单，并同步供应商按重量报价。",
+    disabledCapabilities: ["不可自动回复", "不可自动报价", "不可生成 PI"],
+  },
+  {
+    title: "南美高尔夫球车客户回复草稿",
+    type: "沟通草稿",
+    risk: "中",
+    riskTone: "warning",
+    status: "待人工复核",
+    missingInfo: ["车型", "电池", "认证", "包装", "目的港"],
+    aiSuggestion: "可向客户说明需要确认车型、电池、认证、包装和目的港。",
+    humanNextStep: "人工确认供应商配置后再发送客户回复。",
+    disabledCapabilities: ["不可自动发送", "不可承诺价格", "不可确认交期"],
+  },
+  {
+    title: "沿海项目铝型材问题风险复核",
+    type: "风险复核",
+    risk: "高",
+    riskTone: "danger",
+    status: "禁止自动结论",
+    missingInfo: ["照片", "项目环境", "表面处理记录", "使用位置"],
+    aiSuggestion: "涉及质量责任和可能赔付，不应直接承认责任或承诺赔付。",
+    humanNextStep: "收集照片、项目环境、表面处理记录和使用位置后再判断。",
+    disabledCapabilities: ["不可承认责任", "不可承诺赔付", "不可发送最终结论"],
+  },
+  {
+    title: "印尼吊顶系统报价前复核",
+    type: "报价前检查",
+    risk: "中",
+    riskTone: "warning",
+    status: "待内部核算",
+    missingInfo: ["材料表", "0.7mm 板材", "Option B", "安装损耗", "供应商报价"],
+    aiSuggestion: "材料表、0.7mm 板材、Option B、安装损耗和供应商报价仍需核实。",
+    humanNextStep: "完成内部核算草稿后再进入人工报价复核。",
+    disabledCapabilities: ["不可生成报价", "不可生成 PI", "不可确认生产"],
+  },
+  {
+    title: "供应商能力匹配 AI 建议",
+    type: "供应商复核",
+    risk: "中",
+    riskTone: "warning",
+    status: "待人工核实",
+    missingInfo: ["厚度", "锌层", "装柜重量", "报价有效期"],
+    aiSuggestion: "轻钢龙骨供应商与秘鲁询盘匹配，但厚度、锌层和装柜重量未确认。",
+    humanNextStep: "向供应商确认规格、包装、装柜和报价有效期。",
+    disabledCapabilities: ["不可发送 RFQ", "不可确认报价", "不可确认交期"],
+  },
+  {
+    title: "PD/PT 门安装资料 AI 建议",
+    type: "技术资料",
+    risk: "中",
+    riskTone: "warning",
+    status: "资料缺失",
+    missingInfo: ["安装手册", "视频说明", "五金配置", "系统差异"],
+    aiSuggestion: "客户需要安装指导，但当前系统资料和五金配置仍需确认。",
+    humanNextStep: "整理安装手册、视频说明和系统差异说明后再发客户。",
+    disabledCapabilities: ["不可自动发送资料", "不可承诺安装结果", "不可确认售后责任"],
   },
 ];
 
@@ -2077,44 +2155,166 @@ function renderAiDrafts() {
     return renderAiDraftsLoading();
   }
 
-  if (aiDraftApiState.status === "empty") {
-    return renderAiDraftsEmpty();
-  }
-
   const statusNotice =
-    aiDraftApiState.status === "error"
+    aiDraftApiState.status === "empty"
+      ? renderDataStatus("empty", "暂无实时 AI 询盘分析草稿", "当前没有可用实时数据。AI 复核中心 V2 使用静态只读预览，不执行任何业务动作。")
+      : aiDraftApiState.status === "error"
       ? renderDataStatus("error", "AI 询盘分析 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${aiDraftApiState.error}`)
       : renderDataStatus("success", "AI 询盘分析草稿已加载", `Source: ${aiDraftApiState.source}. 只读草稿列表，未连接发送、报价或 PI 动作。`);
 
   return `
     ${statusNotice}
-    ${renderAiDraftTable(aiDraftApiState.drafts, aiDraftApiState.source)}
-    ${renderReadOnlyAiDraftCard()}
-    ${renderRegistryMetadataPreviewPanel()}
+    ${renderAiReviewCenterPreview()}
+  `;
+}
+
+function renderAiReviewCenterPreview() {
+  return `
+    <div class="ai-review-preview" aria-label="AI 复核中心静态工作流预览">
+      <div class="ai-review-preview-header">
+        <div>
+          <span class="state-label">AI 复核中心</span>
+          <h3>AI 复核中心</h3>
+          <p>集中复核 AI 草稿、风险提醒、缺失信息和人工下一步建议。</p>
+          <p class="ai-review-safety-note">静态预览数据，仅用于界面验证；AI 仅可生成建议和草稿，所有发送、报价、PI、订单、赔付和交期承诺必须人工审批。</p>
+        </div>
+        <div class="ai-review-preview-badges">
+          ${badge("静态预览", "draft")}
+          ${badge("只读", "active")}
+          ${badge("人工审批前置", "approval")}
+          ${badge("不自动发送", "pending")}
+        </div>
+      </div>
+
+      <section class="ai-review-section" aria-label="AI 复核概览">
+        <div class="workbench-section-header">
+          <div>
+            <span>AI REVIEW SUMMARY</span>
+            <h3>今日 AI 复核概览</h3>
+          </div>
+          <p>所有数字均为静态示例，不代表实时业务状态。</p>
+        </div>
+        <div class="ai-review-summary-grid">
+          ${aiReviewSummaryCards.map(renderAiReviewSummaryCard).join("")}
+        </div>
+      </section>
+
+      <section class="ai-review-section" aria-label="AI 复核队列">
+        <div class="workbench-section-header">
+          <div>
+            <span>AI REVIEW QUEUE</span>
+            <h3>AI 复核队列</h3>
+          </div>
+          <p>按风险和信息缺口整理，帮助操作员先判断再行动。</p>
+        </div>
+        <div class="ai-review-queue">
+          ${aiReviewQueueItems.map(renderAiReviewQueueItem).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderAiReviewSummaryCard(card) {
+  return `
+    <article class="ai-review-summary-card ai-review-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderAiReviewQueueItem(item) {
+  const missingInfoHtml = item.missingInfo.map((label) => `<span class="ai-chip">${escapeHtml(label)}</span>`).join("");
+  const disabledHtml = item.disabledCapabilities.map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`).join("");
+
+  return `
+    <article class="ai-review-queue-item">
+      <div class="ai-review-queue-main">
+        <div class="ai-review-queue-title">
+          <span class="workbench-category">${escapeHtml(item.type)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+        </div>
+        <div class="ai-review-queue-meta">
+          <span class="ai-risk ai-risk-${escapeHtml(item.riskTone)}">风险 ${escapeHtml(item.risk)}</span>
+          <span class="ai-status">${escapeHtml(item.status)}</span>
+        </div>
+      </div>
+      <p><strong>AI 建议：</strong>${escapeHtml(item.aiSuggestion)}</p>
+      <p><strong>人工下一步：</strong>${escapeHtml(item.humanNextStep)}</p>
+      <div class="ai-review-row-group">
+        <span>缺失信息 / 待核实</span>
+        <div class="ai-chip-row">${missingInfoHtml}</div>
+      </div>
+      <div class="ai-review-row-group">
+        <span>禁用能力</span>
+        <div class="disabled-chip-row">${disabledHtml}</div>
+      </div>
+    </article>
   `;
 }
 
 function renderAiDraftReview() {
-  return renderReviewDetails({
-    title: "AI Draft API Status",
-    badges: [badge("只读", "active"), badge("仅草稿", "draft"), badge("需要人工审核", "approval"), badge("需要人工复核", "approval"), badge("未发送", "pending")],
-    rows: [
-      ["API 路由", "GET /api/ai-inquiry-analyses"],
-      ["记录数量", String(aiDraftApiState.drafts.length)],
-      ["写入动作", "未连接"],
-    ],
-    draft: "AI 询盘分析在 Step 2C-4 中仅作为只读草稿展示。建议回复只是草稿文本，不会发送。需要人工审核。本页面不确认价格、交期、付款条款、银行信息、生产可行性、报价或 PI。",
-  });
+  const selected = aiReviewQueueItems[0];
+  return `
+    <div class="review-card ai-review-card" aria-label="AI 复核预览">
+      <div class="ai-review-heading">
+        <div>
+          <span class="state-label">AI 复核预览</span>
+          <h3>AI 复核预览</h3>
+          <p>固定示例：秘鲁轻钢龙骨询盘 AI 初判。</p>
+        </div>
+        <div class="ai-review-meta">
+          ${badge("静态预览", "draft")}
+          ${badge("只读", "active")}
+          ${badge("不自动发送", "pending")}
+        </div>
+      </div>
+      <dl>
+        <dt>复核摘要</dt>
+        <dd>客户询盘缺少厚度、锌层、包装和装柜重量信息，当前只能作为 AI 初判建议，不能进入报价或客户回复。</dd>
+        <dt>类型</dt>
+        <dd>${escapeHtml(selected.type)}</dd>
+        <dt>风险等级</dt>
+        <dd><span class="ai-risk ai-risk-${escapeHtml(selected.riskTone)}">${escapeHtml(selected.risk)}</span></dd>
+        <dt>AI 建议</dt>
+        <dd>${escapeHtml(selected.aiSuggestion)}</dd>
+        <dt>缺失信息</dt>
+        <dd>${selected.missingInfo.map((item) => `<span class="ai-chip">${escapeHtml(item)}</span>`).join(" ")}</dd>
+        <dt>人工下一步</dt>
+        <dd>${escapeHtml(selected.humanNextStep)}</dd>
+        <dt>审批边界</dt>
+        <dd>AI 仅可生成建议和草稿；所有发送、报价、PI、订单、赔付和交期承诺必须人工审批。</dd>
+      </dl>
+      <div class="ai-review-group">
+        <h4>禁用能力</h4>
+        <div class="disabled-chip-row">
+          ${selected.disabledCapabilities.map((item) => `<span class="disabled-chip">${escapeHtml(item)}</span>`).join("")}
+          <span class="disabled-chip">不可下单</span>
+          <span class="disabled-chip">不可触发付款 / 生产 / 发货</span>
+        </div>
+      </div>
+      <div class="ai-review-group">
+        <h4>技术说明</h4>
+        <p>静态预览数据。当前不调用 AI、不调用 API、不执行助手、不写入数据库。</p>
+        <dl class="ai-review-technical">
+          <dt>API 路由</dt>
+          <dd>GET /api/ai-inquiry-analyses</dd>
+          <dt>记录数量</dt>
+          <dd>${escapeHtml(String(aiDraftApiState.drafts.length))}</dd>
+          <dt>写入动作</dt>
+          <dd>未连接</dd>
+        </dl>
+      </div>
+    </div>
+  `;
 }
 
 function renderAiDraftsLoading() {
   return `
     ${renderDataStatus("loading", "正在加载 AI 询盘分析草稿", "正在使用当前管理员会话请求 GET /api/ai-inquiry-analyses。")}
-    <div class="table-wrap table-skeleton" aria-label="正在加载 AI 草稿行">
-      <div class="skeleton-row"></div>
-      <div class="skeleton-row"></div>
-      <div class="skeleton-row"></div>
-    </div>
+    ${renderAiReviewCenterPreview()}
   `;
 }
 
