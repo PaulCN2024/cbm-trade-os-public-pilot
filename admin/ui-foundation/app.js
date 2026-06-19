@@ -2,19 +2,19 @@ import { getAdminAccessToken } from "../../lib/admin-auth.js";
 
 const navItems = [
   { id: "dashboard", label: "工作台" },
-  { id: "customers", label: "客户" },
-  { id: "companies", label: "公司" },
   { id: "inquiries", label: "询盘" },
+  { id: "customers", label: "客户" },
+  { id: "companies", label: "客户公司" },
+  { id: "suppliers", label: "供应商", soon: true },
   { id: "products", label: "产品" },
   { id: "manufacturing-capabilities", label: "制造能力" },
-  { id: "suppliers", label: "Suppliers", soon: true },
-  { id: "ai-drafts", label: "AI 草稿" },
-  { id: "quotations", label: "Quotations", soon: true },
-  { id: "orders", label: "Orders", soon: true },
-  { id: "production", label: "Production", soon: true },
-  { id: "shipping", label: "Shipping", soon: true },
-  { id: "after-sales", label: "After-sales", soon: true },
-  { id: "settings", label: "Settings", soon: true },
+  { id: "ai-drafts", label: "AI 复核" },
+  { id: "quotations", label: "报价", soon: true },
+  { id: "orders", label: "订单", soon: true },
+  { id: "production", label: "生产", soon: true },
+  { id: "shipping", label: "发货", soon: true },
+  { id: "after-sales", label: "售后", soon: true },
+  { id: "settings", label: "设置", soon: true },
 ];
 
 const sections = {
@@ -416,7 +416,7 @@ function renderNav() {
       (item) => `
         <button class="nav-button" type="button" data-section="${item.id}" ${item.soon ? "aria-disabled=\"true\"" : ""}>
           <span>${escapeHtml(item.label)}</span>
-          ${item.soon ? "<small>soon</small>" : ""}
+          ${item.soon ? "<small>稍后</small>" : ""}
         </button>
       `,
     )

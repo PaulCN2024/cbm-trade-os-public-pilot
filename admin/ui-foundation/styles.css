@@ -94,7 +94,7 @@ textarea {
 
 .nav-list {
   display: grid;
-  gap: 5px;
+  gap: 4px;
 }
 
 .nav-button {
@@ -110,6 +110,7 @@ textarea {
   color: #cbd5e1;
   text-align: left;
   cursor: pointer;
+  line-height: 1.25;
 }
 
 .nav-button:hover,
@@ -118,14 +119,19 @@ textarea {
   color: #ffffff;
 }
 
-.nav-button[disabled] {
+.nav-button[disabled],
+.nav-button[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.52;
 }
 
 .nav-button small {
+  padding: 2px 6px;
+  border: 1px solid rgba(147, 197, 253, 0.28);
+  border-radius: 999px;
   color: #93c5fd;
   font-size: 11px;
+  font-weight: 700;
 }
 
 .sidebar-note {
