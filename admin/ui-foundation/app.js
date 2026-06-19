@@ -1504,17 +1504,18 @@ function renderReadOnlyCompanyCard() {
 }
 
 function renderCustomers() {
+  const workflowModel = getCustomerWorkflowViewModel();
   if (customerApiState.status === "idle" || customerApiState.status === "loading") {
     return `
       ${renderCustomersLoading()}
-      ${renderCustomerWorkflowPreview()}
+      ${renderCustomerWorkflowPreview(workflowModel)}
     `;
   }
 
   if (customerApiState.status === "empty") {
     return `
       ${renderCustomersEmpty()}
-      ${renderCustomerWorkflowPreview()}
+      ${renderCustomerWorkflowPreview(workflowModel)}
     `;
   }
 
@@ -1525,41 +1526,42 @@ function renderCustomers() {
 
   return `
     ${statusNotice}
-    ${renderCustomerWorkflowPreview()}
+    ${renderCustomerWorkflowPreview(workflowModel)}
   `;
 }
 
 function renderCustomerReview() {
+  const { selectedItem, isLive } = getCustomerWorkflowViewModel();
   return `
     <div class="review-stack">
       <div class="review-card customer-review-card">
         <div class="customer-review-heading">
           <div>
             <h3>客户复核预览</h3>
-            <p>固定示例：加勒比建筑客户。</p>
+            <p>${isLive ? "实时只读记录：" : "固定示例："}${escapeHtml(selectedItem.title)}。</p>
           </div>
-          ${badge("静态", "draft")}
+          ${badge(isLive ? "实时只读数据" : "静态", isLive ? "active" : "draft")}
         </div>
         <dl>
           <dt>客户摘要</dt>
-          <dd>高价值建筑类客户，当前有门窗五金 / 建筑材料项目询盘，需要人工整理历史报价和当前需求。</dd>
+          <dd>${escapeHtml(selectedItem.summary)}</dd>
           <dt>当前阶段</dt>
-          <dd>活跃询盘，价值高，风险中。</dd>
+          <dd>${escapeHtml(selectedItem.stage)}，价值 ${escapeHtml(selectedItem.valueLevel)}，风险 ${escapeHtml(selectedItem.risk)}。</dd>
           <dt>最近询盘</dt>
-          <dd>门窗五金 / 建筑材料项目。</dd>
+          <dd>${escapeHtml(selectedItem.recentInquiry)}</dd>
           <dt>需要补充</dt>
-          <dd>最终规格、付款节奏、目标交期和项目范围。</dd>
+          <dd>${escapeHtml(selectedItem.need)}</dd>
           <dt>风险点</dt>
-          <dd>不能自动确认价格、交期、付款条件或正式 PI。</dd>
+          <dd>${escapeHtml(selectedItem.riskDescription)}</dd>
           <dt>AI 建议</dt>
-          <dd>优先维护，先整理历史报价和当前询盘，再准备人工复核后的跟进内容。</dd>
+          <dd>${escapeHtml(selectedItem.aiSuggestion)}</dd>
           <dt>人工下一步</dt>
-          <dd>业务人员先核对客户需求和历史记录，再决定是否进入供应商询价或报价准备。</dd>
+          <dd>${escapeHtml(selectedItem.humanNextStep)}</dd>
         </dl>
         <div class="customer-review-group">
           <h4>禁用能力</h4>
           <div class="disabled-chip-row">
-            ${renderDisabledCapabilities(["不可自动发送", "不可自动报价", "不可生成 PI", "不可确认订单"])}
+            ${renderDisabledCapabilities(selectedItem.disabledCapabilities)}
           </div>
         </div>
       </div>
@@ -1595,18 +1597,192 @@ function renderCustomersEmpty() {
   `;
 }
 
-function renderCustomerWorkflowPreview() {
+function getCustomerWorkflowViewModel() {
+  const isLive = customerApiState.status === "loaded" && customerApiState.customers.length > 0;
+  const items = isLive
+    ? customerApiState.customers.map(mapCustomerRecordToWorkflowItem)
+    : customerWorkflowItems.map(normalizeStaticCustomerWorkflowItem);
+  return {
+    isLive,
+    items,
+    selectedItem: items[0] || normalizeStaticCustomerWorkflowItem(customerWorkflowItems[0]),
+    summaryCards: isLive ? buildCustomerSummaryCardsFromRecords(items) : customerWorkflowSummaryCards,
+    sourceLabel: isLive
+      ? "实时只读数据"
+      : customerApiState.status === "error"
+        ? "API 暂不可用，显示静态预览"
+        : "静态预览 fallback",
+    queueCountLabel: isLive ? `${items.length} 条只读记录` : "5 条静态示例",
+  };
+}
+
+function normalizeStaticCustomerWorkflowItem(item) {
+  return {
+    ...item,
+    summary: item.summary || `${item.title}需要人工复核，当前不能自动跟进、报价、生成 PI 或确认订单。`,
+    humanNextStep: item.humanNextStep || "由业务人员核对客户资料、询盘背景和风险边界后再推进。",
+    riskDescription: item.riskDescription || "不能自动确认价格、交期、付款、订单或责任边界。",
+  };
+}
+
+function mapCustomerRecordToWorkflowItem(record, index) {
+  record = record || {};
+  const title = firstDisplayValue([
+    record.name,
+    record.contact_name,
+    record.company_name,
+    record.company,
+    record.aliases,
+    `只读客户记录 ${index + 1}`,
+  ]);
+  const company = firstDisplayValue([record.company_name, record.company, record.aliases, record.company_id, "公司待确认"]);
+  const stage = normalizeCustomerStage(record.stage || record.status || record.source || "待复核");
+  const risk = deriveCustomerRisk(record);
+  const need = deriveCustomerNeed(record);
+
+  return {
+    title,
+    stage,
+    valueLevel: deriveCustomerValueLevel(record),
+    risk: risk.level,
+    riskTone: risk.tone,
+    recentInquiry: firstDisplayValue([
+      record.recent_inquiry,
+      record.last_inquiry,
+      record.business_line,
+      record.source,
+      "客户资料待补充",
+    ]),
+    need,
+    summary: firstDisplayValue([
+      record.summary,
+      record.notes,
+      `${title} / ${company}`,
+    ]),
+    aiSuggestion: firstDisplayValue([
+      record.ai_suggestion,
+      record.suggested_next_step,
+      record.summary,
+      "需要人工确认客户资料和当前需求后再决定下一步。",
+    ]),
+    humanNextStep: firstDisplayValue([
+      record.human_next_step,
+      record.next_action,
+      record.next_step,
+      "人工复核客户资料、跟进背景和风险边界后再推进。",
+    ]),
+    riskDescription: risk.description,
+    disabledCapabilities: ["不可自动发送", "不可自动报价", "不可生成 PI", "不可确认订单"],
+  };
+}
+
+function normalizeCustomerStage(value) {
+  const stage = String(value ?? "").trim();
+  const upperStage = stage.toUpperCase();
+  if (!stage) return "待复核";
+  if (upperStage.includes("RISK")) return "风险待复核";
+  if (upperStage.includes("ACTIVE")) return "活跃客户";
+  if (upperStage.includes("NEW")) return "新客户";
+  if (upperStage.includes("FOLLOW")) return "待跟进";
+  return stage;
+}
+
+function deriveCustomerValueLevel(record) {
+  const value = firstDisplayValue([record.value_level, record.priority, record.customer_value, record.tier, "暂无价值等级"]);
+  const lowerValue = value.toLowerCase();
+  if (value.includes("高") || lowerValue.includes("high") || lowerValue.includes("vip")) return "高";
+  if (value.includes("中") || lowerValue.includes("medium")) return "中";
+  return value;
+}
+
+function deriveCustomerRisk(record) {
+  const combinedText = [
+    record.risk,
+    record.risk_level,
+    record.risk_flags,
+    record.stage,
+    record.status,
+    record.notes,
+    record.summary,
+  ]
+    .flat()
+    .join(" ")
+    .toLowerCase();
+  const highRiskTerms = ["high", "高", "price", "payment", "delivery", "quality", "claim", "refund", "赔付", "质量", "价格", "付款", "交期"];
+  if (highRiskTerms.some((term) => combinedText.includes(term))) {
+    return {
+      level: "高",
+      tone: "danger",
+      description: "客户记录包含价格、付款、交期、质量或责任相关风险，必须人工复核。",
+    };
+  }
+  const missingFields = getCustomerMissingFields(record);
+  if (missingFields.length) {
+    return {
+      level: "中",
+      tone: "warning",
+      description: "客户资料仍有缺失，不能自动判断跟进、报价或订单状态。",
+    };
+  }
+  return {
+    level: "暂无风险等级",
+    tone: "neutral",
+    description: "暂无明确风险等级，仍需人工确认后再推进。",
+  };
+}
+
+function getCustomerMissingFields(record) {
+  const missing = [];
+  if (!hasDisplayValue([record.company_name, record.company, record.aliases, record.company_id])) missing.push("公司");
+  if (!hasDisplayValue([record.country])) missing.push("国家");
+  if (!hasDisplayValue([record.language])) missing.push("语言");
+  if (!hasDisplayValue([record.source, record.metadata?.source])) missing.push("来源");
+  return missing;
+}
+
+function hasDisplayValue(values) {
+  return values.some((item) => item !== undefined && item !== null && String(item).trim() !== "");
+}
+
+function deriveCustomerNeed(record) {
+  const missingFields = getCustomerMissingFields(record);
+  if (missingFields.length) return `${missingFields.join("、")}待补充。`;
+  return firstDisplayValue([
+    record.need,
+    record.next_action,
+    record.notes,
+    "需要人工确认客户当前需求和下一步跟进方式。",
+  ]);
+}
+
+function buildCustomerSummaryCardsFromRecords(items) {
+  const followUpCount = items.filter((item) => item.stage.includes("跟进") || item.humanNextStep.includes("跟进")).length;
+  const activeCount = items.filter((item) => item.stage.includes("活跃") || item.recentInquiry !== "客户资料待补充").length;
+  const highValueCount = items.filter((item) => item.valueLevel === "高").length;
+  const riskCount = items.filter((item) => item.risk === "高").length;
+  const missingCount = items.filter((item) => item.need.includes("待补充")).length;
+  return [
+    { label: "只读客户", value: String(items.length), subtitle: "来自现有只读客户数据路径", tone: "info" },
+    { label: "今日需跟进", value: String(followUpCount), subtitle: "需要人工判断是否联系客户", tone: "warning" },
+    { label: "有活跃线索", value: String(activeCount), subtitle: "存在来源、业务线或近期记录", tone: "info" },
+    { label: "高价值客户", value: String(highValueCount), subtitle: "仅按只读字段做保守展示", tone: "neutral" },
+    { label: "风险客户", value: String(riskCount), subtitle: "价格、付款、交期或质量相关", tone: "danger" },
+    { label: "待补资料客户", value: String(missingCount), subtitle: "公司、国家、语言或来源不完整", tone: "warning" },
+  ];
+}
+
+function renderCustomerWorkflowPreview(model = getCustomerWorkflowViewModel()) {
   return `
-    <div class="customer-workflow-preview" aria-label="客户中心静态工作流预览">
+    <div class="customer-workflow-preview" aria-label="客户中心只读工作流预览">
       <div class="customer-workflow-header">
         <div>
           <span class="state-label">客户中心</span>
           <h3>客户中心</h3>
           <p>集中查看客户分层、跟进状态、活跃询盘和人工下一步动作。</p>
-          <p class="customer-safety-note">静态预览数据，仅用于界面验证；所有跟进、报价、PI、订单、赔付和交期承诺必须人工复核。</p>
+          <p class="customer-safety-note">只读数据用于界面展示；所有跟进、报价、PI、订单、发送和交期承诺必须人工复核。</p>
         </div>
         <div class="workbench-badges">
-          ${badge("静态预览", "active")}
+          ${badge(model.sourceLabel, model.isLive ? "active" : "draft")}
           ${badge("只读", "active")}
           ${badge("人工复核", "pending")}
         </div>
@@ -1618,10 +1794,10 @@ function renderCustomerWorkflowPreview() {
             <h3>客户概览</h3>
             <p>把客户价值、跟进状态、活跃询盘和风险先整理成可扫读队列。</p>
           </div>
-          <span>静态数据</span>
+          <span>${escapeHtml(model.sourceLabel)}</span>
         </div>
         <div class="customer-summary-grid">
-          ${renderSummaryCards(customerWorkflowSummaryCards, renderCustomerSummaryCard)}
+          ${renderSummaryCards(model.summaryCards, renderCustomerSummaryCard)}
         </div>
       </section>
 
@@ -1631,10 +1807,10 @@ function renderCustomerWorkflowPreview() {
             <h3>客户处理队列</h3>
             <p>队列只展示人工建议和禁用能力，不触发跟进、报价或订单动作。</p>
           </div>
-          <span>5 条静态示例</span>
+          <span>${escapeHtml(model.queueCountLabel)}</span>
         </div>
         <div class="customer-queue">
-          ${customerWorkflowItems.map(renderCustomerQueueItem).join("")}
+          ${model.items.map(renderCustomerQueueItem).join("")}
         </div>
       </section>
 
@@ -1671,6 +1847,7 @@ function renderCustomerQueueItem(item) {
       </div>
       <p><strong>当前需要：</strong>${escapeHtml(item.need)}</p>
       <p><strong>AI 建议：</strong>${escapeHtml(item.aiSuggestion)}</p>
+      <p><strong>人工下一步：</strong>${escapeHtml(item.humanNextStep)}</p>
       <div class="customer-row-group">
         <span>禁用能力</span>
         <div class="disabled-chip-row">${disabledHtml}</div>
