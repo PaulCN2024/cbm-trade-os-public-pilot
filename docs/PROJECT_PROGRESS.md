@@ -2,17 +2,17 @@
 
 ## 1. Current Progress Summary
 
-- Full product vision progress: 34%
-- Internal MVP / foundation progress: 79%
-- Current phase: Phase UI-2B - File Center UI Migrated To Admin Read Documents
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, and File Center admin-read UI migration completed; still no write actions, external channel integration, approval execution, or business execution
+- Full product vision progress: 35%
+- Internal MVP / foundation progress: 81%
+- Current phase: Phase UI-2B - Pre-Quotation Review Admin Read Resource Added
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, and Pre-Quotation Review admin-read resource completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
-- Full vision: 34% `[███████░░░░░░░░░░░░░]`
-- Internal MVP: 79% `[████████████████░░░░]`
+- Full vision: 35% `[███████░░░░░░░░░░░░░]`
+- Internal MVP: 81% `[████████████████░░░░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
@@ -26,6 +26,7 @@ These percentages are planning estimates. They should move only after milestone 
 - UI-2 Read-only Data Wiring: 35% `[███████░░░░░░░░░░░░░]`
 - Admin-read AI/Supplier Capability Resource Expansion: 100% `[████████████████████]`
 - Admin-read File Metadata Resource: 100% `[████████████████████]`
+- Admin-read Pre-Quotation Review Resource: 100% `[████████████████████]`
 - File Center Admin-read Migration: 100% `[████████████████████]`
 - AI/Supplier Capability Admin-read Migration: 100% `[████████████████████]`
 - Read-only Inquiry Data Wiring: 100% `[████████████████████]`
@@ -88,6 +89,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Admin-read File Metadata Resource
 - File Center Admin-read UI Migration
 - File Center Admin-read Production Deployment
+- Admin-read Pre-Quotation Review Resource
 
 ## 4. Current Frozen Foundations
 
@@ -108,6 +110,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Admin Read Dispatcher now supports `GET /api/admin-read/ai-review`
 - Admin Read Dispatcher now supports `GET /api/admin-read/supplier-capabilities`
 - Admin Read Dispatcher now supports `GET /api/admin-read/documents`
+- Admin Read Dispatcher now supports `GET /api/admin-read/pre-quotation-review`
 - File Center UI now targets `GET /api/admin-read/documents`
 - AI Review Center UI now targets `GET /api/admin-read/ai-review`
 - Supplier and Manufacturing Capability UI now targets `GET /api/admin-read/supplier-capabilities`
@@ -144,11 +147,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-RELEASE-022 - Deploy File Metadata Admin-read Resource And File Center Migration Smoke Test
-2. CBM-CODEX-SPRINT-API-PLAN-003 - Pre-Quotation Admin-read Resource Plan
+1. CBM-CODEX-SPRINT-DATA-014 - Migrate Pre-Quotation UI To Admin Read Resource
+2. CBM-CODEX-RELEASE-024 - Deploy Pre-Quotation Admin-read Migration
 3. CBM-CODEX-RELEASE-013 - Authenticated Admin API Smoke Test Execution if safe token exists
-4. CBM-CODEX-SPRINT-API-READONLY-010 - Add Pre-Quotation Review Admin-read Resource
-5. CBM-CODEX-SPRINT-DATA-014 - Migrate Pre-Quotation UI To Admin Read Path
+4. CBM-CODEX-SPRINT-SAFETY-002 - Write Action Approval Architecture Plan
+5. CBM-CODEX-SPRINT-API-PLAN-004 - Safe Quotation Metadata Projection Plan
 
 ## 9. How To Update This File
 
@@ -163,4 +166,4 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 10. Last Updated
 
-Last updated: 2026-06-19
+Last updated: 2026-06-20

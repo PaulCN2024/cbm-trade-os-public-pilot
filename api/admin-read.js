@@ -31,6 +31,18 @@ const DOCUMENT_DISABLED_ACTIONS = Object.freeze([
   "send_to_customer",
 ]);
 
+const PRE_QUOTATION_DISABLED_ACTIONS = Object.freeze([
+  "calculate_price",
+  "generate_quote",
+  "send_quote",
+  "generate_pi",
+  "generate_contract",
+  "confirm_order",
+  "request_payment",
+  "start_production",
+  "arrange_shipment",
+]);
+
 const DASHBOARD_HIGH_RISK_TERMS = Object.freeze([
   "price",
   "payment",
@@ -155,7 +167,8 @@ function isSupportedResource(resource) {
     resource === "inquiries" ||
     resource === "ai-review" ||
     resource === "supplier-capabilities" ||
-    resource === "documents"
+    resource === "documents" ||
+    resource === "pre-quotation-review"
   );
 }
 
@@ -313,6 +326,104 @@ function documentMetadataRecord(row, source) {
     manual_review_required: true,
     created_at: row.created_at || "",
     updated_at: row.updated_at || "",
+  };
+}
+
+function metadataObject(row) {
+  return row?.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata) ? row.metadata : {};
+}
+
+function leadInfoObject(row) {
+  const leadInfo = metadataObject(row).lead_info;
+  return leadInfo && typeof leadInfo === "object" && !Array.isArray(leadInfo) ? leadInfo : {};
+}
+
+function uniqueSafeList(values, limit = 8) {
+  const seen = new Set();
+  const result = [];
+  values.forEach((value) => {
+    const text = safeText(value, "");
+    if (!text || seen.has(text)) return;
+    seen.add(text);
+    result.push(text);
+  });
+  return result.slice(0, limit);
+}
+
+function customerDisplayName(row) {
+  return safeText(row?.company_name || row?.company || row?.name || row?.contact_name, "需要人工确认");
+}
+
+function preQuotationMissingInformation(row) {
+  const missing = arrayValue(row?.missing_info);
+  if (!safeText(row?.product_category || row?.project_type, "")) missing.push("产品分类待确认");
+  if (!safeText(row?.project_description || row?.original_message || row?.ai_summary, "")) missing.push("需求描述待补充");
+  return uniqueSafeList(missing);
+}
+
+function preQuotationDocumentStatus(row) {
+  const attachmentNames = arrayValue(metadataObject(row).attachment_names);
+  const drawingStatus = String(row?.drawing_status || "").toLowerCase();
+  if (attachmentNames.length > 0 || drawingStatus.includes("received") || drawingStatus.includes("已收到")) {
+    return "文件需人工复核";
+  }
+  return "文件待确认";
+}
+
+function preQuotationReadinessStatus(row, missingInformation, documentStatus) {
+  if (documentStatus === "文件待确认") return "missing_documents";
+  if (missingInformation.length > 0) return "needs_customer_clarification";
+  if (!row?.customer_id && !safeText(leadInfoObject(row).name || leadInfoObject(row).company, "")) return "needs_customer_clarification";
+  return "ready_for_manual_review";
+}
+
+function preQuotationRisk(row, missingInformation) {
+  if (hasHighRiskText(row?.status, row?.title, row?.ai_summary, row?.recommended_next_action, row?.original_message)) return "高风险";
+  if (missingInformation.length > 0) return "信息待补充";
+  return "暂无风险等级";
+}
+
+function preQuotationProductSummary(row) {
+  return truncateText(row?.product_category || row?.project_type || row?.title || row?.project_description, "需要人工确认", 160);
+}
+
+function preQuotationReviewRecord(row, customerMap) {
+  const customer = customerMap.get(row.customer_id);
+  const leadInfo = leadInfoObject(row);
+  const missingInformation = preQuotationMissingInformation(row);
+  const documentStatus = preQuotationDocumentStatus(row);
+  const readinessStatus = preQuotationReadinessStatus(row, missingInformation, documentStatus);
+
+  return {
+    id: row.id || "",
+    inquiry_id: row.id || "",
+    inquiry_title: truncateText(row.title, "报价前复核", 140),
+    customer_name: safeText(leadInfo.company || leadInfo.name || customerDisplayName(customer), "需要人工确认"),
+    product_summary: preQuotationProductSummary(row),
+    readiness_status: readinessStatus,
+    missing_information: missingInformation,
+    supplier_status: "供应商待确认",
+    document_status: documentStatus,
+    risk: preQuotationRisk(row, missingInformation),
+    human_next_step: truncateText(
+      row.recommended_next_action,
+      "先补齐关键信息，再由人工决定是否进入供应商询价或报价准备",
+      220
+    ),
+    ai_suggestion_summary: row.ai_summary ? truncateText(row.ai_summary, "", 220) : "",
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function preQuotationSummary(records) {
+  return {
+    total_reviews: records.length,
+    needs_customer_clarification: records.filter((record) => record.readiness_status === "needs_customer_clarification").length,
+    needs_supplier_confirmation: records.filter((record) => record.readiness_status === "needs_supplier_confirmation").length,
+    missing_documents: records.filter((record) => record.readiness_status === "missing_documents").length,
+    draft_only: records.filter((record) => record.readiness_status === "draft_only").length,
+    high_risk: records.filter((record) => record.risk === "高风险").length,
   };
 }
 
@@ -630,6 +741,43 @@ async function readDocuments(response, supabase) {
   });
 }
 
+async function readPreQuotationReview(response, supabase) {
+  const warnings = [];
+  const [inquiries, customers] = await Promise.all([
+    readSource({
+      supabase,
+      table: "inquiries",
+      select:
+        "id,customer_id,company_id,source,status,business_line,title,inquiry_type,project_type,product_category,drawing_status,quote_method,project_description,original_message,ai_summary,missing_info,recommended_next_action,metadata,created_at,updated_at",
+      warning: "pre_quotation_source_unavailable",
+      warnings,
+    }),
+    readSource({
+      supabase,
+      table: "customers",
+      select: "id,name,contact_name,company_name,company,created_at,updated_at",
+      warning: "pre_quotation_customers_unavailable",
+      warnings,
+    }),
+  ]);
+
+  const customerMap = new Map(customers.map((record) => [record.id, record]));
+  const records = inquiries.map((record) => preQuotationReviewRecord(record, customerMap));
+
+  sendJson(response, 200, {
+    meta: {
+      generated_at: new Date().toISOString(),
+      source: "admin_read",
+      resource: "pre-quotation-review",
+      is_fallback: warnings.length > 0,
+    },
+    records,
+    summary: preQuotationSummary(records),
+    safety: safetyPayload(PRE_QUOTATION_DISABLED_ACTIONS),
+    warnings,
+  });
+}
+
 module.exports = async function handler(request, response) {
   try {
     if (request.method !== "GET") {
@@ -681,6 +829,12 @@ module.exports = async function handler(request, response) {
     if (resource === "documents") {
       const supabase = getSupabaseClient(request);
       await readDocuments(response, supabase);
+      return;
+    }
+
+    if (resource === "pre-quotation-review") {
+      const supabase = getSupabaseClient(request);
+      await readPreQuotationReview(response, supabase);
       return;
     }
   } catch (error) {
