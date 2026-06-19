@@ -1890,17 +1890,18 @@ function renderSupplierQueueItem(item) {
 }
 
 function renderInquiries() {
+  const workflowModel = getInquiryWorkflowViewModel();
   if (inquiryApiState.status === "idle" || inquiryApiState.status === "loading") {
     return `
       ${renderInquiriesLoading()}
-      ${renderInquiryWorkflowPreview()}
+      ${renderInquiryWorkflowPreview(workflowModel)}
     `;
   }
 
   if (inquiryApiState.status === "empty") {
     return `
       ${renderInquiriesEmpty()}
-      ${renderInquiryWorkflowPreview()}
+      ${renderInquiryWorkflowPreview(workflowModel)}
     `;
   }
 
@@ -1911,37 +1912,42 @@ function renderInquiries() {
 
   return `
     ${statusNotice}
-    ${renderInquiryWorkflowPreview()}
+    ${renderInquiryWorkflowPreview(workflowModel)}
   `;
 }
 
 function renderInquiryReview() {
+  const { selectedItem, isLive } = getInquiryWorkflowViewModel();
   return `
     <div class="review-stack">
       <div class="review-card inquiry-review-card">
         <div class="inquiry-review-heading">
           <div>
             <h3>询盘复核预览</h3>
-            <p>固定示例：秘鲁客户轻钢龙骨询盘。</p>
+            <p>${isLive ? "实时只读记录：" : "固定示例："}${escapeHtml(selectedItem.title)}。</p>
           </div>
-          ${badge("静态", "draft")}
+          ${badge(isLive ? "实时只读数据" : "静态", isLive ? "active" : "draft")}
         </div>
         <dl>
           <dt>客户需求摘要</dt>
-          <dd>客户询问轻钢龙骨材料，需要补充图纸、厚度和包装方式后，才能进入供应商询价或报价判断。</dd>
+          <dd>${escapeHtml(selectedItem.summary)}</dd>
+          <dt>客户 / 公司</dt>
+          <dd>${escapeHtml(selectedItem.customerCompany)}</dd>
+          <dt>当前状态</dt>
+          <dd>${escapeHtml(selectedItem.status)}</dd>
           <dt>缺失信息</dt>
-          <dd>图纸、厚度确认、包装方式。</dd>
+          <dd>${escapeHtml(selectedItem.missingInfo.join("、"))}</dd>
           <dt>风险点</dt>
-          <dd>规格不完整，不能直接判断价格、交期、生产可行性或最终订单条件。</dd>
+          <dd>${escapeHtml(selectedItem.riskDescription)}</dd>
           <dt>AI 建议</dt>
-          <dd>先补充规格和厚度，再让供应商按重量报价。</dd>
+          <dd>${escapeHtml(selectedItem.aiSuggestion)}</dd>
           <dt>人工下一步</dt>
-          <dd>由业务人员确认图纸、厚度、数量、包装和目的港，再决定是否进入供应商询价。</dd>
+          <dd>${escapeHtml(selectedItem.humanNextStep)}</dd>
         </dl>
         <div class="inquiry-review-group">
           <h4>禁用能力</h4>
           <div class="disabled-chip-row">
-            ${renderDisabledCapabilities(["不可报价", "不可生成 PI", "不可确认订单", "不可触发付款 / 生产 / 发货"])}
+            ${renderDisabledCapabilities(selectedItem.disabledCapabilities)}
           </div>
         </div>
       </div>
@@ -1977,18 +1983,173 @@ function renderInquiriesEmpty() {
   `;
 }
 
-function renderInquiryWorkflowPreview() {
+function getInquiryWorkflowViewModel() {
+  const isLive = inquiryApiState.status === "loaded" && inquiryApiState.inquiries.length > 0;
+  const items = isLive
+    ? inquiryApiState.inquiries.map(mapInquiryRecordToWorkflowItem)
+    : inquiryWorkflowItems.map(normalizeStaticInquiryWorkflowItem);
+  return {
+    isLive,
+    items,
+    selectedItem: items[0] || normalizeStaticInquiryWorkflowItem(inquiryWorkflowItems[0]),
+    summaryCards: isLive ? buildInquirySummaryCardsFromRecords(items) : inquiryWorkflowSummaryCards,
+    sourceLabel: isLive
+      ? "实时只读数据"
+      : inquiryApiState.status === "error"
+        ? "API 暂不可用，显示静态预览"
+        : "静态预览 fallback",
+    queueCountLabel: isLive ? `${items.length} 条只读记录` : "5 条静态示例",
+  };
+}
+
+function normalizeStaticInquiryWorkflowItem(item) {
+  return {
+    ...item,
+    summary: item.summary || `${item.title}需要人工复核，当前不能直接进入报价、PI、订单或发送动作。`,
+    customerCompany: item.customerCompany || "静态示例客户 / 公司",
+    humanNextStep: item.humanNextStep || "由业务人员补齐关键信息并人工判断下一步。",
+    riskDescription: item.riskDescription || "规格、价格、交期、责任或业务承诺均不能自动确认。",
+  };
+}
+
+function mapInquiryRecordToWorkflowItem(record, index) {
+  record = record || {};
+  const title = firstDisplayValue([
+    record.title,
+    record.project_description,
+    record.original_message,
+    `只读询盘记录 ${index + 1}`,
+  ]);
+  const customerName = firstDisplayValue([record.lead_info?.name, record.customer_name, record.customer_id, "客户待确认"]);
+  const companyName = firstDisplayValue([record.lead_info?.company, record.company_name, record.company_id, "公司待确认"]);
+  const missingInfo = normalizeListValue(record.missing_info || record.missing_information || record.missingInfo);
+  const status = normalizeInquiryStatus(record.status || record.inquiry_status || "待复核");
+  const risk = deriveInquiryRisk(record, missingInfo, status);
+
+  return {
+    title,
+    category: firstDisplayValue([record.inquiry_type, record.project_type, record.source, "询盘"]),
+    status,
+    risk: risk.level,
+    riskTone: risk.tone,
+    missingInfo,
+    summary: firstDisplayValue([
+      record.ai_summary,
+      record.summary,
+      record.original_message,
+      record.project_description,
+      title,
+    ]),
+    customerCompany: `${customerName} / ${companyName}`,
+    aiSuggestion: firstDisplayValue([
+      record.ai_suggestion,
+      record.suggested_next_step,
+      record.ai_summary,
+      "需要人工确认资料完整性后再决定下一步。",
+    ]),
+    humanNextStep: firstDisplayValue([
+      record.human_next_step,
+      record.next_action,
+      record.next_step,
+      "人工复核客户需求、缺失资料和风险边界后再推进。",
+    ]),
+    riskDescription: risk.description,
+    disabledCapabilities: ["不可报价", "不可生成 PI", "不可确认订单", "不可发送"],
+  };
+}
+
+function firstDisplayValue(values) {
+  const value = values.find((item) => item !== undefined && item !== null && String(item).trim() !== "");
+  return displayValue(value);
+}
+
+function normalizeListValue(value) {
+  if (Array.isArray(value)) {
+    const items = value.map((item) => String(item ?? "").trim()).filter(Boolean);
+    return items.length ? items : ["信息待补充"];
+  }
+  if (typeof value === "string") {
+    const items = value
+      .split(/[,，;；\n]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    return items.length ? items : ["信息待补充"];
+  }
+  return ["信息待补充"];
+}
+
+function normalizeInquiryStatus(value) {
+  const status = String(value ?? "").trim();
+  const upperStatus = status.toUpperCase();
+  if (!status) return "待复核";
+  if (upperStatus.includes("HIGH_RISK")) return "高风险";
+  if (upperStatus.includes("NEED") || upperStatus.includes("REVIEW")) return "待复核";
+  if (upperStatus === "NEW") return "新询盘";
+  if (upperStatus.includes("MISSING")) return "缺失信息";
+  return status;
+}
+
+function deriveInquiryRisk(record, missingInfo, status) {
+  const combinedText = [
+    record.risk,
+    record.risk_level,
+    record.risk_flags,
+    record.original_message,
+    record.project_description,
+    record.ai_summary,
+    status,
+  ]
+    .flat()
+    .join(" ")
+    .toLowerCase();
+  const highRiskTerms = ["high", "高", "price", "payment", "delivery", "quality", "claim", "refund", "赔付", "质量", "价格", "付款", "交期"];
+  if (highRiskTerms.some((term) => combinedText.includes(term))) {
+    return {
+      level: "高",
+      tone: "danger",
+      description: "记录包含价格、付款、交期、质量或责任相关风险，必须人工复核。",
+    };
+  }
+  if (missingInfo.length > 0 && !missingInfo.includes("信息待补充")) {
+    return {
+      level: "中",
+      tone: "warning",
+      description: "记录存在缺失信息，不能直接判断报价、交期或订单条件。",
+    };
+  }
+  return {
+    level: "暂无风险等级",
+    tone: "neutral",
+    description: "暂无明确风险等级，仍需人工确认后再推进。",
+  };
+}
+
+function buildInquirySummaryCardsFromRecords(items) {
+  const missingCount = items.filter((item) => !item.missingInfo.includes("信息待补充") && item.missingInfo.length > 0).length;
+  const highRiskCount = items.filter((item) => item.risk === "高").length;
+  const reviewCount = items.filter((item) => item.status.includes("复核") || item.status.includes("缺失")).length;
+  return [
+    { label: "只读询盘", value: String(items.length), subtitle: "来自现有只读数据路径", tone: "info" },
+    { label: "缺失信息", value: String(missingCount), subtitle: "资料、规格或客户需求待补齐", tone: "warning" },
+    { label: "高风险", value: String(highRiskCount), subtitle: "价格、付款、交期或质量相关", tone: "danger" },
+    { label: "待人工复核", value: String(reviewCount || items.length), subtitle: "不能自动发送或报价", tone: "warning" },
+    { label: "静态 fallback", value: "保留", subtitle: "API 不可用时继续显示示例", tone: "neutral" },
+    { label: "写入动作", value: "0", subtitle: "未连接创建、报价、PI 或发送", tone: "info" },
+  ];
+}
+
+function renderInquiryWorkflowPreview(model = getInquiryWorkflowViewModel()) {
   return `
-    <div class="inquiry-workflow-preview" aria-label="询盘中心静态工作流预览">
+    <div class="inquiry-workflow-preview" aria-label="询盘中心只读工作流预览">
       <div class="inquiry-workflow-header">
         <div>
           <span class="state-label">询盘中心</span>
           <h3>询盘中心</h3>
           <p>集中查看新询盘、缺失信息、风险提醒和人工下一步动作。</p>
-          <p class="inquiry-safety-note">静态预览数据，仅用于界面验证；所有报价、PI、订单、赔付和交期承诺必须人工复核。</p>
+          <p class="inquiry-safety-note">只读数据用于界面展示；所有报价、PI、订单、发送和交期承诺必须人工复核。</p>
         </div>
         <div class="workbench-badges">
-          ${badge("静态预览", "active")}
+          ${badge(model.sourceLabel, model.isLive ? "active" : "draft")}
           ${badge("只读", "active")}
           ${badge("人工复核", "pending")}
         </div>
@@ -2000,10 +2161,10 @@ function renderInquiryWorkflowPreview() {
             <h3>询盘概览</h3>
             <p>先把新询盘、缺失资料、风险和待确认事项整理成可扫读状态。</p>
           </div>
-          <span>静态数据</span>
+          <span>${escapeHtml(model.sourceLabel)}</span>
         </div>
         <div class="inquiry-summary-grid">
-          ${renderSummaryCards(inquiryWorkflowSummaryCards, renderInquirySummaryCard)}
+          ${renderSummaryCards(model.summaryCards, renderInquirySummaryCard)}
         </div>
       </section>
 
@@ -2013,10 +2174,10 @@ function renderInquiryWorkflowPreview() {
             <h3>待处理询盘队列</h3>
             <p>队列只展示人工建议和禁用能力，不触发报价、发送或订单动作。</p>
           </div>
-          <span>5 条静态示例</span>
+          <span>${escapeHtml(model.queueCountLabel)}</span>
         </div>
         <div class="inquiry-queue">
-          ${inquiryWorkflowItems.map(renderInquiryQueueItem).join("")}
+          ${model.items.map(renderInquiryQueueItem).join("")}
         </div>
       </section>
 
@@ -2056,6 +2217,7 @@ function renderInquiryQueueItem(item) {
         <div class="inquiry-chip-row">${missingInfoHtml}</div>
       </div>
       <p><strong>AI 建议：</strong>${escapeHtml(item.aiSuggestion)}</p>
+      <p><strong>人工下一步：</strong>${escapeHtml(item.humanNextStep)}</p>
       <div class="inquiry-row-group">
         <span>禁用能力</span>
         <div class="disabled-chip-row">${disabledHtml}</div>
