@@ -50,6 +50,10 @@
       "dest": "/api/customers?crm_resource=admin-dashboard-summary"
     },
     {
+      "src": "^/api/admin-read/(dashboard-summary|customers|inquiries)$",
+      "dest": "/api/admin-read?resource=$1"
+    },
+    {
       "handle": "filesystem"
     }
   ]

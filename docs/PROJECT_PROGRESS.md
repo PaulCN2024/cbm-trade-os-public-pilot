@@ -2,17 +2,17 @@
 
 ## 1. Current Progress Summary
 
-- Full product vision progress: 31%
-- Internal MVP / foundation progress: 68%
-- Current phase: Phase UI-2 - First Read-only Data Wiring Completed
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API plan, and GET-only dashboard summary API completed; still no write actions, external channel integration, approval execution, or business execution
+- Full product vision progress: 32%
+- Internal MVP / foundation progress: 70%
+- Current phase: Phase UI-2B - Admin Read Dispatcher Skeleton Implemented
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, and minimal GET-only Admin Read Dispatcher skeleton completed; still no write actions, external channel integration, approval execution, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
-- Full vision: 31% `[██████░░░░░░░░░░░░░░]`
-- Internal MVP: 68% `[██████████████░░░░░░]`
+- Full vision: 32% `[██████░░░░░░░░░░░░░░]`
+- Internal MVP: 70% `[██████████████░░░░░░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
@@ -29,6 +29,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Read-only AI Review Data Wiring: 100% `[████████████████████]`
 - Read-only Supplier Capability Data Wiring: 100% `[████████████████████]`
 - Read-only Pre-Quotation Review Data Wiring: 100% `[████████████████████]`
+- Admin Read Dispatcher Skeleton: 100% `[████████████████████]`
 
 ## 3. Completed Major Milestones
 
@@ -69,6 +70,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Disabled Action And Approval Boundary Audit
 - Read-only Route Separation Plan
 - Admin Read Dispatcher Plan
+- Admin Read Dispatcher Skeleton
 
 ## 4. Current Frozen Foundations
 
@@ -81,7 +83,7 @@ These percentages are planning estimates. They should move only after milestone 
 
 ## 5. Current Active Area
 
-- Current active area: Phase UI-2B / Read-only API Coverage Planning
+- Current active area: Phase UI-2B / Admin Read Dispatcher Skeleton Completed
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
 
@@ -115,11 +117,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-SPRINT-DATA-007 - Dashboard Workbench Read-only Aggregate Wiring
-2. CBM-CODEX-SPRINT-API-PLAN-002 - File Metadata Read-only API Plan
-3. CBM-CODEX-SPRINT-API-PLAN-003 - Quotation Read-only API Plan
-4. CBM-CODEX-SPRINT-API-PLAN-004 - Order Read-only API Plan
-5. CBM-CODEX-SPRINT-SAFETY-001 - Disabled Action And Approval Boundary Audit
+1. CBM-CODEX-SPRINT-API-READONLY-007 - Admin Read Dispatcher Sanity Review
+2. CBM-CODEX-SPRINT-API-READONLY-008 - Admin Read Dispatcher Authenticated Smoke Test Plan
+3. CBM-CODEX-SPRINT-DATA-008 - Dashboard Summary Production Data Validation
+4. CBM-CODEX-SPRINT-API-PLAN-002 - File Metadata Read-only API Plan
+5. CBM-CODEX-SPRINT-API-PLAN-003 - Quotation Read-only API Plan
 
 ## 9. How To Update This File
 
