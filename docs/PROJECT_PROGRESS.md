@@ -65,6 +65,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Dashboard Aggregate Read-only API Plan
 - Dashboard Aggregate GET-only API
 - Post-deploy Read-only API Safety Audit
+- Authenticated Admin API Smoke Test Plan
 
 ## 4. Current Frozen Foundations
 
