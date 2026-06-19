@@ -11,11 +11,11 @@ const navItems = [
   { id: "ai-drafts", label: "AI 复核" },
   { id: "files", label: "文件" },
   { id: "quotations", label: "报价" },
-  { id: "orders", label: "订单", soon: true },
-  { id: "production", label: "生产", soon: true },
-  { id: "shipping", label: "发货", soon: true },
-  { id: "after-sales", label: "售后", soon: true },
-  { id: "settings", label: "设置", soon: true },
+  { id: "orders", label: "订单" },
+  { id: "production", label: "生产" },
+  { id: "shipping", label: "发货" },
+  { id: "after-sales", label: "售后" },
+  { id: "settings", label: "设置" },
 ];
 
 const sections = {
@@ -98,6 +98,46 @@ const sections = {
     sectionHelp: "静态只读预览。当前不生成报价、不计算价格、不生成 PI、合同或订单。",
     content: renderQuotations,
     review: renderQuotationReview,
+  },
+  orders: {
+    title: "订单中心",
+    description: "集中查看订单准备状态、PI/合同资料、付款条件和人工确认边界。",
+    sectionTitle: "订单中心",
+    sectionHelp: "静态只读预览。当前不确认订单、不生成合同、不确认收款或下达生产。",
+    content: renderOrders,
+    review: renderOrderReview,
+  },
+  production: {
+    title: "生产中心",
+    description: "集中查看生产准备、供应商确认、资料缺口和交期风险。",
+    sectionTitle: "生产中心",
+    sectionHelp: "静态只读预览。当前不下达生产、不确认交期、包装或质量责任。",
+    content: renderProduction,
+    review: renderProductionReview,
+  },
+  shipping: {
+    title: "发货中心",
+    description: "集中查看装柜、物流资料、目的港、单据缺口和发货风险。",
+    sectionTitle: "发货中心",
+    sectionHelp: "静态只读预览。当前不确认发货、不生成装箱单、不通知客户。",
+    content: renderShipping,
+    review: renderShippingReview,
+  },
+  "after-sales": {
+    title: "售后中心",
+    description: "集中查看客户反馈、质量证据、责任边界和人工处理建议。",
+    sectionTitle: "售后中心",
+    sectionHelp: "静态只读预览。当前不承认责任、不承诺赔付、不发送最终结论。",
+    content: renderAfterSales,
+    review: renderAfterSalesReview,
+  },
+  settings: {
+    title: "设置",
+    description: "查看系统边界、账号状态、AI 模型预留和未来集成入口。",
+    sectionTitle: "设置",
+    sectionHelp: "静态只读边界预览。当前不连接账号、不调用 AI、不修改权限。",
+    content: renderSettings,
+    review: renderSettingsReview,
   },
 };
 
@@ -578,6 +618,180 @@ const quoteReviewQueueItems = [
     disabledCapabilities: ["不可自动发送", "不可自动生成 PI", "不可确认订单"],
   },
 ];
+
+const commercialWorkflowSections = {
+  orders: {
+    title: "订单中心",
+    subtitle: "集中查看订单准备状态、PI/合同资料、付款条件和人工确认边界。",
+    summaryLabel: "ORDER REVIEW SUMMARY",
+    summaryTitle: "订单准备概览",
+    queueLabel: "ORDER REVIEW QUEUE",
+    queueTitle: "订单复核队列",
+    queueHint: "所有订单状态均为静态示例，必须人工确认后才能进入真实业务动作。",
+    reviewTitle: "订单复核预览",
+    fixedExample: "固定示例：加勒比建筑材料订单准备。",
+    reviewRows: [
+      ["订单摘要", "建筑材料订单准备中，PI 和合同资料仍需人工复核。"],
+      ["PI/合同状态", "PI 待复核，合同资料缺失。"],
+      ["付款条件", "付款节奏和收款状态未确认。"],
+      ["客户确认状态", "客户尚未完成最终确认。"],
+      ["风险点", "价格、付款、交期和生产下达均不可自动确认。"],
+    ],
+    disabled: ["不可确认订单", "不可生成合同", "不可确认收款", "不可下达生产"],
+    summaryCards: [
+      { label: "待确认订单", value: "5", subtitle: "需要人工确认后才能推进", tone: "warning" },
+      { label: "PI 待复核", value: "4", subtitle: "PI 草稿或条款待人工核对", tone: "warning" },
+      { label: "合同资料缺失", value: "3", subtitle: "签署、条款或客户确认缺失", tone: "danger" },
+      { label: "付款待确认", value: "4", subtitle: "收款和付款条件未锁定", tone: "neutral" },
+      { label: "高风险订单", value: "2", subtitle: "涉及赔付、补货或责任边界", tone: "danger" },
+      { label: "禁止自动确认", value: "7", subtitle: "订单、收款、生产均禁用", tone: "danger" },
+    ],
+    queueItems: [
+      { title: "加勒比建筑材料订单准备", status: "PI 待复核", risk: "中", riskTone: "warning", detail: "门窗五金 / 建筑材料项目，需要合并历史报价和当前规格。", missingInfo: ["PI 条款", "付款节奏", "客户最终确认"], nextStep: "人工复核 PI、合同和付款条件后再确认是否进入订单准备。", disabled: ["不可确认订单", "不可生成合同", "不可确认收款"] },
+      { title: "秘鲁轻钢龙骨订单准备", status: "规格未锁定", risk: "中", riskTone: "warning", detail: "20GP 轻钢龙骨项目，厚度、锌层和装柜重量未锁定。", missingInfo: ["厚度", "锌层", "包装", "装柜重量"], nextStep: "先锁定规格和供应商报价，再进入人工订单复核。", disabled: ["不可确认订单", "不可下达生产", "不可确认装柜"] },
+      { title: "高尔夫球车订单准备", status: "配置待确认", risk: "中", riskTone: "warning", detail: "整柜采购高尔夫球车，车型、配置、电池和认证待确认。", missingInfo: ["车型配置", "电池", "认证", "装柜数量"], nextStep: "由人工确认配置表和供应商报价后再整理订单资料。", disabled: ["不可确认订单", "不可确认交期", "不可确认收款"] },
+      { title: "印尼吊顶系统订单准备", status: "生产信息待确认", risk: "中", riskTone: "warning", detail: "吊顶系统材料、包装、损耗和生产信息待供应商确认。", missingInfo: ["材料表", "包装方案", "交期", "生产信息"], nextStep: "完成供应商确认和内部核算后再复核订单边界。", disabled: ["不可下达生产", "不可确认交期", "不可生成合同"] },
+      { title: "沿海项目补货订单", status: "高风险", risk: "高", riskTone: "danger", detail: "涉及质量责任和可能补货，证据链和责任边界未确认。", missingInfo: ["责任判断", "批次信息", "补货范围"], nextStep: "先完成人工责任判断，不得自动确认补货订单。", disabled: ["不可承认责任", "不可确认补货", "不可下达生产"] },
+    ],
+  },
+  production: {
+    title: "生产中心",
+    subtitle: "集中查看生产准备、供应商确认、资料缺口和交期风险。",
+    summaryLabel: "PRODUCTION REVIEW SUMMARY",
+    summaryTitle: "生产准备概览",
+    queueLabel: "PRODUCTION REVIEW QUEUE",
+    queueTitle: "生产复核队列",
+    queueHint: "仅展示生产准备状态，不下达生产、不确认交期。",
+    reviewTitle: "生产复核预览",
+    fixedExample: "固定示例：印尼吊顶系统生产准备。",
+    reviewRows: [
+      ["生产摘要", "吊顶系统材料和包装方案仍需供应商确认。"],
+      ["供应商状态", "材料表、包装和最终报价待复核。"],
+      ["图纸/材料状态", "图纸可参考，但不能直接下达生产。"],
+      ["包装状态", "包装方式和损耗未确认。"],
+      ["交期风险", "交期必须由人工复核后确认。"],
+      ["质量风险", "质量责任和材料规格需人工确认。"],
+    ],
+    disabled: ["不可下达生产", "不可确认交期", "不可确认包装", "不可确认质量责任"],
+    summaryCards: [
+      { label: "待生产确认", value: "6", subtitle: "生产前必须人工审核", tone: "warning" },
+      { label: "供应商待确认", value: "5", subtitle: "材料、报价或交期待反馈", tone: "neutral" },
+      { label: "图纸待复核", value: "4", subtitle: "图纸和材料表需人工检查", tone: "warning" },
+      { label: "交期风险", value: "3", subtitle: "不得自动承诺交期", tone: "danger" },
+      { label: "质量风险", value: "2", subtitle: "责任和质保边界需复核", tone: "danger" },
+      { label: "禁止自动下单", value: "8", subtitle: "生产下单和采购均禁用", tone: "danger" },
+    ],
+    queueItems: [
+      { title: "印尼吊顶系统生产准备", status: "材料待确认", risk: "中", riskTone: "warning", detail: "0.7mm Option B 吊顶系统，材料表、包装和损耗待确认。", missingInfo: ["材料表", "包装方案", "安装损耗"], nextStep: "供应商确认材料、包装和交期后再人工判断。", disabled: ["不可下达生产", "不可确认交期", "不可确认包装"] },
+      { title: "秘鲁轻钢龙骨生产准备", status: "重量和包装待确认", risk: "中", riskTone: "warning", detail: "轻钢龙骨项目重量、包装和装柜方案未锁定。", missingInfo: ["重量", "包装", "装柜方案"], nextStep: "先确认重量和包装，再进入生产准备复核。", disabled: ["不可下达生产", "不可确认重量", "不可确认装柜"] },
+      { title: "PD/PT 门生产/安装资料准备", status: "技术资料缺失", risk: "中", riskTone: "warning", detail: "安装资料、五金系统和视频说明仍需整理。", missingInfo: ["安装手册", "五金系统", "视频说明"], nextStep: "补齐系统资料后由人工判断可生产/可交付边界。", disabled: ["不可确认安装结果", "不可下达生产", "不可确认售后责任"] },
+      { title: "高尔夫球车整柜生产/备货", status: "配置待确认", risk: "中", riskTone: "warning", detail: "车型、电池、认证和装柜数量待供应商确认。", missingInfo: ["车型", "电池", "认证", "装柜数量"], nextStep: "确认配置和备货周期后再进入人工复核。", disabled: ["不可确认备货", "不可确认交期", "不可确认订单"] },
+      { title: "沿海铝型材补货生产风险", status: "高风险", risk: "高", riskTone: "danger", detail: "涉及质量责任和补货生产，证据链未完整。", missingInfo: ["责任边界", "表面处理记录", "批次信息"], nextStep: "先完成人工质量判断，不得直接安排补货生产。", disabled: ["不可承认责任", "不可确认补货", "不可下达生产"] },
+    ],
+  },
+  shipping: {
+    title: "发货中心",
+    subtitle: "集中查看装柜、物流资料、目的港、单据缺口和发货风险。",
+    summaryLabel: "SHIPPING REVIEW SUMMARY",
+    summaryTitle: "发货准备概览",
+    queueLabel: "SHIPPING REVIEW QUEUE",
+    queueTitle: "发货复核队列",
+    queueHint: "仅展示发货准备状态，不确认物流、不生成装箱单。",
+    reviewTitle: "发货复核预览",
+    fixedExample: "固定示例：秘鲁轻钢龙骨 20GP 装柜复核。",
+    reviewRows: [
+      ["发货摘要", "20GP 装柜重量和包装方案仍需确认。"],
+      ["装柜状态", "装柜重量、包装和数量未锁定。"],
+      ["物流状态", "物流渠道和船期未确认。"],
+      ["单据缺口", "装箱单、商业发票和发货资料仍需人工复核。"],
+      ["目的港/贸易条款", "目的港和贸易条款仅为静态展示，不代表确认。"],
+      ["风险点", "不得自动通知客户发货或确认物流。"],
+    ],
+    disabled: ["不可确认发货", "不可生成装箱单", "不可确认物流", "不可通知客户发货"],
+    summaryCards: [
+      { label: "待发货订单", value: "5", subtitle: "待人工确认后进入发货", tone: "warning" },
+      { label: "装柜待确认", value: "4", subtitle: "数量、重量和包装未锁定", tone: "warning" },
+      { label: "单据缺失", value: "5", subtitle: "CI/PL/发货资料待复核", tone: "danger" },
+      { label: "物流待确认", value: "3", subtitle: "船期、费用或渠道待确认", tone: "neutral" },
+      { label: "高风险发货", value: "2", subtitle: "补货、赔付或责任边界相关", tone: "danger" },
+      { label: "禁止自动发货", value: "7", subtitle: "发货确认和客户通知禁用", tone: "danger" },
+    ],
+    queueItems: [
+      { title: "秘鲁轻钢龙骨 20GP 装柜复核", status: "装柜重量待确认", risk: "中", riskTone: "warning", detail: "轻钢龙骨整柜发货前，重量、包装和装柜方案未确认。", missingInfo: ["装柜重量", "包装方式", "数量核对"], nextStep: "人工核对装柜方案和发货资料后再确认。", disabled: ["不可确认发货", "不可生成装箱单", "不可通知客户"] },
+      { title: "高尔夫球车整柜发货准备", status: "装柜数量待确认", risk: "中", riskTone: "warning", detail: "车型配置和装柜数量需要供应商最终确认。", missingInfo: ["装柜数量", "车型配置", "包装方式"], nextStep: "确认装柜清单和物流安排后再进入发货复核。", disabled: ["不可确认物流", "不可通知客户发货", "不可确认订单"] },
+      { title: "印尼吊顶系统包装与发货", status: "包装方案待确认", risk: "中", riskTone: "warning", detail: "吊顶系统包装、体积和发货批次未锁定。", missingInfo: ["包装方案", "体积重量", "发货批次"], nextStep: "供应商确认包装和资料后由人工复核发货。", disabled: ["不可生成装箱单", "不可确认发货", "不可确认交期"] },
+      { title: "加勒比建筑材料发货资料", status: "单据待复核", risk: "中", riskTone: "warning", detail: "客户资料、CI/PL 和目的港信息需复核。", missingInfo: ["CI 草稿", "PL 草稿", "目的港"], nextStep: "人工核对单据和客户信息后再准备发货资料。", disabled: ["不可生成单据", "不可通知客户", "不可确认物流"] },
+      { title: "沿海项目补货发货风险", status: "高风险", risk: "高", riskTone: "danger", detail: "补货发货涉及质量责任和赔付边界。", missingInfo: ["责任判断", "补货范围", "客户确认"], nextStep: "先确认责任和补货边界，不得自动安排发货。", disabled: ["不可承认责任", "不可确认补货", "不可确认发货"] },
+    ],
+  },
+  "after-sales": {
+    title: "售后中心",
+    subtitle: "集中查看客户反馈、质量证据、责任边界和人工处理建议。",
+    summaryLabel: "AFTER-SALES REVIEW SUMMARY",
+    summaryTitle: "售后处理概览",
+    queueLabel: "AFTER-SALES REVIEW QUEUE",
+    queueTitle: "售后复核队列",
+    queueHint: "仅展示售后处理建议，不承认责任、不承诺赔付。",
+    reviewTitle: "售后复核预览",
+    fixedExample: "固定示例：沿海项目铝型材发黄反馈。",
+    reviewRows: [
+      ["售后摘要", "客户反馈铝型材表面问题，证据链仍不完整。"],
+      ["客户反馈", "可能涉及表面处理、使用环境和质量责任。"],
+      ["证据状态", "照片、批次、环境说明和表面处理记录缺失。"],
+      ["责任风险", "不得自动承认责任或赔付。"],
+      ["供应商状态", "供应商复核和材料记录待确认。"],
+    ],
+    disabled: ["不可承认责任", "不可承诺赔付", "不可发送最终结论", "不可确认补货"],
+    summaryCards: [
+      { label: "待处理反馈", value: "5", subtitle: "需人工判断的客户反馈", tone: "warning" },
+      { label: "高风险售后", value: "2", subtitle: "质量、赔付或责任相关", tone: "danger" },
+      { label: "质量证据缺失", value: "4", subtitle: "照片、批次或记录不完整", tone: "warning" },
+      { label: "待供应商复核", value: "3", subtitle: "需要供应商反馈证据", tone: "neutral" },
+      { label: "待客户补充", value: "4", subtitle: "客户资料或照片待补齐", tone: "info" },
+      { label: "禁止自动结论", value: "6", subtitle: "责任、赔付和补货禁用", tone: "danger" },
+    ],
+    queueItems: [
+      { title: "沿海项目铝型材发黄反馈", status: "高风险", risk: "高", riskTone: "danger", detail: "客户反馈沿海项目铝型材发黄，可能涉及环境和表面处理。", missingInfo: ["环境说明", "表面处理记录", "批次照片"], nextStep: "收集证据链并让供应商复核后再判断责任。", disabled: ["不可承认责任", "不可承诺赔付", "不可发送最终结论"] },
+      { title: "PD/PT 门安装支持反馈", status: "技术资料缺失", risk: "中", riskTone: "warning", detail: "客户需要安装支持，系统差异和五金资料未确认。", missingInfo: ["安装手册", "五金配置", "视频说明"], nextStep: "整理资料并人工确认可发送版本。", disabled: ["不可承诺安装结果", "不可确认售后责任", "不可自动发送"] },
+      { title: "吊顶系统安装疑问", status: "待技术复核", risk: "中", riskTone: "warning", detail: "安装疑问涉及材料表和施工损耗。", missingInfo: ["施工现场信息", "材料表", "安装照片"], nextStep: "由技术人员复核后再回复客户。", disabled: ["不可确认安装责任", "不可承诺补偿", "不可发送最终结论"] },
+      { title: "高尔夫球车配置争议", status: "待供应商确认", risk: "中", riskTone: "warning", detail: "配置争议需要供应商核对订单和出货资料。", missingInfo: ["配置表", "出货照片", "供应商反馈"], nextStep: "核对供应商资料后再判断处理方案。", disabled: ["不可承认责任", "不可承诺赔付", "不可确认补货"] },
+      { title: "门窗五金售后反馈", status: "证据不足", risk: "中", riskTone: "warning", detail: "客户反馈五金问题，但缺少安装位置和使用情况。", missingInfo: ["安装位置", "使用照片", "数量"], nextStep: "请客户补充照片和数量后人工复核。", disabled: ["不可确认责任", "不可补发配件", "不可承诺赔付"] },
+    ],
+  },
+  settings: {
+    title: "设置",
+    subtitle: "查看系统边界、账号状态、AI 模型预留和未来集成入口。",
+    summaryLabel: "SETTINGS BOUNDARY SUMMARY",
+    summaryTitle: "系统边界概览",
+    queueLabel: "SETTINGS PLACEHOLDERS",
+    queueTitle: "设置预留入口",
+    queueHint: "仅展示未来配置入口，不连接账号、不调用服务。",
+    reviewTitle: "系统边界预览",
+    fixedExample: "固定示例：设置边界与未来集成入口。",
+    reviewRows: [
+      ["当前状态", "静态只读设置预览，未连接真实账号或外部服务。"],
+      ["未来可接入能力", "AI Provider、Gmail、WhatsApp、审批规则和用户设置。"],
+      ["审批边界", "所有高风险动作必须人工审批。"],
+      ["安全说明", "当前不修改权限、不保存配置、不开启自动执行。"],
+    ],
+    disabled: ["不可连接账号", "不可发送消息", "不可调用 AI", "不可修改权限", "不可开启自动执行"],
+    summaryCards: [
+      { label: "模型接口预留", value: "6", subtitle: "AI Provider / Model Gateway", tone: "neutral" },
+      { label: "外部渠道预留", value: "4", subtitle: "Gmail / WhatsApp 等未来入口", tone: "neutral" },
+      { label: "审批边界", value: "5", subtitle: "发送、报价、订单等人工审批", tone: "warning" },
+      { label: "只读保护", value: "8", subtitle: "当前不保存配置或权限", tone: "info" },
+      { label: "待配置项", value: "7", subtitle: "账号、渠道、规则和模板", tone: "warning" },
+      { label: "禁止自动执行", value: "10", subtitle: "AI、发送、审批和业务动作禁用", tone: "danger" },
+    ],
+    queueItems: [
+      { title: "AI Provider / Model Gateway placeholder", status: "预留入口", risk: "中", riskTone: "warning", detail: "未来用于配置 AI Provider 或模型网关。", missingInfo: ["供应商选择", "审批策略", "成本边界"], nextStep: "后续单独规划 AI Gateway，不在本页连接。", disabled: ["不可调用 AI", "不可保存 Key", "不可自动执行"] },
+      { title: "Gmail / WhatsApp integration placeholder", status: "预留入口", risk: "高", riskTone: "danger", detail: "未来可能连接外部沟通渠道。", missingInfo: ["账号授权", "发送审批", "日志策略"], nextStep: "先完成审批和只读预览规划，再考虑外部渠道。", disabled: ["不可连接账号", "不可发送消息", "不可自动回复"] },
+      { title: "Approval rules placeholder", status: "待规划", risk: "中", riskTone: "warning", detail: "未来用于配置价格、交期、付款和订单审批规则。", missingInfo: ["角色", "审批层级", "风险阈值"], nextStep: "先做规则文档和只读预览，不执行审批。", disabled: ["不可审批", "不可拒绝", "不可绕过人工"] },
+      { title: "Read-only safety boundary", status: "已启用预览", risk: "中", riskTone: "warning", detail: "当前 Admin UI 仅展示静态和只读信息。", missingInfo: ["真实配置未连接"], nextStep: "继续保留只读边界，避免误触发业务动作。", disabled: ["不可写入", "不可执行", "不可修改权限"] },
+      { title: "User/account settings placeholder", status: "预留入口", risk: "中", riskTone: "warning", detail: "未来用于用户资料、角色和安全配置。", missingInfo: ["用户模型", "角色权限", "审计记录"], nextStep: "后续做 schema/API 规划前不接入真实账号设置。", disabled: ["不可修改权限", "不可连接账号", "不可保存设置"] },
+    ],
+  },
+};
 
 const workbenchOverviewCards = [
   {
@@ -2861,6 +3075,170 @@ function renderQuotationReview() {
       <div class="quote-review-group">
         <h4>安全边界</h4>
         <p>静态预览数据。所有价格、报价、PI、合同、订单、赔付和交期承诺必须人工复核。</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderOrders() {
+  return renderCommercialWorkflowSection("orders");
+}
+
+function renderOrderReview() {
+  return renderCommercialWorkflowReview("orders");
+}
+
+function renderProduction() {
+  return renderCommercialWorkflowSection("production");
+}
+
+function renderProductionReview() {
+  return renderCommercialWorkflowReview("production");
+}
+
+function renderShipping() {
+  return renderCommercialWorkflowSection("shipping");
+}
+
+function renderShippingReview() {
+  return renderCommercialWorkflowReview("shipping");
+}
+
+function renderAfterSales() {
+  return renderCommercialWorkflowSection("after-sales");
+}
+
+function renderAfterSalesReview() {
+  return renderCommercialWorkflowReview("after-sales");
+}
+
+function renderSettings() {
+  return renderCommercialWorkflowSection("settings");
+}
+
+function renderSettingsReview() {
+  return renderCommercialWorkflowReview("settings");
+}
+
+function renderCommercialWorkflowSection(sectionId) {
+  const config = commercialWorkflowSections[sectionId];
+  return `
+    <div class="commercial-workflow-preview" aria-label="${escapeHtml(config.title)}静态工作流预览">
+      <div class="commercial-workflow-header">
+        <div>
+          <span class="state-label">${escapeHtml(config.title)}</span>
+          <h3>${escapeHtml(config.title)}</h3>
+          <p>${escapeHtml(config.subtitle)}</p>
+          <p class="commercial-safety-note">静态预览数据，仅用于界面验证；所有价格、报价、PI、合同、订单、付款、生产、发货和赔付承诺必须人工复核。</p>
+        </div>
+        <div class="commercial-workflow-badges">
+          ${badge("静态预览", "draft")}
+          ${badge("只读", "active")}
+          ${badge("人工复核", "approval")}
+          ${badge("不自动执行", "pending")}
+        </div>
+      </div>
+
+      <section class="commercial-workflow-section" aria-label="${escapeHtml(config.summaryTitle)}">
+        <div class="workbench-section-header">
+          <div>
+            <span>${escapeHtml(config.summaryLabel)}</span>
+            <h3>${escapeHtml(config.summaryTitle)}</h3>
+          </div>
+          <p>${escapeHtml(config.queueHint)}</p>
+        </div>
+        <div class="commercial-summary-grid">
+          ${config.summaryCards.map(renderCommercialSummaryCard).join("")}
+        </div>
+      </section>
+
+      <section class="commercial-workflow-section" aria-label="${escapeHtml(config.queueTitle)}">
+        <div class="workbench-section-header">
+          <div>
+            <span>${escapeHtml(config.queueLabel)}</span>
+            <h3>${escapeHtml(config.queueTitle)}</h3>
+          </div>
+          <p>队列仅展示人工复核建议和禁用能力，不触发真实业务动作。</p>
+        </div>
+        <div class="commercial-review-queue">
+          ${config.queueItems.map(renderCommercialQueueItem).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderCommercialSummaryCard(card) {
+  return `
+    <article class="commercial-summary-card commercial-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderCommercialQueueItem(item) {
+  const missingInfoHtml = item.missingInfo.map((label) => `<span class="commercial-chip">${escapeHtml(label)}</span>`).join("");
+  const disabledHtml = item.disabled.map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`).join("");
+
+  return `
+    <article class="commercial-review-queue-item">
+      <div class="commercial-review-queue-main">
+        <div class="commercial-review-queue-title">
+          <span class="workbench-category">${escapeHtml(item.status)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+        </div>
+        <div class="commercial-review-queue-meta">
+          <span class="commercial-risk commercial-risk-${escapeHtml(item.riskTone)}">风险 ${escapeHtml(item.risk)}</span>
+          <span class="commercial-status">${escapeHtml(item.status)}</span>
+        </div>
+      </div>
+      <p><strong>复核内容：</strong>${escapeHtml(item.detail)}</p>
+      <p><strong>人工下一步：</strong>${escapeHtml(item.nextStep)}</p>
+      <div class="commercial-row-group">
+        <span>缺失资料 / 待核实</span>
+        <div class="commercial-chip-row">${missingInfoHtml}</div>
+      </div>
+      <div class="commercial-row-group">
+        <span>禁用能力</span>
+        <div class="disabled-chip-row">${disabledHtml}</div>
+      </div>
+    </article>
+  `;
+}
+
+function renderCommercialWorkflowReview(sectionId) {
+  const config = commercialWorkflowSections[sectionId];
+  const selected = config.queueItems[0];
+  return `
+    <div class="review-card commercial-review-card" aria-label="${escapeHtml(config.reviewTitle)}">
+      <div class="commercial-review-heading">
+        <div>
+          <span class="state-label">${escapeHtml(config.reviewTitle)}</span>
+          <h3>${escapeHtml(config.reviewTitle)}</h3>
+          <p>${escapeHtml(config.fixedExample)}</p>
+        </div>
+        <div class="commercial-review-meta">
+          ${badge("静态预览", "draft")}
+          ${badge("只读", "active")}
+          ${badge("不自动执行", "pending")}
+        </div>
+      </div>
+      <dl>
+        ${config.reviewRows.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
+        <dt>人工下一步</dt>
+        <dd>${escapeHtml(selected.nextStep)}</dd>
+      </dl>
+      <div class="commercial-review-group">
+        <h4>禁用能力</h4>
+        <div class="disabled-chip-row">
+          ${config.disabled.map((item) => `<span class="disabled-chip">${escapeHtml(item)}</span>`).join("")}
+        </div>
+      </div>
+      <div class="commercial-review-group">
+        <h4>安全说明</h4>
+        <p>本页只做静态只读预览，不调用 API、不写入数据、不执行审批、发送、订单、付款、生产或发货。</p>
       </div>
     </div>
   `;
