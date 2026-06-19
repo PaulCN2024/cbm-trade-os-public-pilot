@@ -1194,6 +1194,18 @@ function badge(label, type = "") {
   return `<span class="badge ${type}">${escapeHtml(label)}</span>`;
 }
 
+function renderSummaryCards(items, renderCard) {
+  return items.map(renderCard).join("");
+}
+
+function renderChipList(items, className) {
+  return items.map((label) => `<span class="${className}">${escapeHtml(label)}</span>`).join("");
+}
+
+function renderDisabledCapabilities(items) {
+  return renderChipList(items, "disabled-chip");
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -1286,7 +1298,7 @@ function renderDashboard() {
           <span>静态数据</span>
         </div>
         <div class="workbench-summary-grid">
-          ${workbenchOverviewCards.map(renderWorkbenchCard).join("")}
+          ${renderSummaryCards(workbenchOverviewCards, renderWorkbenchCard)}
         </div>
       </section>
 
@@ -1344,9 +1356,7 @@ function renderWorkbenchQueueItem(item) {
   const badgeHtml = item.badges
     .map((label) => badge(label, label.includes("高风险") ? "risk" : "approval"))
     .join(" ");
-  const disabledHtml = item.disabledCapabilities
-    .map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`)
-    .join("");
+  const disabledHtml = renderDisabledCapabilities(item.disabledCapabilities);
 
   return `
     <article class="workbench-queue-item">
@@ -1397,11 +1407,7 @@ function renderWorkbenchStaticReview() {
     <div class="workbench-review-group">
       <h4>禁用能力</h4>
       <div class="disabled-chip-row">
-        <span class="disabled-chip">不可发送</span>
-        <span class="disabled-chip">不可报价</span>
-        <span class="disabled-chip">不可生成 PI</span>
-        <span class="disabled-chip">不可下单</span>
-        <span class="disabled-chip">不可触发付款 / 生产 / 发货</span>
+        ${renderDisabledCapabilities(["不可发送", "不可报价", "不可生成 PI", "不可下单", "不可触发付款 / 生产 / 发货"])}
       </div>
     </div>
   `;
@@ -1553,10 +1559,7 @@ function renderCustomerReview() {
         <div class="customer-review-group">
           <h4>禁用能力</h4>
           <div class="disabled-chip-row">
-            <span class="disabled-chip">不可自动发送</span>
-            <span class="disabled-chip">不可自动报价</span>
-            <span class="disabled-chip">不可生成 PI</span>
-            <span class="disabled-chip">不可确认订单</span>
+            ${renderDisabledCapabilities(["不可自动发送", "不可自动报价", "不可生成 PI", "不可确认订单"])}
           </div>
         </div>
       </div>
@@ -1618,7 +1621,7 @@ function renderCustomerWorkflowPreview() {
           <span>静态数据</span>
         </div>
         <div class="customer-summary-grid">
-          ${customerWorkflowSummaryCards.map(renderCustomerSummaryCard).join("")}
+          ${renderSummaryCards(customerWorkflowSummaryCards, renderCustomerSummaryCard)}
         </div>
       </section>
 
@@ -1651,9 +1654,7 @@ function renderCustomerSummaryCard(card) {
 }
 
 function renderCustomerQueueItem(item) {
-  const disabledHtml = item.disabledCapabilities
-    .map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`)
-    .join("");
+  const disabledHtml = renderDisabledCapabilities(item.disabledCapabilities);
 
   return `
     <article class="customer-queue-item">
@@ -1767,7 +1768,7 @@ function renderSuppliers() {
           <span>静态数据</span>
         </div>
         <div class="supplier-summary-grid">
-          ${supplierWorkflowSummaryCards.map(renderSupplierSummaryCard).join("")}
+          ${renderSummaryCards(supplierWorkflowSummaryCards, renderSupplierSummaryCard)}
         </div>
       </section>
 
@@ -1834,10 +1835,7 @@ function renderSupplierReview() {
         <div class="supplier-review-group">
           <h4>禁用能力</h4>
           <div class="disabled-chip-row">
-            <span class="disabled-chip">不可发送 RFQ</span>
-            <span class="disabled-chip">不可确认报价</span>
-            <span class="disabled-chip">不可确认交期</span>
-            <span class="disabled-chip">不可生成客户报价</span>
+            ${renderDisabledCapabilities(["不可发送 RFQ", "不可确认报价", "不可确认交期", "不可生成客户报价"])}
           </div>
         </div>
       </div>
@@ -1867,9 +1865,7 @@ function renderSupplierSummaryCard(card) {
 }
 
 function renderSupplierQueueItem(item) {
-  const disabledHtml = item.disabledCapabilities
-    .map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`)
-    .join("");
+  const disabledHtml = renderDisabledCapabilities(item.disabledCapabilities);
 
   return `
     <article class="supplier-queue-item">
@@ -1945,10 +1941,7 @@ function renderInquiryReview() {
         <div class="inquiry-review-group">
           <h4>禁用能力</h4>
           <div class="disabled-chip-row">
-            <span class="disabled-chip">不可报价</span>
-            <span class="disabled-chip">不可生成 PI</span>
-            <span class="disabled-chip">不可确认订单</span>
-            <span class="disabled-chip">不可触发付款 / 生产 / 发货</span>
+            ${renderDisabledCapabilities(["不可报价", "不可生成 PI", "不可确认订单", "不可触发付款 / 生产 / 发货"])}
           </div>
         </div>
       </div>
@@ -2010,7 +2003,7 @@ function renderInquiryWorkflowPreview() {
           <span>静态数据</span>
         </div>
         <div class="inquiry-summary-grid">
-          ${inquiryWorkflowSummaryCards.map(renderInquirySummaryCard).join("")}
+          ${renderSummaryCards(inquiryWorkflowSummaryCards, renderInquirySummaryCard)}
         </div>
       </section>
 
@@ -2043,12 +2036,8 @@ function renderInquirySummaryCard(card) {
 }
 
 function renderInquiryQueueItem(item) {
-  const missingInfoHtml = item.missingInfo
-    .map((label) => `<span class="inquiry-chip">${escapeHtml(label)}</span>`)
-    .join("");
-  const disabledHtml = item.disabledCapabilities
-    .map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`)
-    .join("");
+  const missingInfoHtml = renderChipList(item.missingInfo, "inquiry-chip");
+  const disabledHtml = renderDisabledCapabilities(item.disabledCapabilities);
 
   return `
     <article class="inquiry-queue-item">
@@ -2367,10 +2356,7 @@ function renderManufacturingCapabilityReview() {
         <div class="capability-review-group">
           <h4>禁用能力</h4>
           <div class="disabled-chip-row">
-            <span class="disabled-chip">不可确认安装结果</span>
-            <span class="disabled-chip">不可确认交期</span>
-            <span class="disabled-chip">不可生成正式报价</span>
-            <span class="disabled-chip">不可触发生产 / 发货</span>
+            ${renderDisabledCapabilities(["不可确认安装结果", "不可确认交期", "不可生成正式报价", "不可触发生产 / 发货"])}
           </div>
         </div>
       </div>
@@ -2432,7 +2418,7 @@ function renderCapabilityWorkflowPreview() {
           <span>静态数据</span>
         </div>
         <div class="capability-summary-grid">
-          ${capabilityWorkflowSummaryCards.map(renderCapabilitySummaryCard).join("")}
+          ${renderSummaryCards(capabilityWorkflowSummaryCards, renderCapabilitySummaryCard)}
         </div>
       </section>
 
@@ -2465,12 +2451,8 @@ function renderCapabilitySummaryCard(card) {
 }
 
 function renderCapabilityQueueItem(item) {
-  const missingInfoHtml = item.missingInfo
-    .map((label) => `<span class="capability-chip">${escapeHtml(label)}</span>`)
-    .join("");
-  const disabledHtml = item.disabledCapabilities
-    .map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`)
-    .join("");
+  const missingInfoHtml = renderChipList(item.missingInfo, "capability-chip");
+  const disabledHtml = renderDisabledCapabilities(item.disabledCapabilities);
 
   return `
     <article class="capability-queue-item">
@@ -2600,7 +2582,7 @@ function renderAiReviewCenterPreview() {
           <p>所有数字均为静态示例，不代表实时业务状态。</p>
         </div>
         <div class="ai-review-summary-grid">
-          ${aiReviewSummaryCards.map(renderAiReviewSummaryCard).join("")}
+          ${renderSummaryCards(aiReviewSummaryCards, renderAiReviewSummaryCard)}
         </div>
       </section>
 
@@ -2631,8 +2613,8 @@ function renderAiReviewSummaryCard(card) {
 }
 
 function renderAiReviewQueueItem(item) {
-  const missingInfoHtml = item.missingInfo.map((label) => `<span class="ai-chip">${escapeHtml(label)}</span>`).join("");
-  const disabledHtml = item.disabledCapabilities.map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`).join("");
+  const missingInfoHtml = renderChipList(item.missingInfo, "ai-chip");
+  const disabledHtml = renderDisabledCapabilities(item.disabledCapabilities);
 
   return `
     <article class="ai-review-queue-item">
@@ -2686,7 +2668,7 @@ function renderAiDraftReview() {
         <dt>AI 建议</dt>
         <dd>${escapeHtml(selected.aiSuggestion)}</dd>
         <dt>缺失信息</dt>
-        <dd>${selected.missingInfo.map((item) => `<span class="ai-chip">${escapeHtml(item)}</span>`).join(" ")}</dd>
+        <dd>${renderChipList(selected.missingInfo, "ai-chip")}</dd>
         <dt>人工下一步</dt>
         <dd>${escapeHtml(selected.humanNextStep)}</dd>
         <dt>审批边界</dt>
@@ -2695,9 +2677,7 @@ function renderAiDraftReview() {
       <div class="ai-review-group">
         <h4>禁用能力</h4>
         <div class="disabled-chip-row">
-          ${selected.disabledCapabilities.map((item) => `<span class="disabled-chip">${escapeHtml(item)}</span>`).join("")}
-          <span class="disabled-chip">不可下单</span>
-          <span class="disabled-chip">不可触发付款 / 生产 / 发货</span>
+          ${renderDisabledCapabilities([...selected.disabledCapabilities, "不可下单", "不可触发付款 / 生产 / 发货"])}
         </div>
       </div>
       <div class="ai-review-group">
@@ -2828,7 +2808,7 @@ function renderFiles() {
           <p>所有文件记录均为静态示例，不代表真实客户文件。</p>
         </div>
         <div class="file-summary-grid">
-          ${fileCenterSummaryCards.map(renderFileSummaryCard).join("")}
+          ${renderSummaryCards(fileCenterSummaryCards, renderFileSummaryCard)}
         </div>
       </section>
 
@@ -2859,8 +2839,8 @@ function renderFileSummaryCard(card) {
 }
 
 function renderFileQueueItem(item) {
-  const missingInfoHtml = item.missingInfo.map((label) => `<span class="file-chip">${escapeHtml(label)}</span>`).join("");
-  const disabledHtml = item.disabledCapabilities.map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`).join("");
+  const missingInfoHtml = renderChipList(item.missingInfo, "file-chip");
+  const disabledHtml = renderDisabledCapabilities(item.disabledCapabilities);
 
   return `
     <article class="file-review-queue-item">
@@ -2917,7 +2897,7 @@ function renderFileReview() {
         <dt>风险点</dt>
         <dd><span class="file-risk file-risk-${escapeHtml(selected.riskTone)}">风险 ${escapeHtml(selected.risk)}</span></dd>
         <dt>缺失资料</dt>
-        <dd>${selected.missingInfo.map((item) => `<span class="file-chip">${escapeHtml(item)}</span>`).join(" ")}</dd>
+        <dd>${renderChipList(selected.missingInfo, "file-chip")}</dd>
         <dt>AI 建议</dt>
         <dd>${escapeHtml(selected.aiSuggestion)}</dd>
         <dt>人工下一步</dt>
@@ -2926,10 +2906,7 @@ function renderFileReview() {
       <div class="file-review-group">
         <h4>禁用能力</h4>
         <div class="disabled-chip-row">
-          ${selected.disabledCapabilities.map((item) => `<span class="disabled-chip">${escapeHtml(item)}</span>`).join("")}
-          <span class="disabled-chip">不可上传</span>
-          <span class="disabled-chip">不可删除</span>
-          <span class="disabled-chip">不可 OCR / 解析</span>
+          ${renderDisabledCapabilities([...selected.disabledCapabilities, "不可上传", "不可删除", "不可 OCR / 解析"])}
         </div>
       </div>
       <div class="file-review-group">
@@ -2967,7 +2944,7 @@ function renderQuotations() {
           <p>所有报价状态均为静态示例，不代表真实可报价状态。</p>
         </div>
         <div class="quote-summary-grid">
-          ${quoteReviewSummaryCards.map(renderQuoteSummaryCard).join("")}
+          ${renderSummaryCards(quoteReviewSummaryCards, renderQuoteSummaryCard)}
         </div>
       </section>
 
@@ -2998,8 +2975,8 @@ function renderQuoteSummaryCard(card) {
 }
 
 function renderQuoteQueueItem(item) {
-  const missingInfoHtml = item.missingInfo.map((label) => `<span class="quote-chip">${escapeHtml(label)}</span>`).join("");
-  const disabledHtml = item.disabledCapabilities.map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`).join("");
+  const missingInfoHtml = renderChipList(item.missingInfo, "quote-chip");
+  const disabledHtml = renderDisabledCapabilities(item.disabledCapabilities);
 
   return `
     <article class="quote-review-queue-item">
@@ -3055,7 +3032,7 @@ function renderQuotationReview() {
         <dt>风险点</dt>
         <dd><span class="quote-risk quote-risk-${escapeHtml(selected.riskTone)}">风险 ${escapeHtml(selected.risk)}</span></dd>
         <dt>缺失资料</dt>
-        <dd>${selected.missingInfo.map((item) => `<span class="quote-chip">${escapeHtml(item)}</span>`).join(" ")}</dd>
+        <dd>${renderChipList(selected.missingInfo, "quote-chip")}</dd>
         <dt>AI 建议</dt>
         <dd>${escapeHtml(selected.aiSuggestion)}</dd>
         <dt>人工下一步</dt>
@@ -3066,10 +3043,7 @@ function renderQuotationReview() {
       <div class="quote-review-group">
         <h4>禁用能力</h4>
         <div class="disabled-chip-row">
-          ${selected.disabledCapabilities.map((item) => `<span class="disabled-chip">${escapeHtml(item)}</span>`).join("")}
-          <span class="disabled-chip">不可计算价格</span>
-          <span class="disabled-chip">不可生成合同</span>
-          <span class="disabled-chip">不可下单 / 收款 / 发货</span>
+          ${renderDisabledCapabilities([...selected.disabledCapabilities, "不可计算价格", "不可生成合同", "不可下单 / 收款 / 发货"])}
         </div>
       </div>
       <div class="quote-review-group">
@@ -3148,7 +3122,7 @@ function renderCommercialWorkflowSection(sectionId) {
           <p>${escapeHtml(config.queueHint)}</p>
         </div>
         <div class="commercial-summary-grid">
-          ${config.summaryCards.map(renderCommercialSummaryCard).join("")}
+          ${renderSummaryCards(config.summaryCards, renderCommercialSummaryCard)}
         </div>
       </section>
 
@@ -3179,8 +3153,8 @@ function renderCommercialSummaryCard(card) {
 }
 
 function renderCommercialQueueItem(item) {
-  const missingInfoHtml = item.missingInfo.map((label) => `<span class="commercial-chip">${escapeHtml(label)}</span>`).join("");
-  const disabledHtml = item.disabled.map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`).join("");
+  const missingInfoHtml = renderChipList(item.missingInfo, "commercial-chip");
+  const disabledHtml = renderDisabledCapabilities(item.disabled);
 
   return `
     <article class="commercial-review-queue-item">
@@ -3233,7 +3207,7 @@ function renderCommercialWorkflowReview(sectionId) {
       <div class="commercial-review-group">
         <h4>禁用能力</h4>
         <div class="disabled-chip-row">
-          ${config.disabled.map((item) => `<span class="disabled-chip">${escapeHtml(item)}</span>`).join("")}
+          ${renderDisabledCapabilities(config.disabled)}
         </div>
       </div>
       <div class="commercial-review-group">
