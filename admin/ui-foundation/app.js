@@ -165,6 +165,8 @@ const fallbackLabel = "Preview fallback / local preview data - not live Supabase
 const apiUnavailableMessage =
   "Real API data is unavailable. You may not be logged in, the API may not be deployed, or this is local preview mode.";
 const DASHBOARD_SUMMARY_ENDPOINT = "/api/admin-read/dashboard-summary";
+const CUSTOMERS_ENDPOINT = "/api/admin-read/customers";
+const INQUIRIES_ENDPOINT = "/api/admin-read/inquiries";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
 
@@ -1832,7 +1834,7 @@ function renderCustomerReview() {
         <h3>客户 API 状态</h3>
         <dl>
           <dt>API 路由</dt>
-          <dd>GET /api/customers</dd>
+          <dd>GET ${CUSTOMERS_ENDPOINT}</dd>
           <dt>记录数量</dt>
           <dd>${escapeHtml(String(customerApiState.customers.length))}</dd>
           <dt>写入动作</dt>
@@ -1845,7 +1847,7 @@ function renderCustomerReview() {
 
 function renderCustomersLoading() {
   return `
-    ${renderDataStatus("loading", "正在加载客户", "正在使用当前管理员会话请求 GET /api/customers。")}
+    ${renderDataStatus("loading", "正在加载客户", `正在使用当前管理员会话请求 GET ${CUSTOMERS_ENDPOINT}。`)}
     <div class="table-wrap table-skeleton" aria-label="正在加载客户行">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -2168,7 +2170,7 @@ function loadCustomersReadOnly() {
   return loadReadOnlyList({
     state: customerApiState,
     collectionKey: "customers",
-    endpoint: "/api/customers",
+    endpoint: CUSTOMERS_ENDPOINT,
     payloadKey: "customers",
     fallbackRecords: customerPreviewFallback,
     fallbackSource: fallbackLabel,
@@ -2480,7 +2482,7 @@ function renderInquiryReview() {
         <h3>询盘 API 状态</h3>
         <dl>
           <dt>API 路由</dt>
-          <dd>GET /api/inquiries</dd>
+          <dd>GET ${INQUIRIES_ENDPOINT}</dd>
           <dt>记录数量</dt>
           <dd>${escapeHtml(String(inquiryApiState.inquiries.length))}</dd>
           <dt>写入动作</dt>
@@ -2493,7 +2495,7 @@ function renderInquiryReview() {
 
 function renderInquiriesLoading() {
   return `
-    ${renderDataStatus("loading", "正在加载询盘", "正在使用当前管理员会话请求 GET /api/inquiries。")}
+    ${renderDataStatus("loading", "正在加载询盘", `正在使用当前管理员会话请求 GET ${INQUIRIES_ENDPOINT}。`)}
     <div class="table-wrap table-skeleton" aria-label="正在加载询盘行">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -2798,7 +2800,7 @@ function loadInquiriesReadOnly() {
   return loadReadOnlyList({
     state: inquiryApiState,
     collectionKey: "inquiries",
-    endpoint: "/api/inquiries",
+    endpoint: INQUIRIES_ENDPOINT,
     payloadKey: "inquiries",
     fallbackRecords: inquiryPreviewFallback,
     fallbackSource: fallbackLabel,
