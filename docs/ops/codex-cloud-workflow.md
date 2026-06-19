@@ -52,6 +52,10 @@ Use Codex Cloud for:
 
 Codex Cloud is best when the task can be reviewed through GitHub diff, tests, and a Review Package.
 
+## First Codex Cloud Smoke Test
+
+Use the first Codex Cloud test as a read-only task whenever possible. The second test may be a documentation-only pull request. Business code, database changes, environment variables, and deployment commands remain forbidden unless explicitly approved. Every task must end with a Review Package, and Paul must review the pull request before merge.
+
 ## What Codex Cloud Should Not Do
 
 Codex Cloud must not:
