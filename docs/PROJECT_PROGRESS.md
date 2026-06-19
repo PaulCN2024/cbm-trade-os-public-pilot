@@ -64,6 +64,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Phase UI-2 Read-only API Coverage Audit
 - Dashboard Aggregate Read-only API Plan
 - Dashboard Aggregate GET-only API
+- Post-deploy Read-only API Safety Audit
 
 ## 4. Current Frozen Foundations
 
