@@ -5,7 +5,7 @@
 - Full product vision progress: 31%
 - Internal MVP / foundation progress: 68%
 - Current phase: Phase UI-2 - First Read-only Data Wiring Completed
-- Current status: first read-only Admin UI data wiring batch completed for core operator sections; still no write actions, external channel integration, approval execution, or business execution
+- Current status: first read-only Admin UI data wiring batch and read-only API coverage audit completed; still no write actions, external channel integration, approval execution, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
@@ -61,6 +61,7 @@ These percentages are planning estimates. They should move only after milestone 
 - UI-2 Read-only Supplier Capability Data Wiring
 - UI-2 Read-only Pre-Quotation Review Data Wiring
 - Phase UI-2 First Read-only Data Wiring Checkpoint
+- Phase UI-2 Read-only API Coverage Audit
 
 ## 4. Current Frozen Foundations
 
@@ -107,11 +108,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-SPRINT-API-READONLY-001 - Read-only API Coverage Audit
-2. CBM-CODEX-SPRINT-DATA-006 - File Metadata Read-only Wiring Readiness
-3. CBM-CODEX-SPRINT-API-READONLY-002 - Order/Production/Shipping Read-only API Plan
-4. CBM-CODEX-SPRINT-DATA-007 - Dashboard Workbench Read-only Aggregate Wiring
-5. CBM-CODEX-SPRINT-SAFETY-001 - Approval Boundary And Disabled Action Audit
+1. CBM-CODEX-SPRINT-API-PLAN-001 - Dashboard Aggregate Read-only API Plan
+2. CBM-CODEX-SPRINT-API-PLAN-002 - File Metadata Read-only API Plan
+3. CBM-CODEX-SPRINT-API-PLAN-003 - Quotation Read-only API Plan
+4. CBM-CODEX-SPRINT-API-PLAN-004 - Order Read-only API Plan
+5. CBM-CODEX-SPRINT-SAFETY-001 - Disabled Action And Approval Boundary Audit
 
 ## 9. How To Update This File
 
