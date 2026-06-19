@@ -5,7 +5,7 @@
 - Full product vision progress: 35%
 - Internal MVP / foundation progress: 85%
 - Current phase: Phase UI-2B - Pre-Quotation UI Migrated To Admin Read Resource
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, and Disabled Action Registry Planning completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, and Approval Audit Schema Planning completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
@@ -98,6 +98,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Admin UI Disabled Action Remediation
 - Admin UI Disabled Action Production Deployment
 - Disabled Action Registry Planning
+- Approval Audit Schema Planning
 
 ## 4. Current Frozen Foundations
 
@@ -125,6 +126,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Supplier and Manufacturing Capability UI now targets `GET /api/admin-read/supplier-capabilities`
 - Admin UI disabled action remediation is deployed and production-smoke verified
 - Disabled Action Registry Planning is completed as documentation only
+- Approval Audit Schema Planning is completed as documentation only
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
 
@@ -158,11 +160,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-SPRINT-SCHEMA-PLAN-001 - Approval Audit Schema Plan
-2. CBM-CODEX-SPRINT-UI-SAFETY-005 - Static Disabled Action Registry Module Plan
-3. CBM-CODEX-SPRINT-DOCS-003 - Internal Trial Operator Guide Update
+1. CBM-CODEX-SPRINT-DOCS-003 - Internal Trial Operator Guide Update
+2. CBM-CODEX-SPRINT-SCHEMA-PLAN-002 - Approval Audit Migration Draft Plan
+3. CBM-CODEX-SPRINT-API-PLAN-003 - Quotation Metadata Admin-read Safe Projection Plan
 4. CBM-CODEX-RELEASE-013 - Authenticated Admin API Smoke Test Execution if safe token exists
-5. CBM-CODEX-SPRINT-API-PLAN-003 - Quotation Metadata Admin-read Safe Projection Plan
+5. CBM-CODEX-SPRINT-UI-SAFETY-005 - Static Disabled Action Registry Module Plan
 
 ## 9. How To Update This File
 
