@@ -3,16 +3,16 @@
 ## 1. Current Progress Summary
 
 - Full product vision progress: 33%
-- Internal MVP / foundation progress: 75%
-- Current phase: Phase UI-2B - Admin Read Dispatcher Expanded For AI Review And Supplier Capability Resources
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, and AI/Supplier Capability admin-read resource expansion completed; still no write actions, external channel integration, approval execution, or business execution
+- Internal MVP / foundation progress: 76%
+- Current phase: Phase UI-2B - AI And Supplier Capability UI Migrated To Admin Read Paths
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, and AI/Supplier Capability UI migration completed; still no write actions, external channel integration, approval execution, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
 - Full vision: 33% `[███████░░░░░░░░░░░░░]`
-- Internal MVP: 75% `[███████████████░░░░░]`
+- Internal MVP: 76% `[███████████████░░░░░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
@@ -25,6 +25,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Commercial Workflow Static Preview: 100% `[████████████████████]`
 - UI-2 Read-only Data Wiring: 35% `[███████░░░░░░░░░░░░░]`
 - Admin-read AI/Supplier Capability Resource Expansion: 100% `[████████████████████]`
+- AI/Supplier Capability Admin-read Migration: 100% `[████████████████████]`
 - Read-only Inquiry Data Wiring: 100% `[████████████████████]`
 - Read-only Customer Data Wiring: 100% `[████████████████████]`
 - Read-only AI Review Data Wiring: 100% `[████████████████████]`
@@ -78,6 +79,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Customer And Inquiry Admin-read UI Path Migration
 - Customer/Inquiry Admin-read Production Deployment
 - Admin-read AI/Supplier Capability Resource Expansion
+- AI/Supplier Capability Admin-read UI Path Migration
 
 ## 4. Current Frozen Foundations
 
@@ -97,6 +99,8 @@ These percentages are planning estimates. They should move only after milestone 
 - Inquiry Center UI now targets `GET /api/admin-read/inquiries`
 - Admin Read Dispatcher now supports `GET /api/admin-read/ai-review`
 - Admin Read Dispatcher now supports `GET /api/admin-read/supplier-capabilities`
+- AI Review Center UI now targets `GET /api/admin-read/ai-review`
+- Supplier and Manufacturing Capability UI now targets `GET /api/admin-read/supplier-capabilities`
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
 
@@ -130,8 +134,8 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-SPRINT-DATA-011 - Migrate AI And Supplier Capability UI To Admin Read Paths
-2. CBM-CODEX-RELEASE-020 - Deploy AI/Supplier Admin-read Resource Expansion And Smoke Test
+1. CBM-CODEX-RELEASE-020 - Deploy AI/Supplier Admin-read Resource Expansion And Smoke Test
+2. CBM-CODEX-RELEASE-021 - Verify AI/Supplier Admin-read UI Migration In Production
 3. CBM-CODEX-RELEASE-013 - Authenticated Admin API Smoke Test Execution if safe token exists
 4. CBM-CODEX-SPRINT-API-PLAN-002 - File Metadata Read-only API Plan
 5. CBM-CODEX-SPRINT-DATA-012 - Production Admin-read Path Coverage Audit

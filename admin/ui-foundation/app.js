@@ -167,6 +167,8 @@ const apiUnavailableMessage =
 const DASHBOARD_SUMMARY_ENDPOINT = "/api/admin-read/dashboard-summary";
 const CUSTOMERS_ENDPOINT = "/api/admin-read/customers";
 const INQUIRIES_ENDPOINT = "/api/admin-read/inquiries";
+const AI_REVIEW_ENDPOINT = "/api/admin-read/ai-review";
+const SUPPLIER_CAPABILITIES_ENDPOINT = "/api/admin-read/supplier-capabilities";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
 
@@ -2330,6 +2332,10 @@ function normalizeStaticSupplierWorkflowItem(item) {
 function mapCapabilityRecordToSupplierItem(record, index) {
   const capabilityItem = mapCapabilityRecordToWorkflowItem(record, index);
   const title = firstDisplayValue([
+    record.supplier,
+    record.company,
+    record.title,
+    record.name,
     record.supplier_name,
     record.company_name,
     record.vendor_name,
@@ -2346,6 +2352,7 @@ function mapCapabilityRecordToSupplierItem(record, index) {
     need: capabilityItem.missingInfo.join("、"),
     matchedInquiries: capabilityItem.matchedInquiries,
     summary: firstDisplayValue([
+      record.summary,
       record.supplier_summary,
       record.public_description,
       record.internal_notes,
@@ -2353,7 +2360,9 @@ function mapCapabilityRecordToSupplierItem(record, index) {
     ]),
     aiSuggestion: firstDisplayValue([
       record.ai_suggestion,
+      record.suggestion,
       record.suggested_next_step,
+      record.summary,
       record.public_description,
       "能力资料仅供候选匹配，必须人工确认供应商反馈后再使用。",
     ]),
@@ -2852,7 +2861,7 @@ async function loadReadOnlyList({ state, collectionKey, endpoint, payloadKey, fa
     if (!response.ok) {
       throw new Error(payload.error || `${endpoint} failed with ${response.status}`);
     }
-    const records = Array.isArray(payload[payloadKey]) ? payload[payloadKey] : [];
+    const records = Array.isArray(payload[payloadKey]) ? payload[payloadKey] : Array.isArray(payload.records) ? payload.records : [];
     state.status = records.length ? "loaded" : "empty";
     state[collectionKey] = normalize(records);
     state.source = "api";
@@ -3060,7 +3069,7 @@ function renderManufacturingCapabilityReview() {
         <h3>制造能力 API 状态</h3>
         <dl>
           <dt>API 路由</dt>
-          <dd>GET /api/manufacturing-capabilities</dd>
+          <dd>GET ${SUPPLIER_CAPABILITIES_ENDPOINT}</dd>
           <dt>记录数量</dt>
           <dd>${escapeHtml(String(capabilityApiState.capabilities.length))}</dd>
           <dt>写入动作</dt>
@@ -3073,7 +3082,7 @@ function renderManufacturingCapabilityReview() {
 
 function renderManufacturingCapabilitiesLoading() {
   return `
-    ${renderDataStatus("loading", "正在加载制造能力", "Requesting GET /api/manufacturing-capabilities with the current admin session when available.")}
+    ${renderDataStatus("loading", "正在加载制造能力", `Requesting GET ${SUPPLIER_CAPABILITIES_ENDPOINT} with the current admin session when available.`)}
     <div class="table-wrap table-skeleton" aria-label="Loading manufacturing capability rows">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -3122,6 +3131,8 @@ function mapCapabilityRecordToWorkflowItem(record, index) {
   const missingInfo = getCapabilityMissingInfo(record);
   const risk = deriveCapabilityRisk(record, missingInfo);
   const title = firstDisplayValue([
+    record.title,
+    record.name,
     record.capability_name,
     record.equipment,
     record.process,
@@ -3132,6 +3143,7 @@ function mapCapabilityRecordToWorkflowItem(record, index) {
     title,
     process: firstDisplayValue([
       record.process,
+      record.capability_category,
       record.manufacturing_method,
       record.equipment,
       record.capability_line,
@@ -3140,6 +3152,8 @@ function mapCapabilityRecordToWorkflowItem(record, index) {
     matchedInquiries: firstDisplayValue([
       record.matched_inquiries,
       record.business_note,
+      record.company,
+      record.supplier,
       record.product_category,
       record.capability_line,
       "需要供应商确认",
@@ -3359,7 +3373,7 @@ function loadManufacturingCapabilitiesReadOnly() {
   return loadReadOnlyList({
     state: capabilityApiState,
     collectionKey: "capabilities",
-    endpoint: "/api/manufacturing-capabilities",
+    endpoint: SUPPLIER_CAPABILITIES_ENDPOINT,
     payloadKey: "manufacturing_capabilities",
     fallbackRecords: capabilityPreviewFallback,
     fallbackSource: fallbackLabel,
@@ -3440,7 +3454,7 @@ function mapAiAnalysisRecordToReviewItem(record, index) {
 
   return {
     title,
-    type: firstDisplayValue([record.task_type, record.analysis_type, record.draft_type, "AI 分析记录"]),
+    type: firstDisplayValue([record.type, record.category, record.task_type, record.analysis_type, record.draft_type, "AI 分析记录"]),
     risk: risk.level,
     riskTone: risk.tone,
     status: normalizeAiReviewStatus(record.approval_status || record.status, record.approval_required),
@@ -3453,6 +3467,7 @@ function mapAiAnalysisRecordToReviewItem(record, index) {
       title,
     ]),
     aiSuggestion: firstDisplayValue([
+      record.suggestion,
       record.suggested_reply,
       record.ai_suggestion,
       record.recommended_reply,
@@ -3657,7 +3672,7 @@ function renderAiDraftReview() {
         <p>${isLive ? "实时只读数据。当前只展示既有记录，不调用 AI、不执行助手、不写入数据库。" : "静态预览数据。当前不调用 AI、不执行助手、不写入数据库。"}</p>
         <dl class="ai-review-technical">
           <dt>API 路由</dt>
-          <dd>GET /api/ai-inquiry-analyses</dd>
+          <dd>GET ${AI_REVIEW_ENDPOINT}</dd>
           <dt>记录数量</dt>
           <dd>${escapeHtml(String(aiDraftApiState.drafts.length))}</dd>
           <dt>写入动作</dt>
@@ -3670,7 +3685,7 @@ function renderAiDraftReview() {
 
 function renderAiDraftsLoading(model = getAiReviewViewModel()) {
   return `
-    ${renderDataStatus("loading", "正在加载 AI 询盘分析草稿", "正在使用当前管理员会话请求 GET /api/ai-inquiry-analyses。")}
+    ${renderDataStatus("loading", "正在加载 AI 询盘分析草稿", `正在使用当前管理员会话请求 GET ${AI_REVIEW_ENDPOINT}。`)}
     ${renderAiReviewCenterPreview(model)}
   `;
 }
@@ -4333,7 +4348,7 @@ function loadAiDraftsReadOnly() {
   return loadReadOnlyList({
     state: aiDraftApiState,
     collectionKey: "drafts",
-    endpoint: "/api/ai-inquiry-analyses",
+    endpoint: AI_REVIEW_ENDPOINT,
     payloadKey: "ai_inquiry_analyses",
     fallbackRecords: aiDraftPreviewFallback,
     fallbackSource: fallbackLabel,
