@@ -42,6 +42,14 @@
       "dest": "/api/customers?crm_resource=ai-inquiry-analyses"
     },
     {
+      "src": "^/api/follow-ups$",
+      "dest": "/api/customers?crm_resource=follow-ups"
+    },
+    {
+      "src": "^/api/admin-dashboard-summary$",
+      "dest": "/api/customers?crm_resource=admin-dashboard-summary"
+    },
+    {
       "handle": "filesystem"
     }
   ]
