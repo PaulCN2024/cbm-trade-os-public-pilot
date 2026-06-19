@@ -165,6 +165,8 @@ const fallbackLabel = "Preview fallback / local preview data - not live Supabase
 const apiUnavailableMessage =
   "Real API data is unavailable. You may not be logged in, the API may not be deployed, or this is local preview mode.";
 
+const dashboardSummaryApiState = createDashboardSummaryState();
+
 const companyPreviewFallback = [
   {
     company_name: "Panama Project Buyer",
@@ -1253,6 +1255,9 @@ function setSection(sectionId) {
   mainContent.innerHTML = config.content(sectionId);
   reviewTitle.textContent = config.title === "Coming Soon" ? "Module Status" : "复核面板";
   reviewPanel.innerHTML = config.review(sectionId);
+  if (sectionId === "dashboard") {
+    loadDashboardSummaryReadOnly();
+  }
   if (sectionId === "companies") {
     loadCompaniesReadOnly();
   }
@@ -1280,16 +1285,27 @@ function setSection(sectionId) {
 }
 
 function renderDashboard() {
+  const model = getDashboardWorkbenchViewModel();
+  const statusNotice =
+    dashboardSummaryApiState.status === "loading"
+      ? renderDataStatus("loading", "正在加载工作台汇总", "正在使用当前管理员会话请求 GET /api/admin-dashboard-summary。")
+      : dashboardSummaryApiState.status === "error"
+      ? renderDataStatus("error", "工作台汇总 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${dashboardSummaryApiState.error}`)
+      : dashboardSummaryApiState.status === "empty"
+      ? renderDataStatus("empty", "暂无实时工作台汇总", "当前没有可用实时汇总数据，继续显示静态预览 fallback。")
+      : "";
+
   return `
-    <div class="workbench-preview" aria-label="静态工作台预览">
+    <div class="workbench-preview" aria-label="工作台只读预览">
+      ${statusNotice}
       <div class="workbench-header">
         <div>
           <span class="state-label">工作台</span>
           <h3>CBM 工作台 / 今日待处理</h3>
-          <p>静态预览数据，仅用于验证工作台信息层级；不调用 API、不执行助手、不写入数据。</p>
+          <p>${escapeHtml(model.headerCopy)}</p>
         </div>
         <div class="workbench-badges" aria-label="工作台预览状态">
-          ${badge("静态预览", "active")}
+          ${badge(model.sourceLabel, model.isLive ? "active" : "draft")}
           ${badge("只读", "active")}
           ${badge("不执行动作", "pending")}
         </div>
@@ -1301,10 +1317,10 @@ function renderDashboard() {
             <h3>今日概览</h3>
             <p>把需要注意的询盘、草稿、缺失信息和风险先压缩成可扫读数字。</p>
           </div>
-          <span>静态数据</span>
+          <span>${escapeHtml(model.summaryLabel)}</span>
         </div>
         <div class="workbench-summary-grid">
-          ${renderSummaryCards(workbenchOverviewCards, renderWorkbenchCard)}
+          ${renderSummaryCards(model.summaryCards, renderWorkbenchCard)}
         </div>
       </section>
 
@@ -1315,12 +1331,12 @@ function renderDashboard() {
               <h3>待处理队列</h3>
               <p>按人工复核优先级排列，队列项仅展示建议，不触发任何业务动作。</p>
             </div>
-            <span>5 条静态示例</span>
+            <span>${escapeHtml(model.queueCountLabel)}</span>
           </div>
-          ${workbenchQueueItems.map(renderWorkbenchQueueItem).join("")}
+          ${model.queueItems.map(renderWorkbenchQueueItem).join("")}
         </section>
         <aside class="workbench-review-panel" aria-label="只读复核预览">
-          ${renderWorkbenchStaticReview()}
+          ${renderWorkbenchStaticReview(model)}
         </aside>
       </div>
     </div>
@@ -1328,6 +1344,7 @@ function renderDashboard() {
 }
 
 function renderDashboardReview() {
+  const model = getDashboardWorkbenchViewModel();
   return `
     <div class="review-stack">
       <div class="review-card">
@@ -1339,11 +1356,169 @@ function renderDashboardReview() {
         </ul>
       </div>
       <div class="review-card">
+        <h3>工作台汇总状态</h3>
+        <dl>
+          <dt>API 路由</dt>
+          <dd>GET /api/admin-dashboard-summary</dd>
+          <dt>数据状态</dt>
+          <dd>${escapeHtml(model.sourceLabel)}</dd>
+          <dt>队列数量</dt>
+          <dd>${escapeHtml(model.queueCountLabel)}</dd>
+          <dt>写入动作</dt>
+          <dd>未连接</dd>
+        </dl>
+      </div>
+      <div class="review-card">
         <h3>预览目标</h3>
-        <p>先验证工作台、今日待处理、复核队列和只读详情面板的产品方向，再进入任何真实数据或业务流程。</p>
+        <p>${model.isLive ? "展示只读汇总数据，但仍不执行发送、审批、报价、PI、订单、付款、生产或发货。" : "先验证工作台、今日待处理、复核队列和只读详情面板的产品方向，再进入任何真实数据或业务流程。"}</p>
       </div>
     </div>
   `;
+}
+
+function createDashboardSummaryState() {
+  return {
+    status: "idle",
+    summary: null,
+    error: "",
+    source: "not loaded",
+  };
+}
+
+function getDashboardWorkbenchViewModel() {
+  const isLive = dashboardSummaryApiState.status === "loaded" && Boolean(dashboardSummaryApiState.summary);
+  if (!isLive) {
+    return {
+      isLive: false,
+      sourceLabel:
+        dashboardSummaryApiState.status === "error"
+          ? "API 暂不可用，显示静态预览"
+          : dashboardSummaryApiState.status === "loading"
+          ? "静态预览 fallback"
+          : "静态预览 fallback",
+      summaryLabel: "静态数据",
+      queueCountLabel: "5 条静态示例",
+      headerCopy: "静态预览数据，仅用于验证工作台信息层级；不调用 API、不执行助手、不写入数据。",
+      summaryCards: workbenchOverviewCards,
+      queueItems: workbenchQueueItems,
+      selectedItem: workbenchQueueItems[0],
+      warnings: [],
+    };
+  }
+
+  const summary = dashboardSummaryApiState.summary;
+  return {
+    isLive: true,
+    sourceLabel: "实时只读数据",
+    summaryLabel: "实时只读汇总",
+    queueCountLabel: `${summary.queueItems.length} 条只读汇总记录`,
+    headerCopy: "实时只读汇总数据，仅用于工作台展示；不执行助手、不写入数据、不触发业务动作。",
+    summaryCards: summary.summaryCards,
+    queueItems: summary.queueItems,
+    selectedItem: summary.queueItems[0] || workbenchQueueItems[0],
+    warnings: summary.warnings,
+  };
+}
+
+function normalizeDashboardSummaryPayload(payload) {
+  if (!payload || typeof payload !== "object" || !payload.summary_cards || typeof payload.summary_cards !== "object") {
+    return null;
+  }
+
+  const summaryCards = normalizeDashboardSummaryCards(payload.summary_cards);
+  const queueItems = normalizeDashboardWorkflowQueues(payload.workflow_queues || {});
+
+  return {
+    summaryCards,
+    queueItems: queueItems.length ? queueItems : workbenchQueueItems,
+    warnings: Array.isArray(payload.warnings) ? payload.warnings.map((item) => safeDashboardText(item, "数据源提示")) : [],
+  };
+}
+
+function normalizeDashboardSummaryCards(summaryCards) {
+  const cardOrder = [
+    ["new_inquiries", workbenchOverviewCards[0]],
+    ["needs_review", workbenchOverviewCards[1]],
+    ["missing_information", workbenchOverviewCards[2]],
+    ["followups_due", workbenchOverviewCards[3]],
+    ["high_risk", workbenchOverviewCards[4]],
+    ["ai_drafts_pending", workbenchOverviewCards[5]],
+  ];
+
+  return cardOrder.map(([key, fallback]) => {
+    const card = summaryCards[key] || {};
+    return {
+      label: safeDashboardText(card.label, fallback.label),
+      value: safeDashboardText(card.value, fallback.value),
+      subtitle: safeDashboardText(card.note || card.subtitle, fallback.subtitle),
+      tone: normalizeWorkbenchTone(card.tone || fallback.tone),
+    };
+  });
+}
+
+function normalizeDashboardWorkflowQueues(workflowQueues) {
+  const queueConfig = [
+    ["inquiry_queue", "询盘"],
+    ["customer_queue", "客户"],
+    ["ai_review_queue", "AI 复核"],
+    ["supplier_capability_queue", "供应商 / 制造能力"],
+    ["pre_quotation_queue", "报价前复核"],
+  ];
+  return queueConfig
+    .flatMap(([key, category]) => {
+      const items = Array.isArray(workflowQueues[key]) ? workflowQueues[key] : [];
+      return items.map((item) => normalizeDashboardQueueItem(item, category));
+    })
+    .slice(0, 5);
+}
+
+function normalizeDashboardQueueItem(item, category) {
+  const risk = safeDashboardText(item?.risk || item?.risk_level, "暂无风险等级");
+  const status = safeDashboardText(item?.status, "待复核");
+  return {
+    title: safeDashboardText(item?.title, "未命名只读记录"),
+    category,
+    priority: risk.includes("高") || risk.toLowerCase().includes("high") ? "P1" : "P2",
+    meta: safeDashboardText(item?.summary, "需要人工确认"),
+    badges: [status, risk].filter(Boolean),
+    recommendedAction: safeDashboardText(item?.next_step || item?.recommended_action, "需要人工确认"),
+    disabledCapabilities: normalizeDashboardDisabledActions(item?.disabled_actions || item?.disabledCapabilities),
+  };
+}
+
+function normalizeDashboardDisabledActions(actions) {
+  const labels = {
+    send: "不可发送",
+    approve: "不可审批",
+    reject: "不可拒绝",
+    quote: "不可报价",
+    create_rfq: "不可发送 RFQ",
+    create_task: "不可创建任务",
+    generate_quotation: "不可生成报价",
+    generate_pi: "不可生成 PI",
+    confirm_order: "不可确认订单",
+    create_order: "不可创建订单",
+    confirm_payment: "不可确认付款",
+    trigger_production: "不可触发生产",
+    confirm_production: "不可确认生产",
+    trigger_shipment: "不可触发发货",
+    confirm_shipment: "不可确认发货",
+  };
+  const normalized = (Array.isArray(actions) ? actions : [])
+    .map((action) => labels[action] || safeDashboardText(action, "禁用动作"))
+    .filter(Boolean);
+  return normalized.length ? normalized : ["不可发送", "不可审批", "不可报价"];
+}
+
+function normalizeWorkbenchTone(tone) {
+  if (tone === "risk") return "danger";
+  if (["info", "warning", "danger", "neutral"].includes(tone)) return tone;
+  return "neutral";
+}
+
+function safeDashboardText(value, fallback) {
+  const text = String(value ?? "").trim();
+  return text && text !== "undefined" && text !== "null" ? text : fallback;
 }
 
 function renderWorkbenchCard(card) {
@@ -1381,7 +1556,47 @@ function renderWorkbenchQueueItem(item) {
   `;
 }
 
-function renderWorkbenchStaticReview() {
+function renderWorkbenchStaticReview(model = getDashboardWorkbenchViewModel()) {
+  if (model.isLive) {
+    const selected = model.selectedItem || workbenchQueueItems[0];
+    const warningItems = model.warnings.length
+      ? model.warnings.map((warning) => `<li>${escapeHtml(warning)}</li>`).join("")
+      : "<li>无额外数据源警告</li>";
+    return `
+      <div class="workbench-review-heading">
+        <div>
+          <h3>只读复核预览</h3>
+          <p class="workbench-review-note">实时只读记录：${escapeHtml(selected.title)}。</p>
+        </div>
+        ${badge("不执行动作", "pending")}
+      </div>
+
+      <dl class="workbench-review-list">
+        <dt>摘要</dt>
+        <dd>${escapeHtml(selected.meta)}</dd>
+        <dt>推荐人工动作</dt>
+        <dd>${escapeHtml(selected.recommendedAction)}</dd>
+        <dt>技术说明</dt>
+        <dd>实时只读汇总数据。当前不调用 AI、不执行助手、不写入数据库。</dd>
+      </dl>
+
+      <div class="workbench-review-group">
+        <h4>风险 / 状态</h4>
+        <ul class="check-list">
+          ${selected.badges.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          ${warningItems}
+        </ul>
+      </div>
+
+      <div class="workbench-review-group">
+        <h4>禁用能力</h4>
+        <div class="disabled-chip-row">
+          ${renderDisabledCapabilities(selected.disabledCapabilities)}
+        </div>
+      </div>
+    `;
+  }
+
   return `
     <div class="workbench-review-heading">
       <div>
@@ -1417,6 +1632,47 @@ function renderWorkbenchStaticReview() {
       </div>
     </div>
   `;
+}
+
+async function loadDashboardSummaryReadOnly() {
+  dashboardSummaryApiState.status = "loading";
+  dashboardSummaryApiState.error = "";
+  dashboardSummaryApiState.source = "api";
+  refreshDashboardView();
+
+  try {
+    const token = getAdminAccessToken();
+    const response = await fetch("/api/admin-dashboard-summary", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `/api/admin-dashboard-summary failed with ${response.status}`);
+    }
+    const summary = normalizeDashboardSummaryPayload(payload);
+    if (!summary) {
+      dashboardSummaryApiState.status = "empty";
+      dashboardSummaryApiState.summary = null;
+      dashboardSummaryApiState.source = fallbackLabel;
+    } else {
+      dashboardSummaryApiState.status = "loaded";
+      dashboardSummaryApiState.summary = summary;
+      dashboardSummaryApiState.source = "api";
+    }
+  } catch (error) {
+    dashboardSummaryApiState.status = "error";
+    dashboardSummaryApiState.error = error.message || "Unknown API error";
+    dashboardSummaryApiState.summary = null;
+    dashboardSummaryApiState.source = fallbackLabel;
+  }
+
+  refreshDashboardView();
+}
+
+function refreshDashboardView() {
+  if (activeSectionId !== "dashboard") return;
+  mainContent.innerHTML = renderDashboard();
+  reviewPanel.innerHTML = renderDashboardReview();
 }
 
 function renderCompanies() {
