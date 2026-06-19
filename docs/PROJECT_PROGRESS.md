@@ -75,6 +75,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Admin Read Dispatcher Production Verification
 - Dashboard Summary Admin-read UI Path Migration
 - Customer And Inquiry Admin-read UI Path Migration
+- Customer/Inquiry Admin-read Production Deployment
 
 ## 4. Current Frozen Foundations
 
