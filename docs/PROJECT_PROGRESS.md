@@ -68,6 +68,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Authenticated Admin API Smoke Test Plan
 - Disabled Action And Approval Boundary Audit
 - Read-only Route Separation Plan
+- Admin Read Dispatcher Plan
 
 ## 4. Current Frozen Foundations
 
