@@ -307,31 +307,37 @@ const workbenchOverviewCards = [
     label: "新询盘",
     value: "5",
     subtitle: "今日新增待查看询盘",
+    tone: "info",
   },
   {
     label: "需要人工复核",
     value: "8",
     subtitle: "AI 草稿、沟通或询盘需要复核",
+    tone: "warning",
   },
   {
     label: "缺失信息",
     value: "4",
     subtitle: "图纸、规格、数量或交期信息缺失",
+    tone: "warning",
   },
   {
     label: "今日跟进",
     value: "6",
     subtitle: "需要联系客户或供应商",
+    tone: "info",
   },
   {
     label: "高风险提醒",
     value: "2",
     subtitle: "涉及价格、付款、交期或质量责任",
+    tone: "danger",
   },
   {
     label: "AI 草稿待审",
     value: "3",
     subtitle: "仅草稿，发送前必须人工确认",
+    tone: "neutral",
   },
 ];
 
@@ -339,6 +345,8 @@ const workbenchQueueItems = [
   {
     title: "秘鲁客户询盘：缺少图纸 / 规格",
     category: "询盘",
+    priority: "P1",
+    meta: "客户资料待补齐",
     badges: ["缺失信息", "需要复核"],
     recommendedAction: "补充图纸和产品规格后再继续报价判断",
     disabledCapabilities: ["不可发送", "不可报价", "不可生成 PI"],
@@ -346,6 +354,8 @@ const workbenchQueueItems = [
   {
     title: "AI 回复草稿：涉及价格，需要复核",
     category: "AI 草稿",
+    priority: "P1",
+    meta: "价格 / 交期敏感",
     badges: ["高风险", "需要人工复核"],
     recommendedAction: "人工确认价格、交期和付款条款后再使用",
     disabledCapabilities: ["不可发送", "不可审批"],
@@ -353,6 +363,8 @@ const workbenchQueueItems = [
   {
     title: "供应商报价附件：需要人工查看",
     category: "附件 / 供应商",
+    priority: "P2",
+    meta: "报价附件待确认",
     badges: ["附件复核", "供应商报价"],
     recommendedAction: "确认报价有效期、币种、交期和规格",
     disabledCapabilities: ["不可生成客户报价", "不可确认订单"],
@@ -360,6 +372,8 @@ const workbenchQueueItems = [
   {
     title: "客户跟进：已超过计划跟进时间",
     category: "客户跟进",
+    priority: "P2",
+    meta: "跟进节奏待判断",
     badges: ["待跟进"],
     recommendedAction: "人工决定是否发送跟进消息",
     disabledCapabilities: ["不可自动发送", "不可创建任务"],
@@ -367,6 +381,8 @@ const workbenchQueueItems = [
   {
     title: "制造能力问题：不得承诺交期",
     category: "制造能力",
+    priority: "P1",
+    meta: "产能 / 交期需核实",
     badges: ["需要复核", "不承诺交期"],
     recommendedAction: "人工核实产能、设备和供应商反馈",
     disabledCapabilities: ["不可确认生产", "不可确认交期", "不可发货"],
@@ -452,9 +468,8 @@ function renderDashboard() {
       <div class="workbench-header">
         <div>
           <span class="state-label">工作台</span>
-          <h3>今日待处理</h3>
-          <p>静态预览数据，不代表实时客户或询盘状态。</p>
-          <p>仅用于界面验证，不调用 API、不执行助手、不写入数据。</p>
+          <h3>CBM 工作台 / 今日待处理</h3>
+          <p>静态预览数据，仅用于验证工作台信息层级；不调用 API、不执行助手、不写入数据。</p>
         </div>
         <div class="workbench-badges" aria-label="工作台预览状态">
           ${badge("静态预览", "active")}
@@ -463,14 +478,26 @@ function renderDashboard() {
         </div>
       </div>
 
-      <div class="workbench-summary-grid" aria-label="今日概览">
-        ${workbenchOverviewCards.map(renderWorkbenchCard).join("")}
-      </div>
+      <section class="workbench-section" aria-label="今日概览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>今日概览</h3>
+            <p>把需要注意的询盘、草稿、缺失信息和风险先压缩成可扫读数字。</p>
+          </div>
+          <span>静态数据</span>
+        </div>
+        <div class="workbench-summary-grid">
+          ${workbenchOverviewCards.map(renderWorkbenchCard).join("")}
+        </div>
+      </section>
 
       <div class="workbench-layout">
         <section class="workbench-queue" aria-label="静态待处理队列">
           <div class="workbench-section-header">
-            <h3>待处理队列</h3>
+            <div>
+              <h3>待处理队列</h3>
+              <p>按人工复核优先级排列，队列项仅展示建议，不触发任何业务动作。</p>
+            </div>
             <span>5 条静态示例</span>
           </div>
           ${workbenchQueueItems.map(renderWorkbenchQueueItem).join("")}
@@ -489,7 +516,6 @@ function renderDashboardReview() {
       <div class="review-card">
         <h3>工作台只读边界</h3>
         <ul class="check-list">
-          <li>静态预览数据，不代表实时客户或询盘状态</li>
           <li>不调用 API，不执行助手，不写入数据库</li>
           <li>不发送、不审批、不创建任务</li>
           <li>不生成报价、PI、订单，不触发付款 / 生产 / 发货</li>
@@ -505,9 +531,11 @@ function renderDashboardReview() {
 
 function renderWorkbenchCard(card) {
   return `
-    <article class="workbench-card">
+    <article class="workbench-card ${card.tone ? `workbench-card-${escapeHtml(card.tone)}` : ""}">
       <span>${escapeHtml(card.label)}</span>
-      <strong>${escapeHtml(card.value)}</strong>
+      <div class="workbench-card-value">
+        <strong>${escapeHtml(card.value)}</strong>
+      </div>
       <small>${escapeHtml(card.subtitle)}</small>
     </article>
   `;
@@ -523,9 +551,13 @@ function renderWorkbenchQueueItem(item) {
 
   return `
     <article class="workbench-queue-item">
-      <div>
-        <span class="workbench-category">${escapeHtml(item.category)}</span>
-        <h4>${escapeHtml(item.title)}</h4>
+      <div class="workbench-queue-topline">
+        <div>
+          <span class="workbench-category">${escapeHtml(item.category)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+          <small>${escapeHtml(item.meta)}</small>
+        </div>
+        <span class="workbench-priority">${escapeHtml(item.priority)}</span>
       </div>
       <div class="workbench-badges">${badgeHtml}</div>
       <p><strong>推荐人工动作：</strong>${escapeHtml(item.recommendedAction)}</p>
@@ -536,8 +568,13 @@ function renderWorkbenchQueueItem(item) {
 
 function renderWorkbenchStaticReview() {
   return `
-    <h3>只读复核预览</h3>
-    <p class="workbench-review-note">固定示例：秘鲁客户询盘，缺少图纸 / 规格。</p>
+    <div class="workbench-review-heading">
+      <div>
+        <h3>只读复核预览</h3>
+        <p class="workbench-review-note">固定示例：秘鲁客户询盘，缺少图纸 / 规格。</p>
+      </div>
+      ${badge("不执行动作", "pending")}
+    </div>
 
     <dl class="workbench-review-list">
       <dt>摘要</dt>
@@ -545,7 +582,7 @@ function renderWorkbenchStaticReview() {
       <dt>推荐人工动作</dt>
       <dd>先补齐关键信息，再由人工决定是否进入供应商询价或报价准备。</dd>
       <dt>技术说明</dt>
-      <dd>静态预览数据。当前不调用 API、不执行助手、不写入数据库。</dd>
+      <dd>静态预览，不调用 API、不执行助手、不写入数据库。</dd>
     </dl>
 
     <div class="workbench-review-group">
