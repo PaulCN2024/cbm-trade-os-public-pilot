@@ -21,39 +21,39 @@ const navItems = [
 const sections = {
   dashboard: {
     title: "CBM 工作台",
-    description: "A calm operating view for leads, companies, products and draft reviews.",
+    description: "内部只读试用版：用于查看、复核和记录问题，不执行发送、审批、报价或下单动作。",
     sectionTitle: "工作台",
-    sectionHelp: "Foundation layout for future business modules.",
+    sectionHelp: "今日待处理概览和复核优先级预览；数据可能来自实时只读路径或静态 fallback。",
     content: renderDashboard,
     review: renderDashboardReview,
   },
   companies: {
     title: "公司",
-    description: "只读公司列表，连接 Step 2A 公司 API。",
+    description: "内部试用的公司只读列表，用于核对客户公司资料和来源。",
     sectionTitle: "公司管理",
-    sectionHelp: "只读 API 列表。当前不支持创建、更新或删除。",
+    sectionHelp: "只读 API 列表。当前不创建、不更新、不删除，也不导出公司数据。",
     content: renderCompanies,
     review: renderCompanyReview,
   },
   customers: {
     title: "客户",
-    description: "只读客户列表，连接现有客户 API。",
+    description: "客户信息只读预览，用于查看客户资料、跟进线索和风险提示。",
     sectionTitle: "客户管理",
-    sectionHelp: "只读 API 列表。当前不支持创建、更新、删除或导入。",
+    sectionHelp: "只读 admin-read 列表。当前不创建、不编辑、不导入、不导出客户资料。",
     content: renderCustomers,
     review: renderCustomerReview,
   },
   inquiries: {
     title: "询盘",
-    description: "只读询盘列表，连接现有询盘 API。",
+    description: "询盘只读复核中心，用于查看客户需求、缺失信息和人工下一步。",
     sectionTitle: "询盘中心",
-    sectionHelp: "只读 API 列表。当前不支持创建询盘、AI 自动处理或外发动作。",
+    sectionHelp: "只读 admin-read 列表。当前不创建询盘、不外发消息、不自动报价。",
     content: renderInquiries,
     review: renderInquiryReview,
   },
   suppliers: {
     title: "供应商",
-    description: "静态供应商能力、报价状态和人工核实预览。",
+    description: "供应商与能力信息仅供内部参考，用于核对状态和待确认事项。",
     sectionTitle: "供应商中心",
     sectionHelp: "静态只读预览。当前不发送 RFQ，不确认报价、交期或供应商承诺。",
     content: renderSuppliers,
@@ -61,7 +61,7 @@ const sections = {
   },
   products: {
     title: "产品",
-    description: "只读产品列表，连接 Step 2A 产品 API。",
+    description: "产品资料只读列表，用于核对业务线、分类、材质和表面处理信息。",
     sectionTitle: "产品管理",
     sectionHelp: "只读 API 列表。当前不支持创建、更新或删除。",
     content: renderProducts,
@@ -69,31 +69,31 @@ const sections = {
   },
   "manufacturing-capabilities": {
     title: "制造能力",
-    description: "只读制造能力列表，连接 Step 2A 制造能力 API。",
+    description: "制造能力只读参考，用于匹配方向判断，不代表供应商已确认可生产。",
     sectionTitle: "制造能力",
-    sectionHelp: "只读 API 列表。当前不支持创建、更新或删除。",
+    sectionHelp: "只读 admin-read 列表。当前不确认产能、价格、交期、包装或质量责任。",
     content: renderManufacturingCapabilities,
     review: renderManufacturingCapabilityReview,
   },
   "ai-drafts": {
     title: "AI 复核中心",
-    description: "静态复核 AI 草稿、风险提醒、缺失信息和人工下一步建议。",
+    description: "AI 输出只作为复核材料，必须人工确认后才可进入任何后续流程。",
     sectionTitle: "AI 复核中心",
-    sectionHelp: "静态只读预览。AI 仅提供建议和草稿，不自动发送、审批、报价或生成 PI。",
+    sectionHelp: "只读复核预览。AI 不自动发送、不审批、不应用建议、不生成报价或 PI。",
     content: renderAiDrafts,
     review: renderAiDraftReview,
   },
   files: {
     title: "文件中心",
-    description: "集中查看询盘附件、图纸资料、合同单据、质量证据和缺失文件。",
+    description: "文件中心仅展示安全元数据，用于查看附件、图纸、单据和缺失资料。",
     sectionTitle: "文件中心",
-    sectionHelp: "静态只读预览。当前不上传、不删除、不解析文件，也不生成报价、PI、合同或订单。",
+    sectionHelp: "只读元数据预览。当前不上传、不下载、不删除、不解析、不 OCR。",
     content: renderFiles,
     review: renderFileReview,
   },
   quotations: {
     title: "报价前复核",
-    description: "集中检查客户需求、供应商报价、资料完整性、风险边界和人工报价准备状态。",
+    description: "报价前只读复核，用于检查资料完整性、供应商反馈和风险边界。",
     sectionTitle: "报价前复核",
     sectionHelp: "只读 admin-read 复核列表。当前不生成报价、不计算价格、不生成 PI、合同或订单。",
     content: renderQuotations,
@@ -101,7 +101,7 @@ const sections = {
   },
   orders: {
     title: "订单中心",
-    description: "集中查看订单准备状态、PI/合同资料、付款条件和人工确认边界。",
+    description: "未来订单模块静态预览，仅展示人工复核方向，不确认订单或付款。",
     sectionTitle: "订单中心",
     sectionHelp: "静态只读预览。当前不确认订单、不生成合同、不确认收款或下达生产。",
     content: renderOrders,
@@ -109,7 +109,7 @@ const sections = {
   },
   production: {
     title: "生产中心",
-    description: "集中查看生产准备、供应商确认、资料缺口和交期风险。",
+    description: "未来生产模块静态预览，仅展示资料缺口和交期风险，不下达生产。",
     sectionTitle: "生产中心",
     sectionHelp: "静态只读预览。当前不下达生产、不确认交期、包装或质量责任。",
     content: renderProduction,
@@ -117,7 +117,7 @@ const sections = {
   },
   shipping: {
     title: "发货中心",
-    description: "集中查看装柜、物流资料、目的港、单据缺口和发货风险。",
+    description: "未来发货模块静态预览，仅展示装柜、物流和单据缺口，不安排发货。",
     sectionTitle: "发货中心",
     sectionHelp: "静态只读预览。当前不确认发货、不生成装箱单、不通知客户。",
     content: renderShipping,
@@ -125,7 +125,7 @@ const sections = {
   },
   "after-sales": {
     title: "售后中心",
-    description: "集中查看客户反馈、质量证据、责任边界和人工处理建议。",
+    description: "未来售后模块静态预览，仅展示反馈和证据，不承认责任或承诺赔付。",
     sectionTitle: "售后中心",
     sectionHelp: "静态只读预览。当前不承认责任、不承诺赔付、不发送最终结论。",
     content: renderAfterSales,
@@ -133,7 +133,7 @@ const sections = {
   },
   settings: {
     title: "设置",
-    description: "查看系统边界、账号状态、AI 模型预留和未来集成入口。",
+    description: "设置页仅展示未来配置入口和安全边界，不连接账号或保存配置。",
     sectionTitle: "设置",
     sectionHelp: "静态只读边界预览。当前不连接账号、不调用 AI、不修改权限。",
     content: renderSettings,
@@ -142,10 +142,10 @@ const sections = {
 };
 
 const comingSoonContent = {
-  title: "Coming Soon",
-  description: "This navigation item is reserved for a future phase.",
-  sectionTitle: "Module Placeholder",
-  sectionHelp: "No workflow is implemented in Step 2B.",
+  title: "稍后开放",
+  description: "该模块保留给后续阶段，当前仅显示只读占位信息。",
+  sectionTitle: "模块占位",
+  sectionHelp: "当前未实现真实业务流程，不执行写入或外发动作。",
   content: renderComingSoon,
   review: renderComingSoonReview,
 };
@@ -1262,7 +1262,7 @@ function setSection(sectionId) {
   sectionTitle.textContent = config.sectionTitle;
   sectionHelp.textContent = config.sectionHelp;
   mainContent.innerHTML = config.content(sectionId);
-  reviewTitle.textContent = config.title === "Coming Soon" ? "Module Status" : "复核面板";
+  reviewTitle.textContent = config.title === "稍后开放" ? "模块状态" : "复核面板";
   reviewPanel.innerHTML = config.review(sectionId);
   if (sectionId === "dashboard") {
     loadDashboardSummaryReadOnly();
@@ -1302,7 +1302,7 @@ function renderDashboard() {
     dashboardSummaryApiState.status === "loading"
       ? renderDataStatus("loading", "正在加载工作台汇总", `正在使用当前管理员会话请求 GET ${DASHBOARD_SUMMARY_ENDPOINT}。`)
       : dashboardSummaryApiState.status === "error"
-      ? renderDataStatus("error", "工作台汇总 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${dashboardSummaryApiState.error}`)
+      ? renderDataStatus("error", "工作台汇总 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${dashboardSummaryApiState.error}`)
       : dashboardSummaryApiState.status === "empty"
       ? renderDataStatus("empty", "暂无实时工作台汇总", "当前没有可用实时汇总数据，继续显示静态预览 fallback。")
       : "";
@@ -1410,7 +1410,7 @@ function getDashboardWorkbenchViewModel() {
           : "静态预览 fallback",
       summaryLabel: "静态数据",
       queueCountLabel: "5 条静态示例",
-      headerCopy: "静态预览数据，仅用于验证工作台信息层级；不调用 API、不执行助手、不写入数据。",
+      headerCopy: "内部只读试用数据，仅用于验证工作台信息层级；不调用 API、不执行助手、不写入数据。",
       summaryCards: workbenchOverviewCards,
       queueItems: workbenchQueueItems,
       selectedItem: workbenchQueueItems[0],
@@ -1424,7 +1424,7 @@ function getDashboardWorkbenchViewModel() {
     sourceLabel: "实时只读数据",
     summaryLabel: "实时只读汇总",
     queueCountLabel: `${summary.queueItems.length} 条只读汇总记录`,
-    headerCopy: "实时只读汇总数据，仅用于工作台展示；不执行助手、不写入数据、不触发业务动作。",
+    headerCopy: "实时只读汇总数据，仅用于内部试用展示；不执行助手、不写入数据、不触发业务动作。",
     summaryCards: summary.summaryCards,
     queueItems: summary.queueItems,
     selectedItem: summary.queueItems[0] || workbenchQueueItems[0],
@@ -1698,8 +1698,8 @@ function renderCompanies() {
 
   const statusNotice =
     companyApiState.status === "error"
-      ? renderDataStatus("error", "公司 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${companyApiState.error}`)
-      : renderDataStatus("success", "公司数据已加载", `Source: ${companyApiState.source}. Read-only list. No create, update or delete action is connected.`);
+      ? renderDataStatus("error", "公司 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${companyApiState.error}`)
+      : renderDataStatus("success", "公司数据已加载", `数据来源：${companyApiState.source}。只读列表，未连接创建、更新或删除动作。`);
 
   return `
     ${statusNotice}
@@ -1717,13 +1717,13 @@ function renderCompanyReview() {
       ["记录数量", String(companyApiState.companies.length)],
       ["写入动作", "未连接"],
     ],
-    draft: "Companies are shown as a read-only list in Step 2C-1. Create, update, delete, quotations, PI and message sending are not implemented.",
+    draft: "公司信息仅以只读列表展示。当前不创建、不更新、不删除，也不发送消息、生成报价或 PI。",
   });
 }
 
 function renderCompaniesLoading() {
   return `
-    ${renderDataStatus("loading", "正在加载公司", "Requesting GET /api/companies with the current admin session when available.")}
+    ${renderDataStatus("loading", "正在加载公司", "正在使用当前管理员会话请求 GET /api/companies。")}
     <div class="table-wrap table-skeleton" aria-label="Loading company rows">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -1734,7 +1734,7 @@ function renderCompaniesLoading() {
 
 function renderCompaniesEmpty() {
   return `
-    ${renderDataStatus("empty", "暂无实时公司数据", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
+    ${renderDataStatus("empty", "暂无实时公司数据", "当前没有可用实时数据。本页面保持只读；创建或写入能力将在后续审批阶段开放。")}
     ${renderReadOnlyCompanyCard()}
   `;
 }
@@ -1751,7 +1751,7 @@ function renderCompanyTable(companies, source) {
     ]),
   ];
   return renderTable(rows, {
-    firstColumnSubtitle: (company) => company.website || company.id || "Read-only company record",
+    firstColumnSubtitle: (company) => company.website || company.id || "只读公司记录",
     bodyData: companies,
   });
 }
@@ -1760,12 +1760,12 @@ function renderReadOnlyCompanyCard() {
   return `
     <div class="form-card read-only-card">
       <h3>公司查看模式</h3>
-      <p>This card remains a static review pattern. It does not submit data or create records.</p>
+      <p>该卡片仅用于内部试用查看，不提交数据、不创建记录。</p>
       <div class="form-grid">
         <label class="field">
           <span>允许动作</span>
           <input type="text" value="只读查看" readonly />
-          <small>No create or update API call is connected.</small>
+          <small>未连接创建或更新 API。</small>
         </label>
         <label class="field">
           <span>安全边界</span>
@@ -1795,8 +1795,8 @@ function renderCustomers() {
 
   const statusNotice =
     customerApiState.status === "error"
-      ? renderDataStatus("error", "客户 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${customerApiState.error}`)
-      : renderDataStatus("success", "客户数据已加载", `Source: ${customerApiState.source}. 只读 CRM 列表，未连接创建、更新、导入或删除动作。`);
+      ? renderDataStatus("error", "客户 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${customerApiState.error}`)
+      : renderDataStatus("success", "客户数据已加载", `数据来源：${customerApiState.source}。只读 CRM 列表，未连接创建、更新、导入、导出或删除动作。`);
 
   return `
     ${statusNotice}
@@ -2450,8 +2450,8 @@ function renderInquiries() {
 
   const statusNotice =
     inquiryApiState.status === "error"
-      ? renderDataStatus("error", "询盘 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${inquiryApiState.error}`)
-      : renderDataStatus("success", "询盘数据已加载", `Source: ${inquiryApiState.source}. 只读询盘列表，未连接创建、AI 自动处理、发送、报价或 PI 动作。`);
+      ? renderDataStatus("error", "询盘 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${inquiryApiState.error}`)
+      : renderDataStatus("success", "询盘数据已加载", `数据来源：${inquiryApiState.source}。只读询盘列表，未连接创建、AI 自动处理、发送、报价或 PI 动作。`);
 
   return `
     ${statusNotice}
@@ -2907,8 +2907,8 @@ function renderProducts() {
 
   const statusNotice =
     productApiState.status === "error"
-      ? renderDataStatus("error", "产品 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${productApiState.error}`)
-      : renderDataStatus("success", "产品数据已加载", `Source: ${productApiState.source}. Read-only list. No create, update or delete action is connected.`);
+      ? renderDataStatus("error", "产品 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${productApiState.error}`)
+      : renderDataStatus("success", "产品数据已加载", `数据来源：${productApiState.source}。只读列表，未连接创建、更新或删除动作。`);
 
   return `
     ${statusNotice}
@@ -2926,13 +2926,13 @@ function renderProductReview() {
       ["记录数量", String(productApiState.products.length)],
       ["写入动作", "未连接"],
     ],
-    draft: "Products are shown as a read-only list in Step 2C-2. Create, update, delete, quotations, PI and message sending are not implemented.",
+    draft: "产品信息仅以只读列表展示。当前不创建、不更新、不删除，也不发送消息、生成报价或 PI。",
   });
 }
 
 function renderProductsLoading() {
   return `
-    ${renderDataStatus("loading", "正在加载产品", "Requesting GET /api/products with the current admin session when available.")}
+    ${renderDataStatus("loading", "正在加载产品", "正在使用当前管理员会话请求 GET /api/products。")}
     <div class="table-wrap table-skeleton" aria-label="Loading product rows">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -2943,7 +2943,7 @@ function renderProductsLoading() {
 
 function renderProductsEmpty() {
   return `
-    ${renderDataStatus("empty", "暂无实时产品数据", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
+    ${renderDataStatus("empty", "暂无实时产品数据", "当前没有可用实时数据。本页面保持只读；创建或写入能力将在后续审批阶段开放。")}
     ${renderReadOnlyProductCard()}
   `;
 }
@@ -2962,7 +2962,7 @@ function renderProductTable(products, source) {
     ]),
   ];
   return renderTable(rows, {
-    firstColumnSubtitle: (product) => product.code || product.id || "Read-only product record",
+    firstColumnSubtitle: (product) => product.code || product.id || "只读产品记录",
     bodyData: products,
   });
 }
@@ -2971,12 +2971,12 @@ function renderReadOnlyProductCard() {
   return `
     <div class="form-card read-only-card">
       <h3>产品查看模式</h3>
-      <p>This card remains a static review pattern. It does not submit data or create records.</p>
+      <p>该卡片仅用于内部试用查看，不提交数据、不创建记录。</p>
       <div class="form-grid">
         <label class="field">
           <span>允许动作</span>
           <input type="text" value="只读产品查看" readonly />
-          <small>No create, update or delete API call is connected.</small>
+          <small>未连接创建、更新或删除 API。</small>
         </label>
         <label class="field">
           <span>业务线</span>
@@ -3024,8 +3024,8 @@ function renderManufacturingCapabilities() {
 
   const statusNotice =
     capabilityApiState.status === "error"
-      ? renderDataStatus("error", "制造能力 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${capabilityApiState.error}`)
-      : renderDataStatus("success", "制造能力数据已加载", `Source: ${capabilityApiState.source}. Read-only list. No create, update or delete action is connected.`);
+      ? renderDataStatus("error", "制造能力 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${capabilityApiState.error}`)
+      : renderDataStatus("success", "制造能力数据已加载", `数据来源：${capabilityApiState.source}。只读列表，未连接创建、更新、删除或供应商确认动作。`);
 
   return `
     ${statusNotice}
@@ -3085,7 +3085,7 @@ function renderManufacturingCapabilityReview() {
 
 function renderManufacturingCapabilitiesLoading() {
   return `
-    ${renderDataStatus("loading", "正在加载制造能力", `Requesting GET ${SUPPLIER_CAPABILITIES_ENDPOINT} with the current admin session when available.`)}
+    ${renderDataStatus("loading", "正在加载制造能力", `正在使用当前管理员会话请求 GET ${SUPPLIER_CAPABILITIES_ENDPOINT}。`)}
     <div class="table-wrap table-skeleton" aria-label="Loading manufacturing capability rows">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -3096,7 +3096,7 @@ function renderManufacturingCapabilitiesLoading() {
 
 function renderManufacturingCapabilitiesEmpty() {
   return `
-    ${renderDataStatus("empty", "暂无实时制造能力数据", "No live data is currently available. This page is read-only; write/create support will come in a later approved phase.")}
+    ${renderDataStatus("empty", "暂无实时制造能力数据", "当前没有可用实时数据。本页面保持只读；产能确认、供应商承诺和写入能力将在后续审批阶段规划。")}
   `;
 }
 
@@ -3360,7 +3360,7 @@ function renderReadOnlyCapabilityCard() {
         <div>
           <span>允许动作</span>
           <strong>只读制造能力查看</strong>
-          <small>No create, update or delete API call is connected.</small>
+          <small>未连接创建、更新或删除 API。</small>
         </div>
         <div>
           <span>安全边界</span>
@@ -3405,8 +3405,8 @@ function renderAiDrafts() {
     aiDraftApiState.status === "empty"
       ? renderDataStatus("empty", "暂无实时 AI 询盘分析草稿", "当前没有可用实时数据。AI 复核中心 V2 使用静态只读预览，不执行任何业务动作。")
       : aiDraftApiState.status === "error"
-      ? renderDataStatus("error", "AI 询盘分析 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${aiDraftApiState.error}`)
-      : renderDataStatus("success", "AI 询盘分析草稿已加载", `Source: ${aiDraftApiState.source}. 只读草稿列表，未连接发送、报价或 PI 动作。`);
+      ? renderDataStatus("error", "AI 询盘分析 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${aiDraftApiState.error}`)
+      : renderDataStatus("success", "AI 询盘分析草稿已加载", `数据来源：${aiDraftApiState.source}。只读草稿列表，未连接发送、审批、应用建议、报价或 PI 动作。`);
 
   return `
     ${statusNotice}
@@ -4026,7 +4026,7 @@ function renderQuotations() {
       : preQuotationApiState.status === "empty"
       ? renderDataStatus("empty", "暂无实时报价前复核", "当前没有可用实时复核数据，继续显示静态预览 fallback。")
       : preQuotationApiState.status === "loaded"
-      ? renderDataStatus("success", "报价前复核数据已加载", `Source: ${preQuotationApiState.source}. 只读复核列表，未连接价格计算、报价、PI、合同或订单动作。`)
+      ? renderDataStatus("success", "报价前复核数据已加载", `数据来源：${preQuotationApiState.source}。只读复核列表，未连接价格计算、报价、PI、合同或订单动作。`)
       : "";
   return `
     <div class="quote-review-preview" aria-label="报价前复核只读工作流预览">
@@ -4687,7 +4687,7 @@ function renderTable(rows, options = {}) {
                       const sourceRecord = options.bodyData?.[rowIndex] || {};
                       const subtitle = options.firstColumnSubtitle
                         ? options.firstColumnSubtitle(sourceRecord)
-                        : "Static sample";
+                        : "静态示例";
                       const title = options.firstColumnHtml ? cell : escapeHtml(cell);
                       return index === 0
                         ? `<td><span class="row-title"><strong>${title}</strong><span>${escapeHtml(subtitle)}</span></span></td>`
@@ -4719,7 +4719,7 @@ function renderFormCard(title, fields) {
               <label class="field">
                 <span>${escapeHtml(label)}</span>
                 ${control}
-                <small>Static read-only field style sample. No save or submit action is connected.</small>
+                <small>只读字段样式示例；未连接保存或提交动作。</small>
               </label>
             `;
           })
@@ -4744,16 +4744,16 @@ function renderReviewDetails({ title, badges, rows, draft }) {
         </dl>
       </div>
       <div class="review-card">
-        <h3>Draft / Review Note</h3>
+        <h3>草稿 / 复核说明</h3>
         <div class="draft-box">${escapeHtml(draft)}</div>
       </div>
       <div class="review-card">
-        <h3>Safety Checklist</h3>
+        <h3>安全检查</h3>
         <ul class="check-list">
-          <li>Draft only</li>
-          <li>Manual approval required</li>
-          <li>No automatic sending</li>
-          <li>No price, payment, delivery or PI confirmation</li>
+          <li>仅草稿 / 仅复核</li>
+          <li>需要人工确认</li>
+          <li>不自动发送</li>
+          <li>不确认价格、付款、交期或 PI</li>
         </ul>
       </div>
     </div>
