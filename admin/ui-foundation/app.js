@@ -1274,6 +1274,9 @@ function setSection(sectionId) {
   if (sectionId === "ai-drafts") {
     loadAiDraftsReadOnly();
   }
+  if (sectionId === "quotations") {
+    loadInquiriesReadOnly();
+  }
 }
 
 function renderDashboard() {
@@ -2547,9 +2550,14 @@ function loadInquiriesReadOnly() {
 }
 
 function refreshInquiriesView() {
-  if (activeSectionId !== "inquiries") return;
-  mainContent.innerHTML = renderInquiries();
-  reviewPanel.innerHTML = renderInquiryReview();
+  if (activeSectionId === "inquiries") {
+    mainContent.innerHTML = renderInquiries();
+    reviewPanel.innerHTML = renderInquiryReview();
+  }
+  if (activeSectionId === "quotations") {
+    mainContent.innerHTML = renderQuotations();
+    reviewPanel.innerHTML = renderQuotationReview();
+  }
 }
 
 function renderDataStatus(type, title, message) {
@@ -3623,17 +3631,18 @@ function renderFileReview() {
 }
 
 function renderQuotations() {
+  const reviewModel = getQuoteReviewViewModel();
   return `
-    <div class="quote-review-preview" aria-label="报价前复核静态工作流预览">
+    <div class="quote-review-preview" aria-label="报价前复核只读工作流预览">
       <div class="quote-review-header">
         <div>
           <span class="state-label">报价前复核</span>
           <h3>报价前复核</h3>
           <p>集中检查客户需求、供应商报价、资料完整性、风险边界和人工报价准备状态。</p>
-          <p class="quote-review-safety-note">静态预览数据，仅用于界面验证；所有价格、报价、PI、合同、订单、赔付和交期承诺必须人工复核。</p>
+          <p class="quote-review-safety-note">只读数据用于界面展示；所有价格、报价、PI、合同、订单、付款、生产、发货和交期承诺必须人工复核。</p>
         </div>
         <div class="quote-review-badges">
-          ${badge("静态预览", "draft")}
+          ${badge(reviewModel.sourceLabel, reviewModel.isLive ? "active" : "draft")}
           ${badge("只读", "active")}
           ${badge("人工复核", "approval")}
           ${badge("不生成报价", "pending")}
@@ -3646,10 +3655,10 @@ function renderQuotations() {
             <span>PRE-QUOTATION SUMMARY</span>
             <h3>报价准备概览</h3>
           </div>
-          <p>所有报价状态均为静态示例，不代表真实可报价状态。</p>
+          <p>${escapeHtml(reviewModel.isLive ? "只读统计来自现有询盘记录，不代表价格、报价或 PI 已确认。" : "所有报价状态均为静态示例，不代表真实可报价状态。")}</p>
         </div>
         <div class="quote-summary-grid">
-          ${renderSummaryCards(quoteReviewSummaryCards, renderQuoteSummaryCard)}
+          ${renderSummaryCards(reviewModel.summaryCards, renderQuoteSummaryCard)}
         </div>
       </section>
 
@@ -3659,14 +3668,152 @@ function renderQuotations() {
             <span>PRE-QUOTATION QUEUE</span>
             <h3>报价前复核队列</h3>
           </div>
-          <p>先确认资料、供应商反馈和风险边界，再由人工准备报价草稿。</p>
+          <p>先确认资料、供应商反馈和风险边界，再由人工准备报价资料。${escapeHtml(reviewModel.queueCountLabel)}</p>
         </div>
         <div class="quote-review-queue">
-          ${quoteReviewQueueItems.map(renderQuoteQueueItem).join("")}
+          ${reviewModel.items.map(renderQuoteQueueItem).join("")}
         </div>
       </section>
     </div>
   `;
+}
+
+function getQuoteReviewViewModel() {
+  const isLive = inquiryApiState.status === "loaded" && inquiryApiState.inquiries.length > 0;
+  const items = isLive
+    ? inquiryApiState.inquiries.map(mapInquiryRecordToQuoteReviewItem)
+    : quoteReviewQueueItems.map(normalizeStaticQuoteReviewItem);
+  return {
+    isLive,
+    items,
+    selectedItem: items[0] || normalizeStaticQuoteReviewItem(quoteReviewQueueItems[0]),
+    summaryCards: isLive ? buildQuoteSummaryCardsFromRecords(items) : quoteReviewSummaryCards,
+    sourceLabel: isLive
+      ? "实时只读数据"
+      : inquiryApiState.status === "error"
+        ? "API 暂不可用，显示静态预览"
+        : "静态预览 fallback",
+    queueCountLabel: isLive ? `${items.length} 条只读询盘派生记录` : "6 条静态示例",
+  };
+}
+
+function normalizeStaticQuoteReviewItem(item) {
+  return {
+    ...item,
+    summary: item.summary || `${item.title}仅用于报价前复核预览，不能生成报价、PI、合同或订单。`,
+    riskDescription: item.riskDescription || "价格、报价、PI、合同、订单、付款、生产、发货和交期承诺都必须人工复核。",
+  };
+}
+
+function mapInquiryRecordToQuoteReviewItem(record, index) {
+  const inquiryItem = mapInquiryRecordToWorkflowItem(record, index);
+  const missingInfo = inquiryItem.missingInfo;
+  const risk = deriveQuoteReviewRisk(record, inquiryItem, missingInfo);
+  return {
+    title: `${inquiryItem.title} 报价前复核`,
+    status: normalizeQuoteReviewStatus(record.status || record.inquiry_status, risk, missingInfo),
+    risk: risk.level,
+    riskTone: risk.tone,
+    readiness: deriveQuoteReadiness(risk, missingInfo),
+    customerNeed: firstDisplayValue([
+      record.project_description,
+      record.original_message,
+      record.ai_summary,
+      inquiryItem.summary,
+      "客户需求待人工确认",
+    ]),
+    supplierStatus: firstDisplayValue([
+      record.supplier_status,
+      record.supplier_quote_status,
+      record.supplier_feedback,
+      record.supplier_notes,
+      "供应商信息待确认",
+    ]),
+    missingInfo,
+    aiSuggestion: firstDisplayValue([
+      record.ai_suggestion,
+      record.suggested_next_step,
+      record.ai_summary,
+      "只读询盘记录仅可用于报价前复核，不能生成报价或确认价格。",
+    ]),
+    humanNextStep: firstDisplayValue([
+      record.human_next_step,
+      record.next_action,
+      record.next_step,
+      "人工补齐资料、确认供应商反馈和风险边界后，再决定是否准备报价资料。",
+    ]),
+    disabledCapabilities: ["不可生成报价", "不可计算价格", "不可生成 PI", "不可确认订单"],
+    summary: inquiryItem.summary,
+    riskDescription: risk.description,
+  };
+}
+
+function normalizeQuoteReviewStatus(value, risk, missingInfo) {
+  const status = String(value ?? "").trim();
+  const upperStatus = status.toUpperCase();
+  if (risk.level === "高") return "高风险";
+  if (missingInfo.length > 0 && !missingInfo.includes("信息待补充")) return "资料不完整";
+  if (upperStatus.includes("MISSING")) return "资料不完整";
+  if (upperStatus.includes("REVIEW") || upperStatus.includes("NEED")) return "待人工复核";
+  return status || "待人工复核";
+}
+
+function deriveQuoteReadiness(risk, missingInfo) {
+  if (risk.level === "高") return "禁止自动报价";
+  if (missingInfo.length > 0 && !missingInfo.includes("信息待补充")) return "资料待补充";
+  return "待人工复核";
+}
+
+function deriveQuoteReviewRisk(record, inquiryItem, missingInfo) {
+  const combinedText = [
+    record.risk,
+    record.risk_level,
+    record.risk_flags,
+    record.status,
+    record.original_message,
+    record.project_description,
+    record.ai_summary,
+    inquiryItem.risk,
+    inquiryItem.riskDescription,
+  ]
+    .flat()
+    .join(" ")
+    .toLowerCase();
+  const highRiskTerms = ["high", "高", "price", "payment", "delivery", "quality", "claim", "refund", "quotation", "pi", "contract", "order", "赔付", "质量", "价格", "付款", "交期", "报价", "合同", "订单"];
+  if (highRiskTerms.some((term) => combinedText.includes(term))) {
+    return {
+      level: "高",
+      tone: "danger",
+      description: "记录包含价格、付款、交期、质量、责任、报价、PI、合同或订单相关风险，必须人工复核。",
+    };
+  }
+  if (missingInfo.length > 0) {
+    return {
+      level: "中",
+      tone: "warning",
+      description: "报价前资料仍有缺失，不能确认价格、供应商报价、PI 或订单状态。",
+    };
+  }
+  return {
+    level: "暂无风险等级",
+    tone: "neutral",
+    description: "暂无明确风险等级，仍需人工确认后再推进报价前复核。",
+  };
+}
+
+function buildQuoteSummaryCardsFromRecords(items) {
+  const missingCount = items.filter((item) => !item.missingInfo.includes("信息待补充") && item.missingInfo.length > 0).length;
+  const highRiskCount = items.filter((item) => item.risk === "高").length;
+  const supplierPendingCount = items.filter((item) => item.supplierStatus.includes("待确认")).length;
+  const reviewCount = items.filter((item) => item.status.includes("复核") || item.status.includes("不完整") || item.status.includes("高风险")).length;
+  return [
+    { label: "只读询盘", value: String(items.length), subtitle: "来自现有询盘只读路径", tone: "info" },
+    { label: "资料不完整", value: String(missingCount), subtitle: "规格、图纸、包装或交期资料缺失", tone: "warning" },
+    { label: "供应商待确认", value: String(supplierPendingCount || items.length), subtitle: "供应商报价或能力反馈待人工确认", tone: "neutral" },
+    { label: "高风险报价", value: String(highRiskCount), subtitle: "价格、付款、质量或责任边界相关", tone: "danger" },
+    { label: "待人工复核", value: String(reviewCount || items.length), subtitle: "仅允许人工判断是否准备报价资料", tone: "warning" },
+    { label: "写入动作", value: "0", subtitle: "不生成报价、PI、合同或订单", tone: "info" },
+  ];
 }
 
 function renderQuoteSummaryCard(card) {
@@ -3712,30 +3859,30 @@ function renderQuoteQueueItem(item) {
 }
 
 function renderQuotationReview() {
-  const selected = quoteReviewQueueItems[0];
+  const { selectedItem: selected, isLive } = getQuoteReviewViewModel();
   return `
     <div class="review-card quote-review-card" aria-label="报价前复核预览">
       <div class="quote-review-heading">
         <div>
           <span class="state-label">报价前复核预览</span>
           <h3>报价前复核预览</h3>
-          <p>固定示例：秘鲁轻钢龙骨报价前复核。</p>
+          <p>${isLive ? "实时只读记录：" : "固定示例："}${escapeHtml(selected.title)}。</p>
         </div>
         <div class="quote-review-meta">
-          ${badge("静态预览", "draft")}
+          ${badge(isLive ? "实时只读数据" : "静态预览", isLive ? "active" : "draft")}
           ${badge("只读", "active")}
           ${badge("不生成报价", "pending")}
         </div>
       </div>
       <dl>
         <dt>复核摘要</dt>
-        <dd>客户需要 20GP 整柜轻钢龙骨材料，但厚度、锌层、包装和装柜重量未确认，当前不能进入正式报价。</dd>
+        <dd>${escapeHtml(selected.summary)}</dd>
         <dt>客户需求</dt>
         <dd>${escapeHtml(selected.customerNeed)}</dd>
         <dt>供应商状态</dt>
         <dd>${escapeHtml(selected.supplierStatus)}</dd>
         <dt>风险点</dt>
-        <dd><span class="quote-risk quote-risk-${escapeHtml(selected.riskTone)}">风险 ${escapeHtml(selected.risk)}</span></dd>
+        <dd><span class="quote-risk quote-risk-${escapeHtml(selected.riskTone)}">风险 ${escapeHtml(selected.risk)}</span> ${escapeHtml(selected.riskDescription)}</dd>
         <dt>缺失资料</dt>
         <dd>${renderChipList(selected.missingInfo, "quote-chip")}</dd>
         <dt>AI 建议</dt>
@@ -3753,7 +3900,7 @@ function renderQuotationReview() {
       </div>
       <div class="quote-review-group">
         <h4>安全边界</h4>
-        <p>静态预览数据。所有价格、报价、PI、合同、订单、赔付和交期承诺必须人工复核。</p>
+        <p>${isLive ? "实时只读数据。当前只展示既有询盘记录，不生成报价、不计算价格、不生成 PI、合同或订单。" : "静态预览数据。所有价格、报价、PI、合同、订单、赔付和交期承诺必须人工复核。"}</p>
       </div>
     </div>
   `;
