@@ -137,6 +137,10 @@ function safetyPayload(disabledActions = DISABLED_ACTIONS) {
   };
 }
 
+function isSupportedResource(resource) {
+  return resource === "dashboard-summary" || resource === "customers" || resource === "inquiries";
+}
+
 function standardPayload({ resource, records = [], summary = {}, warnings = [] }) {
   return {
     meta: {
@@ -453,28 +457,32 @@ module.exports = async function handler(request, response) {
     }
 
     const resource = adminReadResource(request);
-    const supabase = getSupabaseClient(request);
+    if (!isSupportedResource(resource)) {
+      sendJson(response, 404, {
+        error: "not_found",
+        message: "Unknown admin-read resource",
+        safety: safetyPayload(),
+      });
+      return;
+    }
 
     if (resource === "dashboard-summary") {
+      const supabase = getSupabaseClient(request);
       await readDashboardSummary(response, supabase);
       return;
     }
 
     if (resource === "customers") {
+      const supabase = getSupabaseClient(request);
       await readCustomers(response, supabase);
       return;
     }
 
     if (resource === "inquiries") {
+      const supabase = getSupabaseClient(request);
       await readInquiries(response, supabase);
       return;
     }
-
-    sendJson(response, 404, {
-      error: "not_found",
-      message: "Unknown admin-read resource",
-      safety: safetyPayload(),
-    });
   } catch (error) {
     handleApiError(response, error);
   }
