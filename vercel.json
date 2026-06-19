@@ -50,7 +50,7 @@
       "dest": "/api/customers?crm_resource=admin-dashboard-summary"
     },
     {
-      "src": "^/api/admin-read/(dashboard-summary|customers|inquiries)$",
+      "src": "^/api/admin-read/(.*)$",
       "dest": "/api/admin-read?resource=$1"
     },
     {
