@@ -481,6 +481,103 @@ const inquiryWorkflowItems = [
   },
 ];
 
+const customerWorkflowSummaryCards = [
+  {
+    label: "活跃客户",
+    value: "12",
+    subtitle: "近期有询盘、跟进或项目讨论",
+    tone: "info",
+  },
+  {
+    label: "今日需跟进",
+    value: "5",
+    subtitle: "需要人工判断是否联系客户",
+    tone: "warning",
+  },
+  {
+    label: "有活跃询盘",
+    value: "7",
+    subtitle: "正在确认规格、价格或供应商反馈",
+    tone: "info",
+  },
+  {
+    label: "高价值客户",
+    value: "3",
+    subtitle: "优先维护的大项目或复购客户",
+    tone: "neutral",
+  },
+  {
+    label: "风险客户",
+    value: "2",
+    subtitle: "涉及质量、赔付或商业承诺风险",
+    tone: "danger",
+  },
+  {
+    label: "待补资料客户",
+    value: "4",
+    subtitle: "公司、规格、付款或交期资料不完整",
+    tone: "warning",
+  },
+];
+
+const customerWorkflowItems = [
+  {
+    title: "加勒比建筑客户",
+    stage: "活跃询盘",
+    valueLevel: "高",
+    risk: "中",
+    riskTone: "warning",
+    recentInquiry: "门窗五金 / 建筑材料项目",
+    need: "确认客户最终规格、付款节奏和目标交期。",
+    aiSuggestion: "优先维护，先整理历史报价和当前询盘，再准备人工复核后的跟进内容。",
+    disabledCapabilities: ["不可自动发送", "不可自动报价", "不可生成 PI"],
+  },
+  {
+    title: "秘鲁建材客户",
+    stage: "规格确认",
+    valueLevel: "中",
+    risk: "中",
+    riskTone: "warning",
+    recentInquiry: "轻钢龙骨 / drywall materials",
+    need: "补充厚度、包装、装柜和目的港信息。",
+    aiSuggestion: "先把缺失信息整理成客户确认清单，再同步供应商询价。",
+    disabledCapabilities: ["不可报价", "不可确认装柜", "不可生成合同"],
+  },
+  {
+    title: "南美高尔夫球车客户",
+    stage: "供应商确认",
+    valueLevel: "中",
+    risk: "中",
+    riskTone: "warning",
+    recentInquiry: "高尔夫球车整柜采购",
+    need: "确认型号、电池、认证、包装和装柜数量。",
+    aiSuggestion: "先向供应商确认装柜方案和配置差异，再给客户做选项对比。",
+    disabledCapabilities: ["不可确认交期", "不可承诺价格", "不可确认订单"],
+  },
+  {
+    title: "沿海项目客户",
+    stage: "售后风险",
+    valueLevel: "中",
+    risk: "高",
+    riskTone: "danger",
+    recentInquiry: "铝型材发黄问题反馈",
+    need: "收集项目环境、照片、表面处理记录和使用位置。",
+    aiSuggestion: "按质量问题流程处理，避免直接承认责任或承诺赔付。",
+    disabledCapabilities: ["不可承认责任", "不可承诺赔付", "不可发送最终结论"],
+  },
+  {
+    title: "印尼工业项目客户",
+    stage: "内部核算",
+    valueLevel: "高",
+    risk: "中",
+    riskTone: "warning",
+    recentInquiry: "工厂吊顶系统",
+    need: "整理材料表、供应商报价、包装和施工损耗。",
+    aiSuggestion: "先形成内部核算草稿，再进入人工报价复核。",
+    disabledCapabilities: ["不可报价", "不可确认生产", "不可确认交期"],
+  },
+];
+
 const aiDraftApiState = createReadOnlyState("drafts");
 
 function badge(label, type = "") {
@@ -792,11 +889,17 @@ function renderReadOnlyCompanyCard() {
 
 function renderCustomers() {
   if (customerApiState.status === "idle" || customerApiState.status === "loading") {
-    return renderCustomersLoading();
+    return `
+      ${renderCustomersLoading()}
+      ${renderCustomerWorkflowPreview()}
+    `;
   }
 
   if (customerApiState.status === "empty") {
-    return renderCustomersEmpty();
+    return `
+      ${renderCustomersEmpty()}
+      ${renderCustomerWorkflowPreview()}
+    `;
   }
 
   const statusNotice =
@@ -806,22 +909,60 @@ function renderCustomers() {
 
   return `
     ${statusNotice}
-    ${renderCustomerTable(customerApiState.customers, customerApiState.source)}
-    ${renderReadOnlyCustomerCard()}
+    ${renderCustomerWorkflowPreview()}
   `;
 }
 
 function renderCustomerReview() {
-  return renderReviewDetails({
-    title: "客户 API 状态",
-    badges: [badge("只读", "active"), badge(customerApiState.source, customerApiState.status === "error" ? "pending" : "draft")],
-    rows: [
-      ["API 路由", "GET /api/customers"],
-      ["记录数量", String(customerApiState.customers.length)],
-      ["写入动作", "未连接"],
-    ],
-    draft: "客户在 Step 3A 中仅作为只读 CRM 列表展示。当前不支持新增客户、导入、编辑、删除、消息发送、报价、PI 或订单动作。",
-  });
+  return `
+    <div class="review-stack">
+      <div class="review-card customer-review-card">
+        <div class="customer-review-heading">
+          <div>
+            <h3>客户复核预览</h3>
+            <p>固定示例：加勒比建筑客户。</p>
+          </div>
+          ${badge("静态", "draft")}
+        </div>
+        <dl>
+          <dt>客户摘要</dt>
+          <dd>高价值建筑类客户，当前有门窗五金 / 建筑材料项目询盘，需要人工整理历史报价和当前需求。</dd>
+          <dt>当前阶段</dt>
+          <dd>活跃询盘，价值高，风险中。</dd>
+          <dt>最近询盘</dt>
+          <dd>门窗五金 / 建筑材料项目。</dd>
+          <dt>需要补充</dt>
+          <dd>最终规格、付款节奏、目标交期和项目范围。</dd>
+          <dt>风险点</dt>
+          <dd>不能自动确认价格、交期、付款条件或正式 PI。</dd>
+          <dt>AI 建议</dt>
+          <dd>优先维护，先整理历史报价和当前询盘，再准备人工复核后的跟进内容。</dd>
+          <dt>人工下一步</dt>
+          <dd>业务人员先核对客户需求和历史记录，再决定是否进入供应商询价或报价准备。</dd>
+        </dl>
+        <div class="customer-review-group">
+          <h4>禁用能力</h4>
+          <div class="disabled-chip-row">
+            <span class="disabled-chip">不可自动发送</span>
+            <span class="disabled-chip">不可自动报价</span>
+            <span class="disabled-chip">不可生成 PI</span>
+            <span class="disabled-chip">不可确认订单</span>
+          </div>
+        </div>
+      </div>
+      <div class="review-card">
+        <h3>客户 API 状态</h3>
+        <dl>
+          <dt>API 路由</dt>
+          <dd>GET /api/customers</dd>
+          <dt>记录数量</dt>
+          <dd>${escapeHtml(String(customerApiState.customers.length))}</dd>
+          <dt>写入动作</dt>
+          <dd>未连接</dd>
+        </dl>
+      </div>
+    </div>
+  `;
 }
 
 function renderCustomersLoading() {
@@ -838,7 +979,92 @@ function renderCustomersLoading() {
 function renderCustomersEmpty() {
   return `
     ${renderDataStatus("empty", "暂无实时客户数据", "当前没有可用实时数据。本页面为只读；客户导入和创建支持将在后续批准阶段加入。")}
-    ${renderReadOnlyCustomerCard()}
+  `;
+}
+
+function renderCustomerWorkflowPreview() {
+  return `
+    <div class="customer-workflow-preview" aria-label="客户中心静态工作流预览">
+      <div class="customer-workflow-header">
+        <div>
+          <span class="state-label">客户中心</span>
+          <h3>客户中心</h3>
+          <p>集中查看客户分层、跟进状态、活跃询盘和人工下一步动作。</p>
+          <p class="customer-safety-note">静态预览数据，仅用于界面验证；所有跟进、报价、PI、订单、赔付和交期承诺必须人工复核。</p>
+        </div>
+        <div class="workbench-badges">
+          ${badge("静态预览", "active")}
+          ${badge("只读", "active")}
+          ${badge("人工复核", "pending")}
+        </div>
+      </div>
+
+      <section class="customer-workflow-section" aria-label="客户摘要">
+        <div class="workbench-section-header">
+          <div>
+            <h3>客户概览</h3>
+            <p>把客户价值、跟进状态、活跃询盘和风险先整理成可扫读队列。</p>
+          </div>
+          <span>静态数据</span>
+        </div>
+        <div class="customer-summary-grid">
+          ${customerWorkflowSummaryCards.map(renderCustomerSummaryCard).join("")}
+        </div>
+      </section>
+
+      <section class="customer-workflow-section" aria-label="客户处理队列">
+        <div class="workbench-section-header">
+          <div>
+            <h3>客户处理队列</h3>
+            <p>队列只展示人工建议和禁用能力，不触发跟进、报价或订单动作。</p>
+          </div>
+          <span>5 条静态示例</span>
+        </div>
+        <div class="customer-queue">
+          ${customerWorkflowItems.map(renderCustomerQueueItem).join("")}
+        </div>
+      </section>
+
+      ${renderReadOnlyCustomerCard()}
+    </div>
+  `;
+}
+
+function renderCustomerSummaryCard(card) {
+  return `
+    <article class="customer-summary-card customer-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderCustomerQueueItem(item) {
+  const disabledHtml = item.disabledCapabilities
+    .map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`)
+    .join("");
+
+  return `
+    <article class="customer-queue-item">
+      <div class="customer-queue-main">
+        <div class="customer-queue-title">
+          <span class="workbench-category">${escapeHtml(item.recentInquiry)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+        </div>
+        <div class="customer-queue-meta">
+          ${badge(item.stage, item.stage.includes("风险") ? "risk" : "pending")}
+          <span class="customer-value customer-value-${item.valueLevel === "高" ? "high" : "medium"}">价值 ${escapeHtml(item.valueLevel)}</span>
+          <span class="customer-risk customer-risk-${escapeHtml(item.riskTone)}">风险 ${escapeHtml(item.risk)}</span>
+        </div>
+      </div>
+      <p><strong>当前需要：</strong>${escapeHtml(item.need)}</p>
+      <p><strong>AI 建议：</strong>${escapeHtml(item.aiSuggestion)}</p>
+      <div class="customer-row-group">
+        <span>禁用能力</span>
+        <div class="disabled-chip-row">${disabledHtml}</div>
+      </div>
+    </article>
   `;
 }
 
@@ -868,20 +1094,20 @@ function renderCustomerTable(customers, source) {
 
 function renderReadOnlyCustomerCard() {
   return `
-    <div class="form-card read-only-card">
+    <div class="form-card read-only-card customer-boundary-card">
       <h3>客户管理只读边界</h3>
       <p>本区域仅用于查看客户记录，不会创建、导入、更新或删除客户。</p>
-      <div class="form-grid">
-        <label class="field">
+      <div class="customer-boundary-grid">
+        <div>
           <span>允许动作</span>
-          <input type="text" value="只读客户查看" readonly />
+          <strong>只读客户查看</strong>
           <small>未连接客户导入、创建或编辑 API 调用。</small>
-        </label>
-        <label class="field">
+        </div>
+        <div>
           <span>禁止动作</span>
-          <input type="text" value="No send / quote / PI / order" readonly />
+          <strong>No send / quote / PI / order</strong>
           <small>商业动作需要后续批准阶段和人工审核。</small>
-        </label>
+        </div>
       </div>
     </div>
   `;
