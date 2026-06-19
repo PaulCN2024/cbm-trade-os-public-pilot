@@ -67,6 +67,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Post-deploy Read-only API Safety Audit
 - Authenticated Admin API Smoke Test Plan
 - Disabled Action And Approval Boundary Audit
+- Read-only Route Separation Plan
 
 ## 4. Current Frozen Foundations
 
