@@ -71,6 +71,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Read-only Route Separation Plan
 - Admin Read Dispatcher Plan
 - Admin Read Dispatcher Skeleton
+- Admin Read Dispatcher Sanity Review
 
 ## 4. Current Frozen Foundations
 
@@ -117,7 +118,7 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-SPRINT-API-READONLY-007 - Admin Read Dispatcher Sanity Review
+1. CBM-CODEX-RELEASE-014 - Deploy Admin Read Dispatcher To Production And Smoke Test
 2. CBM-CODEX-SPRINT-API-READONLY-008 - Admin Read Dispatcher Authenticated Smoke Test Plan
 3. CBM-CODEX-SPRINT-DATA-008 - Dashboard Summary Production Data Validation
 4. CBM-CODEX-SPRINT-API-PLAN-002 - File Metadata Read-only API Plan
