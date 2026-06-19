@@ -2,17 +2,17 @@
 
 ## 1. Current Progress Summary
 
-- Full product vision progress: 24%
-- Internal MVP / foundation progress: 54%
-- Current phase: Phase UI-1 - Dashboard Workbench V2 Validated
-- Current status: foundations, pure local review summary helpers, orchestration checkpoint, display adapter checkpoint, and Dashboard Workbench V2 completed; no schema/API/write/external channel integration yet
+- Full product vision progress: 28%
+- Internal MVP / foundation progress: 62%
+- Current phase: Phase UI-1 - Static Admin UI Main Workflow Validated
+- Current status: foundations, pure local review summary helpers, orchestration checkpoint, display adapter checkpoint, and static Admin UI main workflow chain completed; no schema/API/write/external channel integration yet
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
-- Full vision: 24% `[█████░░░░░░░░░░░░░░░]`
-- Internal MVP: 54% `[███████████░░░░░░░░░]`
+- Full vision: 28% `[██████░░░░░░░░░░░░░░]`
+- Internal MVP: 62% `[████████████░░░░░░░░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
@@ -21,6 +21,9 @@ These percentages are planning estimates. They should move only after milestone 
 - Admin UI Display Adapter Wiring Preview: 15% `[███░░░░░░░░░░░░░░░░░]`
 - Static Workbench Preview: 100% `[████████████████████]`
 - Dashboard Workbench V2: 100% `[████████████████████]`
+- Static Admin UI Main Workflow: 100% `[████████████████████]`
+- Commercial Workflow Static Preview: 100% `[████████████████████]`
+- UI-2 Data Wiring Preparation: 0% `[░░░░░░░░░░░░░░░░░░░░]`
 
 ## 3. Completed Major Milestones
 
@@ -45,6 +48,8 @@ These percentages are planning estimates. They should move only after milestone 
 - Static Workbench Browser Review
 - Dashboard Workbench V2 Implementation
 - Dashboard Workbench V2 Browser Review
+- Static Admin UI Main Workflow Final Checkpoint
+- Commercial Workflow Static Preview Completion
 
 ## 4. Current Frozen Foundations
 
@@ -57,8 +62,8 @@ These percentages are planning estimates. They should move only after milestone 
 
 ## 5. Current Active Area
 
-- Current active area: UI Shell Polish / Dashboard V2 Follow-up Planning
-- Dashboard Workbench V2 is temporarily frozen after successful browser review
+- Current active area: Phase UI-2 / Data Wiring Preparation
+- Phase UI-1 static Admin UI main workflow is temporarily frozen except for bug fixes and pattern consolidation
 
 ## 6. Not Yet Started / Still Early
 
@@ -90,11 +95,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. Decide whether to continue shell polish or start Admin UI V2 navigation planning
-2. Dashboard V2 screenshot review, if screenshots are available
-3. Controlled click-to-preview behavior planning
-4. Admin UI V2 navigation planning
-5. Schema planning for review summary persistence
+1. CBM-CODEX-SPRINT-UI-REF-001 - Static UI Pattern Consolidation Readiness And Minimal Refactor
+2. CBM-CODEX-SPRINT-DATA-001 - Read-only Inquiry Data Wiring Sprint
+3. CBM-CODEX-SPRINT-DATA-002 - Read-only Customer Data Wiring Sprint
+4. CBM-CODEX-SPRINT-DATA-003 - Read-only AI Review Data Wiring Sprint
+5. CBM-CODEX-SPRINT-DATA-004 - Read-only Supplier Capability Data Wiring Sprint
 
 ## 9. How To Update This File
 
