@@ -36,8 +36,8 @@
           </div>
           <div class="topbar-actions">
             <span class="mode-pill">静态预览</span>
-            <button class="button secondary mock-action" type="button" disabled title="Not connected in this read-only phase">导出视图 - 未连接</button>
-            <button class="button primary mock-action" type="button" disabled title="Coming in a later approved phase">新增 - 稍后开放</button>
+            <button class="button secondary mock-action" type="button" disabled aria-disabled="true" title="当前为只读预览，导出功能未连接">导出视图 - 未连接</button>
+            <button class="button primary mock-action" type="button" disabled aria-disabled="true" title="新增功能将在后续审批流程完成后开放">新增 - 稍后开放</button>
           </div>
         </header>
 
@@ -77,8 +77,8 @@
                 <p id="sectionHelp">A reusable page structure for future admin modules.</p>
               </div>
               <div class="panel-actions">
-                <button class="button secondary" type="button">Filter</button>
-                <button class="button primary mock-action" type="button" disabled title="Mock only in this read-only phase">创建草稿 - 仅模拟</button>
+                <button class="button secondary mock-action" type="button" disabled aria-disabled="true" title="筛选功能将在后续版本开放，目前为只读预览">筛选 - 稍后开放</button>
+                <button class="button primary mock-action" type="button" disabled aria-disabled="true" title="当前为只读预览，不会创建草稿">创建草稿 - 仅模拟</button>
               </div>
             </div>
             <div id="mainContent"></div>

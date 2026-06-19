@@ -4713,21 +4713,21 @@ function renderFormCard(title, fields) {
           .map(([label, value, type]) => {
             const control =
               type === "textarea"
-                ? `<textarea>${escapeHtml(value)}</textarea>`
-                : `<input type="text" value="${escapeHtml(value)}" />`;
+                ? `<textarea readonly aria-readonly="true" title="仅示例字段，不会提交数据">${escapeHtml(value)}</textarea>`
+                : `<input type="text" value="${escapeHtml(value)}" readonly aria-readonly="true" title="仅示例字段，不会提交数据" />`;
             return `
               <label class="field">
                 <span>${escapeHtml(label)}</span>
                 ${control}
-                <small>Static field style sample.</small>
+                <small>Static read-only field style sample. No save or submit action is connected.</small>
               </label>
             `;
           })
           .join("")}
       </div>
       <div class="form-actions">
-        <button class="button secondary" type="button">Cancel</button>
-        <button class="button primary" type="button">Save Draft</button>
+        <button class="button secondary mock-action" type="button" disabled aria-disabled="true" title="仅示例控件，不会取消或提交数据">取消 - 仅示例</button>
+        <button class="button primary mock-action" type="button" disabled aria-disabled="true" title="仅模拟草稿按钮，不会保存或写入数据">保存草稿 - 仅模拟</button>
       </div>
     </div>
   `;
