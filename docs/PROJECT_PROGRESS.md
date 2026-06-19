@@ -72,6 +72,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Admin Read Dispatcher Plan
 - Admin Read Dispatcher Skeleton
 - Admin Read Dispatcher Sanity Review
+- Admin Read Dispatcher Production Verification
 
 ## 4. Current Frozen Foundations
 
