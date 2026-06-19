@@ -3,22 +3,23 @@
 ## 1. Current Progress Summary
 
 - Full product vision progress: 24%
-- Internal MVP / foundation progress: 52%
-- Current phase: Phase 0B - Admin UI Display Adapter Wiring Preview Started
-- Current status: foundations, pure local review summary helpers, orchestration checkpoint, display adapter checkpoint, and first static Admin UI display adapter preview completed; no schema/API/write/external channel integration yet
+- Internal MVP / foundation progress: 53%
+- Current phase: Phase UI-1 - Static Workbench Preview Validated
+- Current status: foundations, pure local review summary helpers, orchestration checkpoint, display adapter checkpoint, and static workflow-first Workbench preview completed; no schema/API/write/external channel integration yet
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
 - Full vision: 24% `[█████░░░░░░░░░░░░░░░]`
-- Internal MVP: 52% `[██████████░░░░░░░░░░]`
+- Internal MVP: 53% `[███████████░░░░░░░░░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
 - Review summary helper registry: 90% `[██████████████████░░]`
 - Display Adapter Layer: 90% `[██████████████████░░]`
 - Admin UI Display Adapter Wiring Preview: 15% `[███░░░░░░░░░░░░░░░░░]`
+- Static Workbench Preview: 100% `[████████████████████]`
 
 ## 3. Completed Major Milestones
 
@@ -39,6 +40,8 @@ These percentages are planning estimates. They should move only after milestone 
 - Phase 0B Display Adapter Layer Final Checkpoint
 - Registry Metadata Read-only UI Preview Panel
 - Registry Metadata UI Preview Browser Review
+- Static Workbench Preview Implementation
+- Static Workbench Browser Review
 
 ## 4. Current Frozen Foundations
 
@@ -51,8 +54,8 @@ These percentages are planning estimates. They should move only after milestone 
 
 ## 5. Current Active Area
 
-- Current active area: Admin UI Display Adapter Wiring Preview
-- Display Adapter layer is frozen, and first static UI preview has passed browser review
+- Current active area: UI Shell Cleanup Planning / Workbench Polish Planning
+- Static Workbench Preview is temporarily frozen after successful browser review
 
 ## 6. Not Yet Started / Still Early
 
@@ -84,11 +87,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. Decide next read-only UI preview target or create usage notes for registry metadata UI preview
-2. Display Adapter Readiness Review
-3. Schema Planning for review summary persistence
-4. API Read-only Integration Planning
-5. Approval Workflow Planning
+1. Global Shell Cleanup Planning
+2. Dashboard Navigation / Title Localization Planning
+3. Workbench Polish Review
+4. Controlled Click-to-preview Behavior Planning
+5. Schema Planning for review summary persistence
 
 ## 9. How To Update This File
 
@@ -96,9 +99,10 @@ All business-risk actions remain human-reviewed and separately approved.
 - Do not inflate percentage based only on number of commits.
 - Increase full product progress only when real business capability is added.
 - Increase internal MVP progress when usable internal workflow improves.
+- No schema/API/write/external business execution has been implemented yet.
 - Keep risk boundaries visible when increasing progress.
 - Record major freezes or checkpoints as milestones.
 
 ## 10. Last Updated
 
-Last updated: 2026-06-17
+Last updated: 2026-06-19
