@@ -9,6 +9,7 @@ const navItems = [
   { id: "products", label: "产品" },
   { id: "manufacturing-capabilities", label: "制造能力" },
   { id: "ai-drafts", label: "AI 复核" },
+  { id: "files", label: "文件" },
   { id: "quotations", label: "报价", soon: true },
   { id: "orders", label: "订单", soon: true },
   { id: "production", label: "生产", soon: true },
@@ -81,6 +82,14 @@ const sections = {
     sectionHelp: "静态只读预览。AI 仅提供建议和草稿，不自动发送、审批、报价或生成 PI。",
     content: renderAiDrafts,
     review: renderAiDraftReview,
+  },
+  files: {
+    title: "文件中心",
+    description: "集中查看询盘附件、图纸资料、合同单据、质量证据和缺失文件。",
+    sectionTitle: "文件中心",
+    sectionHelp: "静态只读预览。当前不上传、不删除、不解析文件，也不生成报价、PI、合同或订单。",
+    content: renderFiles,
+    review: renderFileReview,
   },
 };
 
@@ -385,6 +394,90 @@ const aiReviewQueueItems = [
     aiSuggestion: "客户需要安装指导，但当前系统资料和五金配置仍需确认。",
     humanNextStep: "整理安装手册、视频说明和系统差异说明后再发客户。",
     disabledCapabilities: ["不可自动发送资料", "不可承诺安装结果", "不可确认售后责任"],
+  },
+];
+
+const fileCenterSummaryCards = [
+  { label: "待复核文件", value: "12", subtitle: "询盘、客户和供应商相关附件", tone: "warning" },
+  { label: "缺失关键资料", value: "6", subtitle: "规格、图纸、认证或签署资料缺失", tone: "warning" },
+  { label: "图纸 / 技术资料", value: "5", subtitle: "CAD、PDF、安装手册和材料表", tone: "info" },
+  { label: "报价 / PI / 合同", value: "4", subtitle: "业务单据必须人工复核", tone: "danger" },
+  { label: "质量证据", value: "3", subtitle: "照片、批次和表面处理记录", tone: "neutral" },
+  { label: "禁止自动执行", value: "9", subtitle: "上传、解析、发送和生成均禁用", tone: "danger" },
+];
+
+const fileCenterQueueItems = [
+  {
+    title: "秘鲁轻钢龙骨规格资料",
+    type: "规格 / 询盘附件",
+    linkedBusiness: "秘鲁轻钢龙骨询盘",
+    status: "资料不完整",
+    risk: "中",
+    riskTone: "warning",
+    missingInfo: ["厚度", "锌层", "包装方式", "装柜重量"],
+    aiSuggestion: "该资料不足以直接报价，应先向客户补充规格并让供应商按重量核价。",
+    humanNextStep: "整理客户确认清单，补齐厚度、锌层、包装和装柜信息。",
+    disabledCapabilities: ["不可生成报价", "不可生成 PI", "不可确认装柜"],
+  },
+  {
+    title: "印尼吊顶系统图纸与材料表",
+    type: "图纸 / 材料表",
+    linkedBusiness: "印尼工厂吊顶系统询盘",
+    status: "待供应商复核",
+    risk: "中",
+    riskTone: "warning",
+    missingInfo: ["安装损耗", "包装方案", "供应商最终报价"],
+    aiSuggestion: "图纸和材料表可用于内部核算，但不能直接作为正式报价依据。",
+    humanNextStep: "让供应商确认材料、包装、损耗和交期后再生成报价草稿。",
+    disabledCapabilities: ["不可确认生产", "不可确认交期", "不可生成 PI"],
+  },
+  {
+    title: "沿海项目铝型材问题照片",
+    type: "质量证据",
+    linkedBusiness: "沿海项目铝型材问题反馈",
+    status: "高风险复核",
+    risk: "高",
+    riskTone: "danger",
+    missingInfo: ["项目环境说明", "表面处理记录", "使用位置照片", "批次信息"],
+    aiSuggestion: "涉及质量责任和赔付风险，不能仅凭照片判断责任。",
+    humanNextStep: "收集完整证据链后，由人工判断责任边界。",
+    disabledCapabilities: ["不可承认责任", "不可承诺赔付", "不可发送最终结论"],
+  },
+  {
+    title: "PD/PT 门安装资料",
+    type: "安装手册 / 技术资料",
+    linkedBusiness: "PD/PT 门安装支持需求",
+    status: "资料缺失",
+    risk: "中",
+    riskTone: "warning",
+    missingInfo: ["五金系统确认", "安装步骤图", "视频说明"],
+    aiSuggestion: "资料可能与客户实际系统不完全一致，必须人工确认后再发送。",
+    humanNextStep: "整理系统差异说明和安装视频，再由人工确认客户可用版本。",
+    disabledCapabilities: ["不可自动发送", "不可承诺安装结果", "不可确认售后责任"],
+  },
+  {
+    title: "高尔夫球车供应商报价资料",
+    type: "供应商报价",
+    linkedBusiness: "南美高尔夫球车客户询盘",
+    status: "待人工核价",
+    risk: "中",
+    riskTone: "warning",
+    missingInfo: ["电池配置", "认证", "包装", "装柜数量"],
+    aiSuggestion: "供应商报价需要与配置、认证和装柜方案一起复核。",
+    humanNextStep: "确认车型配置、包装和装柜数量后再形成客户报价。",
+    disabledCapabilities: ["不可承诺价格", "不可确认交期", "不可确认订单"],
+  },
+  {
+    title: "PI / 销售合同草稿",
+    type: "业务单据",
+    linkedBusiness: "客户下单前资料",
+    status: "禁止自动发送",
+    risk: "高",
+    riskTone: "danger",
+    missingInfo: ["最终价格确认", "付款条款", "交期", "手动签名"],
+    aiSuggestion: "PI 和合同属于高风险业务文件，必须人工确认后才能发送客户。",
+    humanNextStep: "人工确认价格、付款、交期、收款信息和签名后再使用。",
+    disabledCapabilities: ["不可自动发送", "不可自动签署", "不可确认订单"],
   },
 ];
 
@@ -2393,6 +2486,145 @@ function renderRegistryMetadataPreviewCard(card) {
         ${card.safetyLabels.map((label) => badge(label, label === "仅预览" || label === "只读" ? "active" : "pending")).join(" ")}
       </p>
     </article>
+  `;
+}
+
+function renderFiles() {
+  return `
+    <div class="file-center-preview" aria-label="文件中心静态工作流预览">
+      <div class="file-center-header">
+        <div>
+          <span class="state-label">文件中心</span>
+          <h3>文件中心</h3>
+          <p>集中查看询盘附件、图纸资料、合同单据、质量证据和缺失文件。</p>
+          <p class="file-center-safety-note">静态预览数据，仅用于界面验证；所有文件解析、报价、PI、合同、订单、赔付和交期承诺必须人工复核。</p>
+        </div>
+        <div class="file-center-badges">
+          ${badge("静态预览", "draft")}
+          ${badge("只读", "active")}
+          ${badge("人工复核", "approval")}
+          ${badge("不自动解析", "pending")}
+        </div>
+      </div>
+
+      <section class="file-center-section" aria-label="文件复核概览">
+        <div class="workbench-section-header">
+          <div>
+            <span>FILE REVIEW SUMMARY</span>
+            <h3>文件复核概览</h3>
+          </div>
+          <p>所有文件记录均为静态示例，不代表真实客户文件。</p>
+        </div>
+        <div class="file-summary-grid">
+          ${fileCenterSummaryCards.map(renderFileSummaryCard).join("")}
+        </div>
+      </section>
+
+      <section class="file-center-section" aria-label="文件复核队列">
+        <div class="workbench-section-header">
+          <div>
+            <span>FILE REVIEW QUEUE</span>
+            <h3>文件复核队列</h3>
+          </div>
+          <p>按文件类型、风险和缺失资料整理，帮助操作员先复核再进入业务动作。</p>
+        </div>
+        <div class="file-review-queue">
+          ${fileCenterQueueItems.map(renderFileQueueItem).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderFileSummaryCard(card) {
+  return `
+    <article class="file-summary-card file-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderFileQueueItem(item) {
+  const missingInfoHtml = item.missingInfo.map((label) => `<span class="file-chip">${escapeHtml(label)}</span>`).join("");
+  const disabledHtml = item.disabledCapabilities.map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`).join("");
+
+  return `
+    <article class="file-review-queue-item">
+      <div class="file-review-queue-main">
+        <div class="file-review-queue-title">
+          <span class="workbench-category">${escapeHtml(item.type)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+        </div>
+        <div class="file-review-queue-meta">
+          <span class="file-risk file-risk-${escapeHtml(item.riskTone)}">风险 ${escapeHtml(item.risk)}</span>
+          <span class="file-status">${escapeHtml(item.status)}</span>
+        </div>
+      </div>
+      <p><strong>关联业务：</strong>${escapeHtml(item.linkedBusiness)}</p>
+      <p><strong>AI 建议：</strong>${escapeHtml(item.aiSuggestion)}</p>
+      <p><strong>人工下一步：</strong>${escapeHtml(item.humanNextStep)}</p>
+      <div class="file-row-group">
+        <span>缺失资料</span>
+        <div class="file-chip-row">${missingInfoHtml}</div>
+      </div>
+      <div class="file-row-group">
+        <span>禁用能力</span>
+        <div class="disabled-chip-row">${disabledHtml}</div>
+      </div>
+    </article>
+  `;
+}
+
+function renderFileReview() {
+  const selected = fileCenterQueueItems[0];
+  return `
+    <div class="review-card file-review-card" aria-label="文件复核预览">
+      <div class="file-review-heading">
+        <div>
+          <span class="state-label">文件复核预览</span>
+          <h3>文件复核预览</h3>
+          <p>固定示例：秘鲁轻钢龙骨规格资料。</p>
+        </div>
+        <div class="file-review-meta">
+          ${badge("静态预览", "draft")}
+          ${badge("只读", "active")}
+          ${badge("不自动解析", "pending")}
+        </div>
+      </div>
+      <dl>
+        <dt>文件摘要</dt>
+        <dd>客户提供的规格资料不足以直接报价，需要补齐厚度、锌层、包装和装柜重量后再进入人工判断。</dd>
+        <dt>文件类型</dt>
+        <dd>${escapeHtml(selected.type)}</dd>
+        <dt>关联业务</dt>
+        <dd>${escapeHtml(selected.linkedBusiness)}</dd>
+        <dt>当前状态</dt>
+        <dd>${escapeHtml(selected.status)}</dd>
+        <dt>风险点</dt>
+        <dd><span class="file-risk file-risk-${escapeHtml(selected.riskTone)}">风险 ${escapeHtml(selected.risk)}</span></dd>
+        <dt>缺失资料</dt>
+        <dd>${selected.missingInfo.map((item) => `<span class="file-chip">${escapeHtml(item)}</span>`).join(" ")}</dd>
+        <dt>AI 建议</dt>
+        <dd>${escapeHtml(selected.aiSuggestion)}</dd>
+        <dt>人工下一步</dt>
+        <dd>${escapeHtml(selected.humanNextStep)}</dd>
+      </dl>
+      <div class="file-review-group">
+        <h4>禁用能力</h4>
+        <div class="disabled-chip-row">
+          ${selected.disabledCapabilities.map((item) => `<span class="disabled-chip">${escapeHtml(item)}</span>`).join("")}
+          <span class="disabled-chip">不可上传</span>
+          <span class="disabled-chip">不可删除</span>
+          <span class="disabled-chip">不可 OCR / 解析</span>
+        </div>
+      </div>
+      <div class="file-review-group">
+        <h4>安全边界</h4>
+        <p>本页只展示静态文件复核预览；不读取真实文件、不上传、不删除、不解析、不归档，也不生成报价、PI、合同或订单。</p>
+      </div>
+    </div>
   `;
 }
 
