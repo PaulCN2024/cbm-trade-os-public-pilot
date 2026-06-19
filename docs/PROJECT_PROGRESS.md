@@ -3,7 +3,7 @@
 ## 1. Current Progress Summary
 
 - Full product vision progress: 35%
-- Internal MVP / foundation progress: 84%
+- Internal MVP / foundation progress: 85%
 - Current phase: Phase UI-2B - Pre-Quotation UI Migrated To Admin Read Resource
 - Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, and Admin UI disabled action production deployment completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
 
@@ -12,7 +12,7 @@ These percentages are planning estimates. They should move only after milestone 
 ## 2. Progress Bars
 
 - Full vision: 35% `[███████░░░░░░░░░░░░░]`
-- Internal MVP: 84% `[█████████████████░░░]`
+- Internal MVP: 85% `[█████████░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
