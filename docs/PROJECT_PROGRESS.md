@@ -82,6 +82,7 @@ These percentages are planning estimates. They should move only after milestone 
 - AI/Supplier Capability Admin-read UI Path Migration
 - AI/Supplier Capability Admin-read Production Deployment
 - Production Admin-read Path Coverage Audit
+- File/Quotation Admin-read Planning
 
 ## 4. Current Frozen Foundations
 
