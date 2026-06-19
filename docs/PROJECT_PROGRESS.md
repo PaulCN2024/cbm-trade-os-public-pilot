@@ -87,6 +87,7 @@ These percentages are planning estimates. They should move only after milestone 
 - File/Quotation Admin-read Planning
 - Admin-read File Metadata Resource
 - File Center Admin-read UI Migration
+- File Center Admin-read Production Deployment
 
 ## 4. Current Frozen Foundations
 
