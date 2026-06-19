@@ -20,6 +20,17 @@ const DISABLED_ACTIONS = Object.freeze([
   "confirm_shipment",
 ]);
 
+const DOCUMENT_DISABLED_ACTIONS = Object.freeze([
+  "upload_file",
+  "download_file",
+  "delete_file",
+  "parse_file",
+  "run_ocr",
+  "generate_quote",
+  "generate_pi",
+  "send_to_customer",
+]);
+
 const DASHBOARD_HIGH_RISK_TERMS = Object.freeze([
   "price",
   "payment",
@@ -143,7 +154,8 @@ function isSupportedResource(resource) {
     resource === "customers" ||
     resource === "inquiries" ||
     resource === "ai-review" ||
-    resource === "supplier-capabilities"
+    resource === "supplier-capabilities" ||
+    resource === "documents"
   );
 }
 
@@ -262,6 +274,43 @@ function supplierCapabilityRecord(row) {
     status: safeText(row.supplier_status || row.status || row.capability_status, "待人工核实"),
     risk: safeText(row.risk_level || row.risk, "暂无风险等级"),
     summary: truncateText(row.summary || row.public_description || row.monthly_capacity, "需要供应商确认", 240),
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function linkedBusinessType(row) {
+  if (row.related_type) return safeText(row.related_type, "未关联");
+  if (row.inquiry_id) return "inquiry";
+  if (row.customer_id) return "customer";
+  if (row.lead_id) return "lead";
+  return "未关联";
+}
+
+function linkedBusinessId(row) {
+  return row.related_id || row.inquiry_id || row.customer_id || row.lead_id || "";
+}
+
+function documentRisk(row) {
+  return hasHighRiskText(row.doc_type, row.file_name, row.file_type) ? "高风险" : "暂无风险等级";
+}
+
+function documentMetadataRecord(row, source) {
+  const title = safeText(row.file_name || row.title || row.name || row.doc_type || row.file_type, "文件资料");
+  const fileType = safeText(row.doc_type || row.file_type || row.document_type, "文件资料");
+
+  return {
+    id: row.id || "",
+    title,
+    file_type: fileType,
+    document_type: fileType,
+    linked_business_type: linkedBusinessType(row),
+    linked_business_id: linkedBusinessId(row),
+    status: safeText(row.status, "待人工复核"),
+    risk: documentRisk(row),
+    source: safeText(source || row.source, "documents"),
+    file_size: row.file_size === null || row.file_size === undefined ? "" : row.file_size,
+    manual_review_required: true,
     created_at: row.created_at || "",
     updated_at: row.updated_at || "",
   };
@@ -536,6 +585,51 @@ async function readSupplierCapabilities(response, supabase) {
   );
 }
 
+async function readDocuments(response, supabase) {
+  const warnings = [];
+  const documents = await readSource({
+    supabase,
+    table: "documents",
+    select: "id,related_type,related_id,doc_type,file_name,created_at,updated_at",
+    warning: "documents_source_unavailable",
+    warnings,
+  });
+
+  let attachments = [];
+  if (documents.length === 0) {
+    attachments = await readSource({
+      supabase,
+      table: "attachments",
+      select: "id,lead_id,customer_id,inquiry_id,file_name,file_type,file_size,source,created_at,updated_at",
+      warning: "attachments_source_unavailable",
+      warnings,
+    });
+  }
+
+  const records = [
+    ...documents.map((record) => documentMetadataRecord(record, "documents")),
+    ...attachments.map((record) => documentMetadataRecord(record, "attachments")),
+  ];
+
+  sendJson(response, 200, {
+    meta: {
+      generated_at: new Date().toISOString(),
+      source: "admin_read",
+      resource: "documents",
+      is_fallback: warnings.length > 0 || documents.length === 0,
+    },
+    records,
+    summary: {
+      total_documents: records.length,
+      needs_review: records.filter((record) => record.manual_review_required || statusNeedsReview(record.status)).length,
+      high_risk: records.filter((record) => record.risk === "高风险").length,
+      missing_metadata: records.filter((record) => !record.linked_business_id || record.title === "文件资料" || record.file_type === "文件资料").length,
+    },
+    safety: safetyPayload(DOCUMENT_DISABLED_ACTIONS),
+    warnings,
+  });
+}
+
 module.exports = async function handler(request, response) {
   try {
     if (request.method !== "GET") {
@@ -581,6 +675,12 @@ module.exports = async function handler(request, response) {
     if (resource === "supplier-capabilities") {
       const supabase = getSupabaseClient(request);
       await readSupplierCapabilities(response, supabase);
+      return;
+    }
+
+    if (resource === "documents") {
+      const supabase = getSupabaseClient(request);
+      await readDocuments(response, supabase);
       return;
     }
   } catch (error) {
