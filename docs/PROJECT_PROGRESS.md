@@ -3,16 +3,16 @@
 ## 1. Current Progress Summary
 
 - Full product vision progress: 32%
-- Internal MVP / foundation progress: 70%
-- Current phase: Phase UI-2B - Admin Read Dispatcher Skeleton Implemented
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, and minimal GET-only Admin Read Dispatcher skeleton completed; still no write actions, external channel integration, approval execution, or business execution
+- Internal MVP / foundation progress: 72%
+- Current phase: Phase UI-2B - Admin Read Dispatcher Production Verified; Dashboard Summary UI Migrated To Admin Read Path
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, and Dashboard Summary UI migration to the admin-read namespace completed; still no write actions, external channel integration, approval execution, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
 - Full vision: 32% `[██████░░░░░░░░░░░░░░]`
-- Internal MVP: 70% `[██████████████░░░░░░]`
+- Internal MVP: 72% `[██████████████░░░░░░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
@@ -73,6 +73,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Admin Read Dispatcher Skeleton
 - Admin Read Dispatcher Sanity Review
 - Admin Read Dispatcher Production Verification
+- Dashboard Summary Admin-read UI Path Migration
 
 ## 4. Current Frozen Foundations
 
@@ -85,7 +86,9 @@ These percentages are planning estimates. They should move only after milestone 
 
 ## 5. Current Active Area
 
-- Current active area: Phase UI-2B / Admin Read Dispatcher Skeleton Completed
+- Current active area: Phase UI-2B / Admin Read UI Path Migration
+- Admin Read Dispatcher production verification is complete
+- Dashboard Summary UI now targets `GET /api/admin-read/dashboard-summary`
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
 
@@ -119,8 +122,8 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-RELEASE-014 - Deploy Admin Read Dispatcher To Production And Smoke Test
-2. CBM-CODEX-SPRINT-API-READONLY-008 - Admin Read Dispatcher Authenticated Smoke Test Plan
+1. CBM-CODEX-SPRINT-DATA-010 - Migrate Customer/Inquiry UI To Admin Read Paths
+2. CBM-CODEX-RELEASE-013 - Authenticated Admin API Smoke Test Execution if safe token exists
 3. CBM-CODEX-SPRINT-DATA-008 - Dashboard Summary Production Data Validation
 4. CBM-CODEX-SPRINT-API-PLAN-002 - File Metadata Read-only API Plan
 5. CBM-CODEX-SPRINT-API-PLAN-003 - Quotation Read-only API Plan

@@ -164,6 +164,7 @@ let activeSectionId = "dashboard";
 const fallbackLabel = "Preview fallback / local preview data - not live Supabase data";
 const apiUnavailableMessage =
   "Real API data is unavailable. You may not be logged in, the API may not be deployed, or this is local preview mode.";
+const DASHBOARD_SUMMARY_ENDPOINT = "/api/admin-read/dashboard-summary";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
 
@@ -1288,7 +1289,7 @@ function renderDashboard() {
   const model = getDashboardWorkbenchViewModel();
   const statusNotice =
     dashboardSummaryApiState.status === "loading"
-      ? renderDataStatus("loading", "正在加载工作台汇总", "正在使用当前管理员会话请求 GET /api/admin-dashboard-summary。")
+      ? renderDataStatus("loading", "正在加载工作台汇总", `正在使用当前管理员会话请求 GET ${DASHBOARD_SUMMARY_ENDPOINT}。`)
       : dashboardSummaryApiState.status === "error"
       ? renderDataStatus("error", "工作台汇总 API 暂不可用", `${apiUnavailableMessage} Showing ${fallbackLabel} only. Technical detail: ${dashboardSummaryApiState.error}`)
       : dashboardSummaryApiState.status === "empty"
@@ -1359,7 +1360,7 @@ function renderDashboardReview() {
         <h3>工作台汇总状态</h3>
         <dl>
           <dt>API 路由</dt>
-          <dd>GET /api/admin-dashboard-summary</dd>
+          <dd>GET ${DASHBOARD_SUMMARY_ENDPOINT}</dd>
           <dt>数据状态</dt>
           <dd>${escapeHtml(model.sourceLabel)}</dd>
           <dt>队列数量</dt>
@@ -1642,12 +1643,12 @@ async function loadDashboardSummaryReadOnly() {
 
   try {
     const token = getAdminAccessToken();
-    const response = await fetch("/api/admin-dashboard-summary", {
+    const response = await fetch(DASHBOARD_SUMMARY_ENDPOINT, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(payload.error || `/api/admin-dashboard-summary failed with ${response.status}`);
+      throw new Error(payload.error || `${DASHBOARD_SUMMARY_ENDPOINT} failed with ${response.status}`);
     }
     const summary = normalizeDashboardSummaryPayload(payload);
     if (!summary) {
