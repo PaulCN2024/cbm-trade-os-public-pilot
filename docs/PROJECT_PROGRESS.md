@@ -93,6 +93,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Admin-read Pre-Quotation Review Resource
 - Pre-Quotation UI Admin-read Migration
 - Pre-Quotation Admin-read Production Deployment
+- Disabled Action / Write Approval Planning
 
 ## 4. Current Frozen Foundations
 
