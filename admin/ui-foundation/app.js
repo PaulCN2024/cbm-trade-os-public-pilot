@@ -10,7 +10,7 @@ const navItems = [
   { id: "manufacturing-capabilities", label: "制造能力" },
   { id: "ai-drafts", label: "AI 复核" },
   { id: "files", label: "文件" },
-  { id: "quotations", label: "报价", soon: true },
+  { id: "quotations", label: "报价" },
   { id: "orders", label: "订单", soon: true },
   { id: "production", label: "生产", soon: true },
   { id: "shipping", label: "发货", soon: true },
@@ -90,6 +90,14 @@ const sections = {
     sectionHelp: "静态只读预览。当前不上传、不删除、不解析文件，也不生成报价、PI、合同或订单。",
     content: renderFiles,
     review: renderFileReview,
+  },
+  quotations: {
+    title: "报价前复核",
+    description: "集中检查客户需求、供应商报价、资料完整性、风险边界和人工报价准备状态。",
+    sectionTitle: "报价前复核",
+    sectionHelp: "静态只读预览。当前不生成报价、不计算价格、不生成 PI、合同或订单。",
+    content: renderQuotations,
+    review: renderQuotationReview,
   },
 };
 
@@ -478,6 +486,96 @@ const fileCenterQueueItems = [
     aiSuggestion: "PI 和合同属于高风险业务文件，必须人工确认后才能发送客户。",
     humanNextStep: "人工确认价格、付款、交期、收款信息和签名后再使用。",
     disabledCapabilities: ["不可自动发送", "不可自动签署", "不可确认订单"],
+  },
+];
+
+const quoteReviewSummaryCards = [
+  { label: "待复核报价", value: "7", subtitle: "进入人工报价前的候选询盘", tone: "warning" },
+  { label: "资料不完整", value: "5", subtitle: "规格、图纸、包装或交期资料缺失", tone: "warning" },
+  { label: "供应商待确认", value: "4", subtitle: "单价、配置、有效期或装柜待确认", tone: "neutral" },
+  { label: "高风险报价", value: "2", subtitle: "质量、赔付、价格或责任边界相关", tone: "danger" },
+  { label: "可进入人工报价", value: "3", subtitle: "仅允许人工整理报价草稿", tone: "info" },
+  { label: "禁止自动生成", value: "9", subtitle: "报价、PI、合同和订单均禁用", tone: "danger" },
+];
+
+const quoteReviewQueueItems = [
+  {
+    title: "秘鲁轻钢龙骨报价前复核",
+    status: "资料不完整",
+    risk: "中",
+    riskTone: "warning",
+    readiness: "暂不报价",
+    customerNeed: "20GP 整柜，轻钢龙骨 / drywall materials",
+    supplierStatus: "待确认厚度、锌层、包装和装柜重量",
+    missingInfo: ["厚度", "锌层", "包装方式", "装柜重量"],
+    aiSuggestion: "暂不进入正式报价。先补齐规格和重量，再按供应商报价核算。",
+    humanNextStep: "向客户确认规格，同时让供应商按重量报价。",
+    disabledCapabilities: ["不可生成报价", "不可生成 PI", "不可确认装柜"],
+  },
+  {
+    title: "印尼吊顶系统报价前复核",
+    status: "待内部核算",
+    risk: "中",
+    riskTone: "warning",
+    readiness: "内部核算草稿",
+    customerNeed: "工厂吊顶系统，0.7mm，Option B",
+    supplierStatus: "材料表、包装、损耗和最终报价待确认",
+    missingInfo: ["安装损耗", "包装方案", "供应商最终报价", "交期确认"],
+    aiSuggestion: "可以进入内部核算草稿，但不能生成正式客户报价。",
+    humanNextStep: "完善材料表和供应商报价后再人工复核。",
+    disabledCapabilities: ["不可生成正式报价", "不可生成 PI", "不可确认生产"],
+  },
+  {
+    title: "南美高尔夫球车报价前复核",
+    status: "供应商待确认",
+    risk: "中",
+    riskTone: "warning",
+    readiness: "配置待确认",
+    customerNeed: "整柜采购高尔夫球车",
+    supplierStatus: "型号、配置、电池、认证和装柜数量待确认",
+    missingInfo: ["电池配置", "认证要求", "包装方式", "装柜数量"],
+    aiSuggestion: "不能只按单价报价，应先确认配置差异和整柜装载方案。",
+    humanNextStep: "向供应商确认配置表和装柜方案，再整理客户选项。",
+    disabledCapabilities: ["不可承诺价格", "不可确认交期", "不可确认订单"],
+  },
+  {
+    title: "沿海铝型材问题报价/赔付风险复核",
+    status: "高风险",
+    risk: "高",
+    riskTone: "danger",
+    readiness: "禁止赔付报价",
+    customerNeed: "质量问题反馈，可能涉及赔付或补货",
+    supplierStatus: "责任边界和证据链未确认",
+    missingInfo: ["项目环境说明", "表面处理记录", "批次信息", "使用位置照片"],
+    aiSuggestion: "禁止直接形成赔付报价或补货承诺。",
+    humanNextStep: "先完成质量证据收集和责任判断。",
+    disabledCapabilities: ["不可承认责任", "不可承诺赔付", "不可生成补货报价"],
+  },
+  {
+    title: "PD/PT 门安装支持报价前复核",
+    status: "技术资料缺失",
+    risk: "中",
+    riskTone: "warning",
+    readiness: "技术确认后判断",
+    customerNeed: "安装指导 / 技术支持",
+    supplierStatus: "五金系统和安装资料待确认",
+    missingInfo: ["安装手册", "五金系统确认", "视频说明"],
+    aiSuggestion: "不应直接承诺安装结果或售后责任。",
+    humanNextStep: "整理安装资料和系统差异说明，再判断是否涉及收费服务。",
+    disabledCapabilities: ["不可生成服务报价", "不可承诺安装结果", "不可确认售后责任"],
+  },
+  {
+    title: "加勒比建筑客户报价前复核",
+    status: "可进入人工报价",
+    risk: "中",
+    riskTone: "warning",
+    readiness: "人工报价准备",
+    customerNeed: "门窗五金 / 建筑材料项目",
+    supplierStatus: "历史报价和当前规格需要人工合并复核",
+    missingInfo: ["最终规格确认", "付款节奏", "目标交期"],
+    aiSuggestion: "可进入人工报价准备，但必须人工确认最终规格、价格和交期。",
+    humanNextStep: "整理报价草稿，人工复核后再发送客户。",
+    disabledCapabilities: ["不可自动发送", "不可自动生成 PI", "不可确认订单"],
   },
 ];
 
@@ -2623,6 +2721,146 @@ function renderFileReview() {
       <div class="file-review-group">
         <h4>安全边界</h4>
         <p>本页只展示静态文件复核预览；不读取真实文件、不上传、不删除、不解析、不归档，也不生成报价、PI、合同或订单。</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderQuotations() {
+  return `
+    <div class="quote-review-preview" aria-label="报价前复核静态工作流预览">
+      <div class="quote-review-header">
+        <div>
+          <span class="state-label">报价前复核</span>
+          <h3>报价前复核</h3>
+          <p>集中检查客户需求、供应商报价、资料完整性、风险边界和人工报价准备状态。</p>
+          <p class="quote-review-safety-note">静态预览数据，仅用于界面验证；所有价格、报价、PI、合同、订单、赔付和交期承诺必须人工复核。</p>
+        </div>
+        <div class="quote-review-badges">
+          ${badge("静态预览", "draft")}
+          ${badge("只读", "active")}
+          ${badge("人工复核", "approval")}
+          ${badge("不生成报价", "pending")}
+        </div>
+      </div>
+
+      <section class="quote-review-section" aria-label="报价前复核概览">
+        <div class="workbench-section-header">
+          <div>
+            <span>PRE-QUOTATION SUMMARY</span>
+            <h3>报价准备概览</h3>
+          </div>
+          <p>所有报价状态均为静态示例，不代表真实可报价状态。</p>
+        </div>
+        <div class="quote-summary-grid">
+          ${quoteReviewSummaryCards.map(renderQuoteSummaryCard).join("")}
+        </div>
+      </section>
+
+      <section class="quote-review-section" aria-label="报价前复核队列">
+        <div class="workbench-section-header">
+          <div>
+            <span>PRE-QUOTATION QUEUE</span>
+            <h3>报价前复核队列</h3>
+          </div>
+          <p>先确认资料、供应商反馈和风险边界，再由人工准备报价草稿。</p>
+        </div>
+        <div class="quote-review-queue">
+          ${quoteReviewQueueItems.map(renderQuoteQueueItem).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderQuoteSummaryCard(card) {
+  return `
+    <article class="quote-summary-card quote-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderQuoteQueueItem(item) {
+  const missingInfoHtml = item.missingInfo.map((label) => `<span class="quote-chip">${escapeHtml(label)}</span>`).join("");
+  const disabledHtml = item.disabledCapabilities.map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`).join("");
+
+  return `
+    <article class="quote-review-queue-item">
+      <div class="quote-review-queue-main">
+        <div class="quote-review-queue-title">
+          <span class="workbench-category">${escapeHtml(item.readiness)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+        </div>
+        <div class="quote-review-queue-meta">
+          <span class="quote-risk quote-risk-${escapeHtml(item.riskTone)}">风险 ${escapeHtml(item.risk)}</span>
+          <span class="quote-status">${escapeHtml(item.status)}</span>
+        </div>
+      </div>
+      <p><strong>客户需求：</strong>${escapeHtml(item.customerNeed)}</p>
+      <p><strong>供应商状态：</strong>${escapeHtml(item.supplierStatus)}</p>
+      <p><strong>AI 建议：</strong>${escapeHtml(item.aiSuggestion)}</p>
+      <p><strong>人工下一步：</strong>${escapeHtml(item.humanNextStep)}</p>
+      <div class="quote-row-group">
+        <span>缺失资料</span>
+        <div class="quote-chip-row">${missingInfoHtml}</div>
+      </div>
+      <div class="quote-row-group">
+        <span>禁用能力</span>
+        <div class="disabled-chip-row">${disabledHtml}</div>
+      </div>
+    </article>
+  `;
+}
+
+function renderQuotationReview() {
+  const selected = quoteReviewQueueItems[0];
+  return `
+    <div class="review-card quote-review-card" aria-label="报价前复核预览">
+      <div class="quote-review-heading">
+        <div>
+          <span class="state-label">报价前复核预览</span>
+          <h3>报价前复核预览</h3>
+          <p>固定示例：秘鲁轻钢龙骨报价前复核。</p>
+        </div>
+        <div class="quote-review-meta">
+          ${badge("静态预览", "draft")}
+          ${badge("只读", "active")}
+          ${badge("不生成报价", "pending")}
+        </div>
+      </div>
+      <dl>
+        <dt>复核摘要</dt>
+        <dd>客户需要 20GP 整柜轻钢龙骨材料，但厚度、锌层、包装和装柜重量未确认，当前不能进入正式报价。</dd>
+        <dt>客户需求</dt>
+        <dd>${escapeHtml(selected.customerNeed)}</dd>
+        <dt>供应商状态</dt>
+        <dd>${escapeHtml(selected.supplierStatus)}</dd>
+        <dt>风险点</dt>
+        <dd><span class="quote-risk quote-risk-${escapeHtml(selected.riskTone)}">风险 ${escapeHtml(selected.risk)}</span></dd>
+        <dt>缺失资料</dt>
+        <dd>${selected.missingInfo.map((item) => `<span class="quote-chip">${escapeHtml(item)}</span>`).join(" ")}</dd>
+        <dt>AI 建议</dt>
+        <dd>${escapeHtml(selected.aiSuggestion)}</dd>
+        <dt>人工下一步</dt>
+        <dd>${escapeHtml(selected.humanNextStep)}</dd>
+        <dt>报价边界</dt>
+        <dd>本页只做报价前检查，不生成价格、不计算报价、不生成 PI、合同或订单。</dd>
+      </dl>
+      <div class="quote-review-group">
+        <h4>禁用能力</h4>
+        <div class="disabled-chip-row">
+          ${selected.disabledCapabilities.map((item) => `<span class="disabled-chip">${escapeHtml(item)}</span>`).join("")}
+          <span class="disabled-chip">不可计算价格</span>
+          <span class="disabled-chip">不可生成合同</span>
+          <span class="disabled-chip">不可下单 / 收款 / 发货</span>
+        </div>
+      </div>
+      <div class="quote-review-group">
+        <h4>安全边界</h4>
+        <p>静态预览数据。所有价格、报价、PI、合同、订单、赔付和交期承诺必须人工复核。</p>
       </div>
     </div>
   `;

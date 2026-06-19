@@ -1373,6 +1373,230 @@ tr:last-child td {
   margin: 0;
 }
 
+.quote-review-preview {
+  display: grid;
+  gap: 16px;
+}
+
+.quote-review-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #d7e3f8;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(239, 246, 255, 0.82), rgba(255, 255, 255, 0.94)),
+    var(--surface);
+}
+
+.quote-review-header h3 {
+  margin: 6px 0 8px;
+  font-size: 22px;
+}
+
+.quote-review-header p {
+  max-width: 760px;
+  margin: 3px 0;
+}
+
+.quote-review-safety-note {
+  color: var(--muted-strong);
+  font-size: 13px;
+}
+
+.quote-review-badges,
+.quote-review-queue-meta,
+.quote-chip-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quote-review-section {
+  display: grid;
+  gap: 10px;
+}
+
+.quote-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quote-summary-card {
+  position: relative;
+  min-height: 108px;
+  padding: 13px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.quote-summary-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--border);
+}
+
+.quote-summary-info::before {
+  background: var(--blue);
+}
+
+.quote-summary-warning::before {
+  background: var(--amber);
+}
+
+.quote-summary-danger::before {
+  background: var(--red);
+}
+
+.quote-summary-neutral::before {
+  background: var(--green);
+}
+
+.quote-summary-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.quote-summary-card strong {
+  display: block;
+  margin: 7px 0 4px;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.quote-summary-card small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.quote-review-queue {
+  display: grid;
+  gap: 10px;
+}
+
+.quote-review-queue-item {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid #dde7f4;
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.quote-review-queue-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quote-review-queue-title {
+  min-width: 0;
+}
+
+.quote-review-queue-title h4 {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.quote-review-queue-item p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 13px;
+}
+
+.quote-row-group {
+  display: grid;
+  gap: 6px;
+}
+
+.quote-row-group > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.quote-risk,
+.quote-status,
+.quote-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.quote-risk-warning {
+  border-color: #f7d78d;
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.quote-risk-danger {
+  border-color: #fdc4ad;
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.quote-review-card dl {
+  grid-template-columns: 96px 1fr;
+}
+
+.quote-review-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.quote-review-heading h3 {
+  margin: 0 0 4px;
+}
+
+.quote-review-heading p,
+.quote-review-group p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.quote-review-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.quote-review-group {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.quote-review-group h4 {
+  margin: 0;
+}
+
 .supplier-workflow-preview,
 .capability-workflow-preview {
   display: grid;
@@ -2165,6 +2389,7 @@ tr:last-child td {
   .workbench-summary-grid,
   .ai-review-summary-grid,
   .file-summary-grid,
+  .quote-summary-grid,
   .supplier-summary-grid,
   .capability-summary-grid,
   .customer-summary-grid,
@@ -2200,6 +2425,8 @@ tr:last-child td {
     .ai-review-technical,
     .file-summary-grid,
     .file-review-card dl,
+    .quote-summary-grid,
+    .quote-review-card dl,
     .supplier-summary-grid,
     .supplier-review-card dl,
     .supplier-boundary-grid,
@@ -2218,6 +2445,7 @@ tr:last-child td {
   .workbench-header,
   .ai-review-preview-header,
   .file-center-header,
+  .quote-review-header,
   .supplier-workflow-header,
   .capability-workflow-header,
   .customer-workflow-header,
@@ -2232,6 +2460,8 @@ tr:last-child td {
   .ai-review-heading,
   .file-review-queue-main,
   .file-review-heading,
+  .quote-review-queue-main,
+  .quote-review-heading,
   .supplier-queue-main,
   .supplier-review-heading,
   .capability-queue-main,
