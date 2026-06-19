@@ -924,6 +924,287 @@ tr:last-child td {
   margin: 0;
 }
 
+.supplier-workflow-preview,
+.capability-workflow-preview {
+  display: grid;
+  gap: 16px;
+}
+
+.supplier-workflow-header,
+.capability-workflow-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #d7e3f8;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(239, 246, 255, 0.78), rgba(255, 255, 255, 0.94)),
+    var(--surface);
+}
+
+.supplier-workflow-header h3,
+.capability-workflow-header h3 {
+  margin: 6px 0 8px;
+  font-size: 22px;
+}
+
+.supplier-workflow-header p,
+.capability-workflow-header p {
+  max-width: 720px;
+  margin: 3px 0;
+}
+
+.supplier-safety-note,
+.capability-safety-note {
+  font-size: 13px;
+}
+
+.supplier-workflow-section,
+.capability-workflow-section {
+  display: grid;
+  gap: 10px;
+}
+
+.supplier-summary-grid,
+.capability-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.supplier-summary-card,
+.capability-summary-card {
+  position: relative;
+  min-height: 108px;
+  padding: 13px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.supplier-summary-card::before,
+.capability-summary-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--border);
+}
+
+.supplier-summary-info::before,
+.capability-summary-info::before {
+  background: var(--blue);
+}
+
+.supplier-summary-warning::before,
+.capability-summary-warning::before {
+  background: var(--amber);
+}
+
+.supplier-summary-danger::before,
+.capability-summary-danger::before {
+  background: var(--red);
+}
+
+.supplier-summary-neutral::before,
+.capability-summary-neutral::before {
+  background: var(--green);
+}
+
+.supplier-summary-card span,
+.capability-summary-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.supplier-summary-card strong,
+.capability-summary-card strong {
+  display: block;
+  margin: 7px 0 4px;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.supplier-summary-card small,
+.capability-summary-card small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.supplier-queue,
+.capability-queue {
+  display: grid;
+  gap: 10px;
+}
+
+.supplier-queue-item,
+.capability-queue-item {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid #dde7f4;
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.supplier-queue-main,
+.supplier-queue-meta,
+.capability-queue-main,
+.capability-queue-meta,
+.capability-chip-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.supplier-queue-main,
+.capability-queue-main {
+  justify-content: space-between;
+}
+
+.supplier-queue-title,
+.capability-queue-title {
+  min-width: 0;
+}
+
+.supplier-queue-title h4,
+.capability-queue-title h4 {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.supplier-queue-item p,
+.capability-queue-item p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 13px;
+}
+
+.supplier-row-group,
+.capability-row-group {
+  display: grid;
+  gap: 6px;
+}
+
+.supplier-row-group > span,
+.capability-row-group > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.supplier-risk,
+.capability-risk,
+.capability-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.supplier-risk-warning,
+.capability-risk-warning {
+  border-color: #f7d78d;
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.supplier-risk-danger,
+.capability-risk-danger {
+  border-color: #fdc4ad;
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.supplier-review-card dl,
+.capability-review-card dl {
+  grid-template-columns: 96px 1fr;
+}
+
+.supplier-review-heading,
+.capability-review-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.supplier-review-heading h3,
+.capability-review-heading h3 {
+  margin: 0 0 4px;
+}
+
+.supplier-review-heading p,
+.capability-review-heading p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.supplier-review-group,
+.capability-review-group {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.supplier-review-group h4,
+.capability-review-group h4 {
+  margin: 0;
+}
+
+.supplier-boundary-grid,
+.capability-boundary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.supplier-boundary-grid > div,
+.capability-boundary-grid > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.supplier-boundary-grid span,
+.capability-boundary-grid span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.supplier-boundary-grid strong,
+.capability-boundary-grid strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.supplier-boundary-grid small,
+.capability-boundary-grid small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .customer-workflow-preview {
   display: grid;
   gap: 16px;
@@ -1433,6 +1714,8 @@ tr:last-child td {
   }
 
   .workbench-summary-grid,
+  .supplier-summary-grid,
+  .capability-summary-grid,
   .customer-summary-grid,
   .inquiry-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1461,6 +1744,12 @@ tr:last-child td {
   .nav-list,
   .workbench-summary-grid,
   .workbench-review-list,
+  .supplier-summary-grid,
+  .supplier-review-card dl,
+  .supplier-boundary-grid,
+  .capability-summary-grid,
+  .capability-review-card dl,
+  .capability-boundary-grid,
   .customer-summary-grid,
   .customer-review-card dl,
   .customer-boundary-grid,
@@ -1471,6 +1760,8 @@ tr:last-child td {
   }
 
   .workbench-header,
+  .supplier-workflow-header,
+  .capability-workflow-header,
   .customer-workflow-header,
   .inquiry-workflow-header {
     display: grid;
@@ -1479,6 +1770,10 @@ tr:last-child td {
   .workbench-section-header,
   .workbench-queue-topline,
   .workbench-review-heading,
+  .supplier-queue-main,
+  .supplier-review-heading,
+  .capability-queue-main,
+  .capability-review-heading,
   .customer-queue-main,
   .customer-review-heading,
   .inquiry-queue-main,
