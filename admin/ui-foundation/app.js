@@ -389,6 +389,98 @@ const workbenchQueueItems = [
   },
 ];
 
+const inquiryWorkflowSummaryCards = [
+  {
+    label: "新询盘",
+    value: "5",
+    subtitle: "今日新增待查看询盘",
+    tone: "info",
+  },
+  {
+    label: "缺失信息",
+    value: "4",
+    subtitle: "图纸、规格或认证要求待补齐",
+    tone: "warning",
+  },
+  {
+    label: "高风险",
+    value: "2",
+    subtitle: "质量、赔付、价格或交期相关",
+    tone: "danger",
+  },
+  {
+    label: "待客户确认",
+    value: "3",
+    subtitle: "客户需求或技术资料未确认",
+    tone: "info",
+  },
+  {
+    label: "待供应商确认",
+    value: "2",
+    subtitle: "型号、包装、认证或交期待反馈",
+    tone: "neutral",
+  },
+  {
+    label: "AI 初判待复核",
+    value: "6",
+    subtitle: "仅建议，必须人工确认后使用",
+    tone: "warning",
+  },
+];
+
+const inquiryWorkflowItems = [
+  {
+    title: "秘鲁客户轻钢龙骨询盘",
+    category: "询盘",
+    status: "缺失信息",
+    risk: "中",
+    riskTone: "warning",
+    missingInfo: ["图纸", "厚度确认", "包装方式"],
+    aiSuggestion: "先补充规格和厚度，再让供应商按重量报价。",
+    disabledCapabilities: ["不可报价", "不可生成 PI", "不可确认订单"],
+  },
+  {
+    title: "南美客户高尔夫球车询盘",
+    category: "询盘",
+    status: "待供应商确认",
+    risk: "中",
+    riskTone: "warning",
+    missingInfo: ["电池规格", "装柜数量", "认证要求"],
+    aiSuggestion: "先确认型号、装柜数量、包装和目的港要求。",
+    disabledCapabilities: ["不可报价", "不可确认交期", "不可生成合同"],
+  },
+  {
+    title: "沿海项目铝型材问题反馈",
+    category: "质量反馈",
+    status: "高风险",
+    risk: "高",
+    riskTone: "danger",
+    missingInfo: ["项目环境说明", "表面处理记录", "使用位置照片"],
+    aiSuggestion: "先按质量问题流程收集证据，不要承认责任或承诺赔付。",
+    disabledCapabilities: ["不可承诺赔付", "不可确认责任", "不可发送最终结论"],
+  },
+  {
+    title: "印尼工厂吊顶系统询盘",
+    category: "询盘",
+    status: "待内部核算",
+    risk: "中",
+    riskTone: "warning",
+    missingInfo: ["安装损耗", "包装方式", "供应商最终报价"],
+    aiSuggestion: "先整理材料表和供应商询价，再形成内部核算草稿。",
+    disabledCapabilities: ["不可报价", "不可确认交期", "不可确认生产"],
+  },
+  {
+    title: "PD/PT 门安装支持需求",
+    category: "技术支持",
+    status: "技术资料缺失",
+    risk: "中",
+    riskTone: "warning",
+    missingInfo: ["安装手册", "五金系统确认", "视频说明"],
+    aiSuggestion: "先整理安装资料和系统差异说明，再发客户。",
+    disabledCapabilities: ["不可承诺安装结果", "不可发送未经确认手册", "不可确认售后责任"],
+  },
+];
+
 const aiDraftApiState = createReadOnlyState("drafts");
 
 function badge(label, type = "") {
@@ -815,11 +907,17 @@ function refreshCustomersView() {
 
 function renderInquiries() {
   if (inquiryApiState.status === "idle" || inquiryApiState.status === "loading") {
-    return renderInquiriesLoading();
+    return `
+      ${renderInquiriesLoading()}
+      ${renderInquiryWorkflowPreview()}
+    `;
   }
 
   if (inquiryApiState.status === "empty") {
-    return renderInquiriesEmpty();
+    return `
+      ${renderInquiriesEmpty()}
+      ${renderInquiryWorkflowPreview()}
+    `;
   }
 
   const statusNotice =
@@ -829,22 +927,56 @@ function renderInquiries() {
 
   return `
     ${statusNotice}
-    ${renderInquiryTable(inquiryApiState.inquiries, inquiryApiState.source)}
-    ${renderReadOnlyInquiryCard()}
+    ${renderInquiryWorkflowPreview()}
   `;
 }
 
 function renderInquiryReview() {
-  return renderReviewDetails({
-    title: "询盘 API 状态",
-    badges: [badge("只读", "active"), badge(inquiryApiState.source, inquiryApiState.status === "error" ? "pending" : "draft")],
-    rows: [
-      ["API 路由", "GET /api/inquiries"],
-      ["记录数量", String(inquiryApiState.inquiries.length)],
-      ["写入动作", "未连接"],
-    ],
-    draft: "询盘在 Step 3A 中仅作为只读询盘中心列表展示。当前不支持创建询盘、AI 自动处理、发送、报价、PI、订单、生产或出运动作。",
-  });
+  return `
+    <div class="review-stack">
+      <div class="review-card inquiry-review-card">
+        <div class="inquiry-review-heading">
+          <div>
+            <h3>询盘复核预览</h3>
+            <p>固定示例：秘鲁客户轻钢龙骨询盘。</p>
+          </div>
+          ${badge("静态", "draft")}
+        </div>
+        <dl>
+          <dt>客户需求摘要</dt>
+          <dd>客户询问轻钢龙骨材料，需要补充图纸、厚度和包装方式后，才能进入供应商询价或报价判断。</dd>
+          <dt>缺失信息</dt>
+          <dd>图纸、厚度确认、包装方式。</dd>
+          <dt>风险点</dt>
+          <dd>规格不完整，不能直接判断价格、交期、生产可行性或最终订单条件。</dd>
+          <dt>AI 建议</dt>
+          <dd>先补充规格和厚度，再让供应商按重量报价。</dd>
+          <dt>人工下一步</dt>
+          <dd>由业务人员确认图纸、厚度、数量、包装和目的港，再决定是否进入供应商询价。</dd>
+        </dl>
+        <div class="inquiry-review-group">
+          <h4>禁用能力</h4>
+          <div class="disabled-chip-row">
+            <span class="disabled-chip">不可报价</span>
+            <span class="disabled-chip">不可生成 PI</span>
+            <span class="disabled-chip">不可确认订单</span>
+            <span class="disabled-chip">不可触发付款 / 生产 / 发货</span>
+          </div>
+        </div>
+      </div>
+      <div class="review-card">
+        <h3>询盘 API 状态</h3>
+        <dl>
+          <dt>API 路由</dt>
+          <dd>GET /api/inquiries</dd>
+          <dt>记录数量</dt>
+          <dd>${escapeHtml(String(inquiryApiState.inquiries.length))}</dd>
+          <dt>写入动作</dt>
+          <dd>未连接</dd>
+        </dl>
+      </div>
+    </div>
+  `;
 }
 
 function renderInquiriesLoading() {
@@ -861,7 +993,97 @@ function renderInquiriesLoading() {
 function renderInquiriesEmpty() {
   return `
     ${renderDataStatus("empty", "暂无实时询盘数据", "当前没有可用实时数据。本页面为只读；询盘创建和 AI 处理将在后续批准阶段加入。")}
-    ${renderReadOnlyInquiryCard()}
+  `;
+}
+
+function renderInquiryWorkflowPreview() {
+  return `
+    <div class="inquiry-workflow-preview" aria-label="询盘中心静态工作流预览">
+      <div class="inquiry-workflow-header">
+        <div>
+          <span class="state-label">询盘中心</span>
+          <h3>询盘中心</h3>
+          <p>集中查看新询盘、缺失信息、风险提醒和人工下一步动作。</p>
+          <p class="inquiry-safety-note">静态预览数据，仅用于界面验证；所有报价、PI、订单、赔付和交期承诺必须人工复核。</p>
+        </div>
+        <div class="workbench-badges">
+          ${badge("静态预览", "active")}
+          ${badge("只读", "active")}
+          ${badge("人工复核", "pending")}
+        </div>
+      </div>
+
+      <section class="inquiry-workflow-section" aria-label="询盘摘要">
+        <div class="workbench-section-header">
+          <div>
+            <h3>询盘概览</h3>
+            <p>先把新询盘、缺失资料、风险和待确认事项整理成可扫读状态。</p>
+          </div>
+          <span>静态数据</span>
+        </div>
+        <div class="inquiry-summary-grid">
+          ${inquiryWorkflowSummaryCards.map(renderInquirySummaryCard).join("")}
+        </div>
+      </section>
+
+      <section class="inquiry-workflow-section" aria-label="询盘处理队列">
+        <div class="workbench-section-header">
+          <div>
+            <h3>待处理询盘队列</h3>
+            <p>队列只展示人工建议和禁用能力，不触发报价、发送或订单动作。</p>
+          </div>
+          <span>5 条静态示例</span>
+        </div>
+        <div class="inquiry-queue">
+          ${inquiryWorkflowItems.map(renderInquiryQueueItem).join("")}
+        </div>
+      </section>
+
+      ${renderReadOnlyInquiryCard()}
+    </div>
+  `;
+}
+
+function renderInquirySummaryCard(card) {
+  return `
+    <article class="inquiry-summary-card inquiry-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderInquiryQueueItem(item) {
+  const missingInfoHtml = item.missingInfo
+    .map((label) => `<span class="inquiry-chip">${escapeHtml(label)}</span>`)
+    .join("");
+  const disabledHtml = item.disabledCapabilities
+    .map((label) => `<span class="disabled-chip">${escapeHtml(label)}</span>`)
+    .join("");
+
+  return `
+    <article class="inquiry-queue-item">
+      <div class="inquiry-queue-main">
+        <div class="inquiry-queue-title">
+          <span class="workbench-category">${escapeHtml(item.category)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+        </div>
+        <div class="inquiry-queue-meta">
+          ${badge(item.status, item.status === "高风险" ? "risk" : "pending")}
+          <span class="inquiry-risk inquiry-risk-${escapeHtml(item.riskTone)}">风险 ${escapeHtml(item.risk)}</span>
+        </div>
+      </div>
+      <div class="inquiry-row-group">
+        <span>缺失信息</span>
+        <div class="inquiry-chip-row">${missingInfoHtml}</div>
+      </div>
+      <p><strong>AI 建议：</strong>${escapeHtml(item.aiSuggestion)}</p>
+      <div class="inquiry-row-group">
+        <span>禁用能力</span>
+        <div class="disabled-chip-row">${disabledHtml}</div>
+      </div>
+    </article>
   `;
 }
 
@@ -889,20 +1111,20 @@ function renderInquiryTable(inquiries, source) {
 
 function renderReadOnlyInquiryCard() {
   return `
-    <div class="form-card read-only-card">
+    <div class="form-card read-only-card inquiry-boundary-card">
       <h3>询盘中心只读边界</h3>
       <p>本区域仅用于查看现有询盘，不会创建询盘或运行 AI 自动处理。</p>
-      <div class="form-grid">
-        <label class="field">
+      <div class="inquiry-boundary-grid">
+        <div>
           <span>允许动作</span>
-          <input type="text" value="只读询盘查看" readonly />
+          <strong>只读询盘查看</strong>
           <small>本界面未连接询盘创建、POST 或 PATCH 动作。</small>
-        </label>
-        <label class="field">
+        </div>
+        <div>
           <span>禁止动作</span>
-          <input type="text" value="No send / quote / PI / order" readonly />
+          <strong>No send / quote / PI / order</strong>
           <small>不会执行外发消息、报价、PI 或业务承诺。</small>
-        </label>
+        </div>
       </div>
     </div>
   `;
