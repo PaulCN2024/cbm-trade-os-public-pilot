@@ -2877,8 +2877,9 @@ function refreshManufacturingCapabilitiesView() {
 }
 
 function renderAiDrafts() {
+  const reviewModel = getAiReviewViewModel();
   if (aiDraftApiState.status === "idle" || aiDraftApiState.status === "loading") {
-    return renderAiDraftsLoading();
+    return renderAiDraftsLoading(reviewModel);
   }
 
   const statusNotice =
@@ -2890,22 +2891,152 @@ function renderAiDrafts() {
 
   return `
     ${statusNotice}
-    ${renderAiReviewCenterPreview()}
+    ${renderAiReviewCenterPreview(reviewModel)}
   `;
 }
 
-function renderAiReviewCenterPreview() {
+function getAiReviewViewModel() {
+  const isLive = aiDraftApiState.status === "loaded" && aiDraftApiState.drafts.length > 0;
+  const items = isLive
+    ? aiDraftApiState.drafts.map(mapAiAnalysisRecordToReviewItem)
+    : aiReviewQueueItems.map(normalizeStaticAiReviewItem);
+  return {
+    isLive,
+    items,
+    selectedItem: items[0] || normalizeStaticAiReviewItem(aiReviewQueueItems[0]),
+    summaryCards: isLive ? buildAiReviewSummaryCardsFromRecords(items) : aiReviewSummaryCards,
+    sourceLabel: isLive
+      ? "实时只读数据"
+      : aiDraftApiState.status === "error"
+        ? "API 暂不可用，显示静态预览"
+        : "静态预览 fallback",
+    queueCountLabel: isLive ? `${items.length} 条只读记录` : "6 条静态示例",
+  };
+}
+
+function normalizeStaticAiReviewItem(item) {
+  return {
+    ...item,
+    summary: item.summary || `${item.title}需要人工复核，当前不能发送、审批、报价、生成 PI 或创建订单。`,
+  };
+}
+
+function mapAiAnalysisRecordToReviewItem(record, index) {
+  record = record || {};
+  const extractedRequirements = record.extracted_requirements || record.requirements || record.analysis || {};
+  const missingInfo = normalizeListValue(record.missing_information || record.missing_info || record.missingInfo);
+  const riskFlags = normalizeListValue(record.risk_flags || record.riskFlags || record.risks);
+  const risk = deriveAiReviewRisk(record, riskFlags, missingInfo);
+  const title = firstDisplayValue([
+    record.title,
+    record.inquiry_title,
+    extractedRequirements.product,
+    extractedRequirements.project,
+    record.detected_business_line,
+    `AI 分析记录 ${index + 1}`,
+  ]);
+
+  return {
+    title,
+    type: firstDisplayValue([record.task_type, record.analysis_type, record.draft_type, "AI 分析记录"]),
+    risk: risk.level,
+    riskTone: risk.tone,
+    status: normalizeAiReviewStatus(record.approval_status || record.status, record.approval_required),
+    missingInfo,
+    summary: firstDisplayValue([
+      record.ai_summary,
+      record.summary,
+      record.analysis_summary,
+      formatObjectSummary(extractedRequirements),
+      title,
+    ]),
+    aiSuggestion: firstDisplayValue([
+      record.suggested_reply,
+      record.ai_suggestion,
+      record.recommended_reply,
+      record.suggested_next_step,
+      "已有 AI 分析记录仅供查看，必须由人工确认后再使用。",
+    ]),
+    humanNextStep: firstDisplayValue([
+      record.human_next_step,
+      record.next_action,
+      record.next_step,
+      "人工复核风险、缺失信息和业务边界后再决定下一步。",
+    ]),
+    disabledCapabilities: ["不可自动发送", "不可自动审批", "不可生成报价", "不可生成 PI", "不可确认订单"],
+  };
+}
+
+function normalizeAiReviewStatus(value, approvalRequired) {
+  const status = String(value ?? "").trim();
+  const lowerStatus = status.toLowerCase();
+  if (approvalRequired === true || lowerStatus.includes("review") || lowerStatus.includes("draft")) return "待人工复核";
+  if (lowerStatus.includes("blocked") || lowerStatus.includes("reject")) return "禁止自动结论";
+  if (!status) return "待人工复核";
+  return status;
+}
+
+function deriveAiReviewRisk(record, riskFlags, missingInfo) {
+  const combinedText = [
+    record.risk,
+    record.risk_level,
+    record.action_boundary,
+    record.approval_status,
+    record.status,
+    riskFlags,
+    record.suggested_reply,
+    record.ai_summary,
+    record.summary,
+  ]
+    .flat()
+    .join(" ")
+    .toLowerCase();
+  const highRiskTerms = ["blocked", "high", "高", "price", "payment", "delivery", "quality", "claim", "refund", "quotation", "pi", "赔付", "质量", "价格", "付款", "交期", "报价"];
+  if (highRiskTerms.some((term) => combinedText.includes(term))) {
+    return { level: "高", tone: "danger" };
+  }
+  if (missingInfo.length > 0 || riskFlags.length > 0) {
+    return { level: "中", tone: "warning" };
+  }
+  return { level: "暂无风险等级", tone: "neutral" };
+}
+
+function formatObjectSummary(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+  const summary = Object.entries(value)
+    .filter(([, item]) => item !== undefined && item !== null && String(item).trim() !== "")
+    .map(([key, item]) => `${key}: ${item}`)
+    .join("，");
+  return summary;
+}
+
+function buildAiReviewSummaryCardsFromRecords(items) {
+  const highRiskCount = items.filter((item) => item.risk === "高").length;
+  const missingCount = items.filter((item) => !item.missingInfo.includes("信息待补充") && item.missingInfo.length > 0).length;
+  const reviewCount = items.filter((item) => item.status.includes("复核") || item.status.includes("禁止")).length;
+  const suggestionCount = items.filter((item) => item.aiSuggestion && item.aiSuggestion !== "—").length;
+  return [
+    { label: "只读 AI 记录", value: String(items.length), subtitle: "来自现有 AI 分析只读路径", tone: "info" },
+    { label: "高风险建议", value: String(highRiskCount), subtitle: "价格、付款、交期、质量或 PI 相关", tone: "danger" },
+    { label: "缺失信息提醒", value: String(missingCount), subtitle: "规格、图纸、认证或客户信息缺失", tone: "warning" },
+    { label: "待人工复核", value: String(reviewCount || items.length), subtitle: "不能自动发送或审批", tone: "warning" },
+    { label: "已有建议文本", value: String(suggestionCount), subtitle: "仅展示已有分析或草稿", tone: "neutral" },
+    { label: "写入动作", value: "0", subtitle: "未连接发送、审批、报价或 PI", tone: "info" },
+  ];
+}
+
+function renderAiReviewCenterPreview(model = getAiReviewViewModel()) {
   return `
-    <div class="ai-review-preview" aria-label="AI 复核中心静态工作流预览">
+    <div class="ai-review-preview" aria-label="AI 复核中心只读工作流预览">
       <div class="ai-review-preview-header">
         <div>
           <span class="state-label">AI 复核中心</span>
           <h3>AI 复核中心</h3>
           <p>集中复核 AI 草稿、风险提醒、缺失信息和人工下一步建议。</p>
-          <p class="ai-review-safety-note">静态预览数据，仅用于界面验证；AI 仅可生成建议和草稿，所有发送、报价、PI、订单、赔付和交期承诺必须人工审批。</p>
+          <p class="ai-review-safety-note">只读数据用于界面展示；AI 仅可展示已有分析和草稿，所有发送、报价、PI、订单、赔付和交期承诺必须人工复核。</p>
         </div>
         <div class="ai-review-preview-badges">
-          ${badge("静态预览", "draft")}
+          ${badge(model.sourceLabel, model.isLive ? "active" : "draft")}
           ${badge("只读", "active")}
           ${badge("人工审批前置", "approval")}
           ${badge("不自动发送", "pending")}
@@ -2918,10 +3049,10 @@ function renderAiReviewCenterPreview() {
             <span>AI REVIEW SUMMARY</span>
             <h3>今日 AI 复核概览</h3>
           </div>
-          <p>所有数字均为静态示例，不代表实时业务状态。</p>
+          <p>${escapeHtml(model.isLive ? "只读统计来自现有 AI 分析记录，不代表审批或发送状态。" : "所有数字均为静态示例，不代表实时业务状态。")}</p>
         </div>
         <div class="ai-review-summary-grid">
-          ${renderSummaryCards(aiReviewSummaryCards, renderAiReviewSummaryCard)}
+          ${renderSummaryCards(model.summaryCards, renderAiReviewSummaryCard)}
         </div>
       </section>
 
@@ -2931,10 +3062,10 @@ function renderAiReviewCenterPreview() {
             <span>AI REVIEW QUEUE</span>
             <h3>AI 复核队列</h3>
           </div>
-          <p>按风险和信息缺口整理，帮助操作员先判断再行动。</p>
+          <p>按风险和信息缺口整理，帮助操作员先判断再行动。${escapeHtml(model.queueCountLabel)}</p>
         </div>
         <div class="ai-review-queue">
-          ${aiReviewQueueItems.map(renderAiReviewQueueItem).join("")}
+          ${model.items.map(renderAiReviewQueueItem).join("")}
         </div>
       </section>
     </div>
@@ -2982,24 +3113,24 @@ function renderAiReviewQueueItem(item) {
 }
 
 function renderAiDraftReview() {
-  const selected = aiReviewQueueItems[0];
+  const { selectedItem: selected, isLive } = getAiReviewViewModel();
   return `
     <div class="review-card ai-review-card" aria-label="AI 复核预览">
       <div class="ai-review-heading">
         <div>
           <span class="state-label">AI 复核预览</span>
           <h3>AI 复核预览</h3>
-          <p>固定示例：秘鲁轻钢龙骨询盘 AI 初判。</p>
+          <p>${isLive ? "实时只读记录：" : "固定示例："}${escapeHtml(selected.title)}。</p>
         </div>
         <div class="ai-review-meta">
-          ${badge("静态预览", "draft")}
+          ${badge(isLive ? "实时只读数据" : "静态预览", isLive ? "active" : "draft")}
           ${badge("只读", "active")}
           ${badge("不自动发送", "pending")}
         </div>
       </div>
       <dl>
         <dt>复核摘要</dt>
-        <dd>客户询盘缺少厚度、锌层、包装和装柜重量信息，当前只能作为 AI 初判建议，不能进入报价或客户回复。</dd>
+        <dd>${escapeHtml(selected.summary)}</dd>
         <dt>类型</dt>
         <dd>${escapeHtml(selected.type)}</dd>
         <dt>风险等级</dt>
@@ -3011,7 +3142,7 @@ function renderAiDraftReview() {
         <dt>人工下一步</dt>
         <dd>${escapeHtml(selected.humanNextStep)}</dd>
         <dt>审批边界</dt>
-        <dd>AI 仅可生成建议和草稿；所有发送、报价、PI、订单、赔付和交期承诺必须人工审批。</dd>
+        <dd>AI 仅可展示已有分析和草稿；所有发送、报价、PI、订单、赔付和交期承诺必须人工复核。</dd>
       </dl>
       <div class="ai-review-group">
         <h4>禁用能力</h4>
@@ -3021,7 +3152,7 @@ function renderAiDraftReview() {
       </div>
       <div class="ai-review-group">
         <h4>技术说明</h4>
-        <p>静态预览数据。当前不调用 AI、不调用 API、不执行助手、不写入数据库。</p>
+        <p>${isLive ? "实时只读数据。当前只展示既有记录，不调用 AI、不执行助手、不写入数据库。" : "静态预览数据。当前不调用 AI、不执行助手、不写入数据库。"}</p>
         <dl class="ai-review-technical">
           <dt>API 路由</dt>
           <dd>GET /api/ai-inquiry-analyses</dd>
@@ -3035,10 +3166,10 @@ function renderAiDraftReview() {
   `;
 }
 
-function renderAiDraftsLoading() {
+function renderAiDraftsLoading(model = getAiReviewViewModel()) {
   return `
     ${renderDataStatus("loading", "正在加载 AI 询盘分析草稿", "正在使用当前管理员会话请求 GET /api/ai-inquiry-analyses。")}
-    ${renderAiReviewCenterPreview()}
+    ${renderAiReviewCenterPreview(model)}
   `;
 }
 
