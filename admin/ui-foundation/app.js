@@ -1268,6 +1268,9 @@ function setSection(sectionId) {
   if (sectionId === "manufacturing-capabilities") {
     loadManufacturingCapabilitiesReadOnly();
   }
+  if (sectionId === "suppliers") {
+    loadManufacturingCapabilitiesReadOnly();
+  }
   if (sectionId === "ai-drafts") {
     loadAiDraftsReadOnly();
   }
@@ -1920,17 +1923,18 @@ function refreshCustomersView() {
 }
 
 function renderSuppliers() {
+  const workflowModel = getSupplierWorkflowViewModel();
   return `
-    <div class="supplier-workflow-preview" aria-label="供应商中心静态工作流预览">
+    <div class="supplier-workflow-preview" aria-label="供应商中心只读工作流预览">
       <div class="supplier-workflow-header">
         <div>
           <span class="state-label">供应商中心</span>
           <h3>供应商中心</h3>
           <p>集中查看供应商能力、报价状态、风险提醒和人工核实事项。</p>
-          <p class="supplier-safety-note">静态预览数据，仅用于界面验证；所有询价、报价、交期、质保和供应商承诺必须人工核实。</p>
+          <p class="supplier-safety-note">只读数据用于界面展示；所有询价、报价、交期、质保和供应商承诺必须人工核实。</p>
         </div>
         <div class="workbench-badges">
-          ${badge("静态预览", "active")}
+          ${badge(workflowModel.sourceLabel, workflowModel.isLive ? "active" : "draft")}
           ${badge("只读", "active")}
           ${badge("人工核实", "pending")}
         </div>
@@ -1942,10 +1946,10 @@ function renderSuppliers() {
             <h3>供应商概览</h3>
             <p>先把候选供应商、报价确认、能力匹配和风险压缩成可扫读状态。</p>
           </div>
-          <span>静态数据</span>
+          <span>${escapeHtml(workflowModel.sourceLabel)}</span>
         </div>
         <div class="supplier-summary-grid">
-          ${renderSummaryCards(supplierWorkflowSummaryCards, renderSupplierSummaryCard)}
+          ${renderSummaryCards(workflowModel.summaryCards, renderSupplierSummaryCard)}
         </div>
       </section>
 
@@ -1955,10 +1959,10 @@ function renderSuppliers() {
             <h3>供应商处理队列</h3>
             <p>队列仅展示候选匹配和人工核实建议，不发送 RFQ，不确认报价或交期。</p>
           </div>
-          <span>5 条静态示例</span>
+          <span>${escapeHtml(workflowModel.queueCountLabel)}</span>
         </div>
         <div class="supplier-queue">
-          ${supplierWorkflowItems.map(renderSupplierQueueItem).join("")}
+          ${workflowModel.items.map(renderSupplierQueueItem).join("")}
         </div>
       </section>
 
@@ -1983,36 +1987,37 @@ function renderSuppliers() {
 }
 
 function renderSupplierReview() {
+  const { selectedItem, isLive } = getSupplierWorkflowViewModel();
   return `
     <div class="review-stack">
       <div class="review-card supplier-review-card">
         <div class="supplier-review-heading">
           <div>
             <h3>供应商复核预览</h3>
-            <p>固定示例：铝合金门窗供应商。</p>
+            <p>${isLive ? "实时只读记录：" : "固定示例："}${escapeHtml(selectedItem.title)}。</p>
           </div>
-          ${badge("静态", "draft")}
+          ${badge(isLive ? "实时只读数据" : "静态", isLive ? "active" : "draft")}
         </div>
         <dl>
           <dt>供应商摘要</dt>
-          <dd>门窗型材、五金和组装候选供应商，适合建筑类门窗和 PD/PT 门项目的人工初筛。</dd>
+          <dd>${escapeHtml(selectedItem.summary)}</dd>
           <dt>能力范围</dt>
-          <dd>门窗型材 / 五金 / 组装。</dd>
+          <dd>${escapeHtml(selectedItem.capability)}</dd>
           <dt>适用询盘</dt>
-          <dd>门窗五金、PD/PT 门、建筑项目。</dd>
+          <dd>${escapeHtml(selectedItem.matchedInquiries)}</dd>
           <dt>待确认事项</dt>
-          <dd>型材系统、表面处理、五金品牌、包装方式和安装资料。</dd>
+          <dd>${escapeHtml(selectedItem.need)}</dd>
           <dt>风险点</dt>
-          <dd>不能直接确认报价、交期、安装效果或供应商正式承诺。</dd>
+          <dd>${escapeHtml(selectedItem.riskDescription)}</dd>
           <dt>AI 建议</dt>
-          <dd>适合作为候选供应商，但安装资料和系统差异必须人工确认。</dd>
+          <dd>${escapeHtml(selectedItem.aiSuggestion)}</dd>
           <dt>人工下一步</dt>
-          <dd>由业务人员核对项目要求和供应商资料，再决定是否人工发起询价。</dd>
+          <dd>${escapeHtml(selectedItem.humanNextStep)}</dd>
         </dl>
         <div class="supplier-review-group">
           <h4>禁用能力</h4>
           <div class="disabled-chip-row">
-            ${renderDisabledCapabilities(["不可发送 RFQ", "不可确认报价", "不可确认交期", "不可生成客户报价"])}
+            ${renderDisabledCapabilities(selectedItem.disabledCapabilities)}
           </div>
         </div>
       </div>
@@ -2020,7 +2025,7 @@ function renderSupplierReview() {
         <h3>供应商预览状态</h3>
         <dl>
           <dt>数据来源</dt>
-          <dd>静态预览</dd>
+          <dd>${escapeHtml(isLive ? "实时只读制造能力数据派生" : "静态预览")}</dd>
           <dt>写入动作</dt>
           <dd>未连接</dd>
           <dt>外发动作</dt>
@@ -2029,6 +2034,89 @@ function renderSupplierReview() {
       </div>
     </div>
   `;
+}
+
+function getSupplierWorkflowViewModel() {
+  const isLive = capabilityApiState.status === "loaded" && capabilityApiState.capabilities.length > 0;
+  const items = isLive
+    ? capabilityApiState.capabilities.map(mapCapabilityRecordToSupplierItem)
+    : supplierWorkflowItems.map(normalizeStaticSupplierWorkflowItem);
+  return {
+    isLive,
+    items,
+    selectedItem: items[0] || normalizeStaticSupplierWorkflowItem(supplierWorkflowItems[0]),
+    summaryCards: isLive ? buildSupplierSummaryCardsFromRecords(items) : supplierWorkflowSummaryCards,
+    sourceLabel: isLive
+      ? "实时只读数据"
+      : capabilityApiState.status === "error"
+        ? "API 暂不可用，显示静态预览"
+        : "静态预览 fallback",
+    queueCountLabel: isLive ? `${items.length} 条只读能力派生记录` : "5 条静态示例",
+  };
+}
+
+function normalizeStaticSupplierWorkflowItem(item) {
+  return {
+    ...item,
+    summary: item.summary || `${item.title}仅作为候选供应商预览，不能确认报价、交期或供应商承诺。`,
+    matchedInquiries: item.matchedInquiries || "待人工匹配询盘",
+    humanNextStep: item.humanNextStep || "由业务人员核对项目要求和供应商资料，再决定是否人工发起询价。",
+    riskDescription: item.riskDescription || "不能直接确认报价、交期、安装效果或供应商正式承诺。",
+  };
+}
+
+function mapCapabilityRecordToSupplierItem(record, index) {
+  const capabilityItem = mapCapabilityRecordToWorkflowItem(record, index);
+  const title = firstDisplayValue([
+    record.supplier_name,
+    record.company_name,
+    record.vendor_name,
+    record.factory_name,
+    record.equipment,
+    `只读供应商能力记录 ${index + 1}`,
+  ]);
+  return {
+    title,
+    capability: capabilityItem.process,
+    status: firstDisplayValue([record.supplier_status, record.status, record.capability_status, "待人工核实"]),
+    risk: capabilityItem.risk,
+    riskTone: capabilityItem.riskTone,
+    need: capabilityItem.missingInfo.join("、"),
+    matchedInquiries: capabilityItem.matchedInquiries,
+    summary: firstDisplayValue([
+      record.supplier_summary,
+      record.public_description,
+      record.internal_notes,
+      `${title} / ${capabilityItem.process}`,
+    ]),
+    aiSuggestion: firstDisplayValue([
+      record.ai_suggestion,
+      record.suggested_next_step,
+      record.public_description,
+      "能力资料仅供候选匹配，必须人工确认供应商反馈后再使用。",
+    ]),
+    humanNextStep: firstDisplayValue([
+      record.human_next_step,
+      record.next_action,
+      "人工核实供应商能力、报价有效期、交期和质量边界后再推进。",
+    ]),
+    riskDescription: capabilityItem.riskDescription,
+    disabledCapabilities: ["不可发送 RFQ", "不可确认报价", "不可确认交期", "不可生成客户报价"],
+  };
+}
+
+function buildSupplierSummaryCardsFromRecords(items) {
+  const highRiskCount = items.filter((item) => item.risk === "高").length;
+  const missingCount = items.filter((item) => item.need && item.need !== "能力资料待补充").length;
+  const reviewCount = items.filter((item) => item.status.includes("核实") || item.status.includes("确认")).length;
+  return [
+    { label: "只读能力记录", value: String(items.length), subtitle: "从制造能力只读数据派生", tone: "info" },
+    { label: "待报价确认", value: String(reviewCount || items.length), subtitle: "报价、有效期或币种需人工复核", tone: "warning" },
+    { label: "能力匹配", value: String(items.length), subtitle: "仅作为候选供应商能力参考", tone: "neutral" },
+    { label: "高风险供应商", value: String(highRiskCount), subtitle: "质保、责任或交期风险", tone: "danger" },
+    { label: "待补资料", value: String(missingCount), subtitle: "系统、认证、包装或产能资料缺失", tone: "warning" },
+    { label: "写入动作", value: "0", subtitle: "未连接 RFQ、报价或承诺动作", tone: "info" },
+  ];
 }
 
 function renderSupplierSummaryCard(card) {
@@ -2640,17 +2728,18 @@ function refreshProductsView() {
 }
 
 function renderManufacturingCapabilities() {
+  const workflowModel = getCapabilityWorkflowViewModel();
   if (capabilityApiState.status === "idle" || capabilityApiState.status === "loading") {
     return `
       ${renderManufacturingCapabilitiesLoading()}
-      ${renderCapabilityWorkflowPreview()}
+      ${renderCapabilityWorkflowPreview(workflowModel)}
     `;
   }
 
   if (capabilityApiState.status === "empty") {
     return `
       ${renderManufacturingCapabilitiesEmpty()}
-      ${renderCapabilityWorkflowPreview()}
+      ${renderCapabilityWorkflowPreview(workflowModel)}
     `;
   }
 
@@ -2661,41 +2750,42 @@ function renderManufacturingCapabilities() {
 
   return `
     ${statusNotice}
-    ${renderCapabilityWorkflowPreview()}
+    ${renderCapabilityWorkflowPreview(workflowModel)}
   `;
 }
 
 function renderManufacturingCapabilityReview() {
+  const { selectedItem, isLive } = getCapabilityWorkflowViewModel();
   return `
     <div class="review-stack">
       <div class="review-card capability-review-card">
         <div class="capability-review-heading">
           <div>
             <h3>制造能力复核预览</h3>
-            <p>固定示例：铝合金门窗系统。</p>
+            <p>${isLive ? "实时只读记录：" : "固定示例："}${escapeHtml(selectedItem.title)}。</p>
           </div>
-          ${badge("不承诺交期", "pending")}
+          ${badge(isLive ? "实时只读数据" : "不承诺交期", isLive ? "active" : "pending")}
         </div>
         <dl>
           <dt>能力摘要</dt>
-          <dd>铝合金门窗系统可用于 PD/PT 门、门窗五金和建筑项目，但必须补齐系统图纸、五金清单和安装说明。</dd>
+          <dd>${escapeHtml(selectedItem.summary)}</dd>
           <dt>适用询盘</dt>
-          <dd>PD/PT 门、门窗五金、建筑项目。</dd>
+          <dd>${escapeHtml(selectedItem.matchedInquiries)}</dd>
           <dt>加工方式</dt>
-          <dd>型材挤压 / 表面处理 / 组装。</dd>
+          <dd>${escapeHtml(selectedItem.process)}</dd>
           <dt>资料缺口</dt>
-          <dd>系统图纸、五金清单、安装说明。</dd>
+          <dd>${escapeHtml(selectedItem.missingInfo.join("、"))}</dd>
           <dt>风险点</dt>
-          <dd>不能直接确认安装结果、生产可行性、正式报价或交期。</dd>
+          <dd>${escapeHtml(selectedItem.riskDescription)}</dd>
           <dt>AI 建议</dt>
-          <dd>先核对系统资料和供应商反馈，再由人工判断是否进入询价或报价准备。</dd>
+          <dd>${escapeHtml(selectedItem.aiSuggestion)}</dd>
           <dt>人工下一步</dt>
-          <dd>补齐技术资料并核实供应商能力，不在本页面承诺生产或发货。</dd>
+          <dd>${escapeHtml(selectedItem.humanNextStep)}</dd>
         </dl>
         <div class="capability-review-group">
           <h4>禁用能力</h4>
           <div class="disabled-chip-row">
-            ${renderDisabledCapabilities(["不可确认安装结果", "不可确认交期", "不可生成正式报价", "不可触发生产 / 发货"])}
+            ${renderDisabledCapabilities([...selectedItem.disabledCapabilities, "不可触发生产 / 发货"])}
           </div>
         </div>
       </div>
@@ -2731,18 +2821,158 @@ function renderManufacturingCapabilitiesEmpty() {
   `;
 }
 
-function renderCapabilityWorkflowPreview() {
+function getCapabilityWorkflowViewModel() {
+  const isLive = capabilityApiState.status === "loaded" && capabilityApiState.capabilities.length > 0;
+  const items = isLive
+    ? capabilityApiState.capabilities.map(mapCapabilityRecordToWorkflowItem)
+    : capabilityWorkflowItems.map(normalizeStaticCapabilityWorkflowItem);
+  return {
+    isLive,
+    items,
+    selectedItem: items[0] || normalizeStaticCapabilityWorkflowItem(capabilityWorkflowItems[0]),
+    summaryCards: isLive ? buildCapabilitySummaryCardsFromRecords(items) : capabilityWorkflowSummaryCards,
+    sourceLabel: isLive
+      ? "实时只读数据"
+      : capabilityApiState.status === "error"
+        ? "API 暂不可用，显示静态预览"
+        : "静态预览 fallback",
+    queueCountLabel: isLive ? `${items.length} 条只读记录` : "5 条静态示例",
+  };
+}
+
+function normalizeStaticCapabilityWorkflowItem(item) {
+  return {
+    ...item,
+    summary: item.summary || `${item.title}仅用于能力匹配预览，不能确认生产可行性、报价或交期。`,
+    aiSuggestion: item.aiSuggestion || "先核对系统资料和供应商反馈，再由人工判断是否进入询价或报价准备。",
+    humanNextStep: item.humanNextStep || "补齐技术资料并核实供应商能力，不在本页面承诺生产或发货。",
+    riskDescription: item.riskDescription || "不能直接确认安装结果、生产可行性、正式报价或交期。",
+  };
+}
+
+function mapCapabilityRecordToWorkflowItem(record, index) {
+  record = record || {};
+  const missingInfo = getCapabilityMissingInfo(record);
+  const risk = deriveCapabilityRisk(record, missingInfo);
+  const title = firstDisplayValue([
+    record.capability_name,
+    record.equipment,
+    record.process,
+    record.capability_line,
+    `只读制造能力记录 ${index + 1}`,
+  ]);
+  return {
+    title,
+    process: firstDisplayValue([
+      record.process,
+      record.manufacturing_method,
+      record.equipment,
+      record.capability_line,
+      "能力资料待补充",
+    ]),
+    matchedInquiries: firstDisplayValue([
+      record.matched_inquiries,
+      record.business_note,
+      record.product_category,
+      record.capability_line,
+      "需要供应商确认",
+    ]),
+    risk: risk.level,
+    riskTone: risk.tone,
+    missingInfo,
+    summary: firstDisplayValue([
+      record.public_description,
+      record.summary,
+      record.internal_notes,
+      `${title} / ${record.monthly_capacity || "产能待确认"}`,
+    ]),
+    aiSuggestion: firstDisplayValue([
+      record.ai_suggestion,
+      record.suggested_next_step,
+      record.public_description,
+      "能力记录仅供查看，必须人工核实供应商反馈后再判断。",
+    ]),
+    humanNextStep: firstDisplayValue([
+      record.human_next_step,
+      record.next_action,
+      "人工核实设备、产能、最大长度、质量边界和交期后再推进。",
+    ]),
+    riskDescription: risk.description,
+    disabledCapabilities: ["不可确认生产", "不可确认交期", "不可生成正式报价"],
+  };
+}
+
+function getCapabilityMissingInfo(record) {
+  const missing = normalizeListValue(record.missing_info || record.missing_information || record.missingInfo);
+  if (!missing.includes("信息待补充")) return missing;
+  const inferredMissing = [];
+  if (!hasDisplayValue([record.equipment])) inferredMissing.push("设备");
+  if (!hasDisplayValue([record.monthly_capacity])) inferredMissing.push("月产能");
+  if (!hasDisplayValue([record.max_length])) inferredMissing.push("最大长度");
+  if (!hasDisplayValue([record.public_description])) inferredMissing.push("公开描述");
+  return inferredMissing.length ? inferredMissing : ["能力资料待补充"];
+}
+
+function deriveCapabilityRisk(record, missingInfo) {
+  const combinedText = [
+    record.risk,
+    record.risk_level,
+    record.status,
+    record.capability_status,
+    record.public_description,
+    record.internal_notes,
+  ]
+    .flat()
+    .join(" ")
+    .toLowerCase();
+  const highRiskTerms = ["high", "高", "delivery", "quality", "claim", "refund", "warranty", "coastal", "责任", "质保", "赔付", "质量", "交期", "沿海"];
+  if (highRiskTerms.some((term) => combinedText.includes(term))) {
+    return {
+      level: "高",
+      tone: "danger",
+      description: "能力记录包含交期、质量、质保、环境适配或责任相关风险，必须人工复核。",
+    };
+  }
+  if (missingInfo.length > 0) {
+    return {
+      level: "中",
+      tone: "warning",
+      description: "能力资料仍有缺失，不能确认生产可行性、报价或交期。",
+    };
+  }
+  return {
+    level: "暂无风险等级",
+    tone: "neutral",
+    description: "暂无明确风险等级，仍需人工确认后再推进。",
+  };
+}
+
+function buildCapabilitySummaryCardsFromRecords(items) {
+  const missingCount = items.filter((item) => item.missingInfo.length > 0).length;
+  const highRiskCount = items.filter((item) => item.risk === "高").length;
+  const reviewCount = items.filter((item) => item.risk !== "暂无风险等级" || item.missingInfo.length > 0).length;
+  return [
+    { label: "只读能力", value: String(items.length), subtitle: "来自现有制造能力只读路径", tone: "info" },
+    { label: "可匹配询盘", value: String(items.length), subtitle: "仅供人工能力匹配判断", tone: "neutral" },
+    { label: "需技术确认", value: String(reviewCount || items.length), subtitle: "图纸、工艺或供应商反馈待补充", tone: "warning" },
+    { label: "高风险工艺", value: String(highRiskCount), subtitle: "责任、质保或环境适配相关", tone: "danger" },
+    { label: "待补资料", value: String(missingCount), subtitle: "材料、包装、产能或描述缺失", tone: "warning" },
+    { label: "写入动作", value: "0", subtitle: "不确认生产、报价或交期", tone: "info" },
+  ];
+}
+
+function renderCapabilityWorkflowPreview(model = getCapabilityWorkflowViewModel()) {
   return `
-    <div class="capability-workflow-preview" aria-label="制造能力中心静态工作流预览">
+    <div class="capability-workflow-preview" aria-label="制造能力中心只读工作流预览">
       <div class="capability-workflow-header">
         <div>
           <span class="state-label">制造能力中心</span>
           <h3>制造能力中心</h3>
           <p>查看产品能力、加工方式、资料缺口和生产风险。</p>
-          <p class="capability-safety-note">静态预览数据，仅用于界面验证；所有生产能力、加工方案、交期和质量责任必须人工复核。</p>
+          <p class="capability-safety-note">只读数据用于界面展示；所有生产能力、加工方案、交期和质量责任必须人工复核。</p>
         </div>
         <div class="workbench-badges">
-          ${badge("静态预览", "active")}
+          ${badge(model.sourceLabel, model.isLive ? "active" : "draft")}
           ${badge("只读", "active")}
           ${badge("不承诺交期", "pending")}
         </div>
@@ -2754,10 +2984,10 @@ function renderCapabilityWorkflowPreview() {
             <h3>能力概览</h3>
             <p>把可匹配询盘、技术确认、资料缺口和高风险工艺整理成可扫读状态。</p>
           </div>
-          <span>静态数据</span>
+          <span>${escapeHtml(model.sourceLabel)}</span>
         </div>
         <div class="capability-summary-grid">
-          ${renderSummaryCards(capabilityWorkflowSummaryCards, renderCapabilitySummaryCard)}
+          ${renderSummaryCards(model.summaryCards, renderCapabilitySummaryCard)}
         </div>
       </section>
 
@@ -2767,10 +2997,10 @@ function renderCapabilityWorkflowPreview() {
             <h3>制造能力队列</h3>
             <p>队列只展示能力匹配和缺失资料，不确认生产可行性、交期或报价。</p>
           </div>
-          <span>5 条静态示例</span>
+          <span>${escapeHtml(model.queueCountLabel)}</span>
         </div>
         <div class="capability-queue">
-          ${capabilityWorkflowItems.map(renderCapabilityQueueItem).join("")}
+          ${model.items.map(renderCapabilityQueueItem).join("")}
         </div>
       </section>
 
@@ -2871,9 +3101,14 @@ function loadManufacturingCapabilitiesReadOnly() {
 }
 
 function refreshManufacturingCapabilitiesView() {
-  if (activeSectionId !== "manufacturing-capabilities") return;
-  mainContent.innerHTML = renderManufacturingCapabilities();
-  reviewPanel.innerHTML = renderManufacturingCapabilityReview();
+  if (activeSectionId === "manufacturing-capabilities") {
+    mainContent.innerHTML = renderManufacturingCapabilities();
+    reviewPanel.innerHTML = renderManufacturingCapabilityReview();
+  }
+  if (activeSectionId === "suppliers") {
+    mainContent.innerHTML = renderSuppliers();
+    reviewPanel.innerHTML = renderSupplierReview();
+  }
 }
 
 function renderAiDrafts() {
