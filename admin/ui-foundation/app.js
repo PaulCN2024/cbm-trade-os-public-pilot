@@ -1,7 +1,7 @@
 import { getAdminAccessToken } from "../../lib/admin-auth.js";
 
 const navItems = [
-  { id: "dashboard", label: "Dashboard" },
+  { id: "dashboard", label: "工作台" },
   { id: "customers", label: "客户" },
   { id: "companies", label: "公司" },
   { id: "inquiries", label: "询盘" },
@@ -19,9 +19,9 @@ const navItems = [
 
 const sections = {
   dashboard: {
-    title: "Admin Dashboard",
+    title: "CBM 工作台",
     description: "A calm operating view for leads, companies, products and draft reviews.",
-    sectionTitle: "Dashboard Overview",
+    sectionTitle: "工作台",
     sectionHelp: "Foundation layout for future business modules.",
     content: renderDashboard,
     review: renderDashboardReview,
