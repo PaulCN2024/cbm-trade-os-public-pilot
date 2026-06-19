@@ -138,7 +138,13 @@ function safetyPayload(disabledActions = DISABLED_ACTIONS) {
 }
 
 function isSupportedResource(resource) {
-  return resource === "dashboard-summary" || resource === "customers" || resource === "inquiries";
+  return (
+    resource === "dashboard-summary" ||
+    resource === "customers" ||
+    resource === "inquiries" ||
+    resource === "ai-review" ||
+    resource === "supplier-capabilities"
+  );
 }
 
 function standardPayload({ resource, records = [], summary = {}, warnings = [] }) {
@@ -223,6 +229,39 @@ function inquiryRecord(row) {
     reply_draft_zh: row.reply_draft_zh || "",
     reply_draft_es: row.reply_draft_es || "",
     next_follow_up_at: row.next_follow_up_at || "",
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function aiReviewRecord(row) {
+  return {
+    id: row.id,
+    title: safeText(row.title || row.inquiry_title || row.analysis_title, "AI 分析记录"),
+    type: safeText(row.draft_type || row.analysis_type || row.type, "AI 分析记录"),
+    category: safeText(row.category || row.task_type || row.source_type, "AI 分析记录"),
+    risk: safeText(row.risk_level || arrayValue(row.risk_flags).join("、"), "暂无风险等级"),
+    status: safeText(row.approval_status || row.status || (row.approval_required === false ? "仅展示" : "待人工复核"), "待人工复核"),
+    summary: truncateText(row.ai_summary || row.summary || row.analysis_summary, "需要人工确认", 240),
+    suggestion: truncateText(row.suggestion || row.recommended_next_action || row.suggested_reply || row.reply_draft_zh || row.reply_draft_en, "需要人工确认", 240),
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function supplierCapabilityRecord(row) {
+  const title = safeText(row.title || row.name || row.capability_name || row.equipment, "能力资料");
+  return {
+    id: row.id,
+    title,
+    name: title,
+    supplier: row.supplier || row.supplier_name || row.supplier_company || "",
+    company: row.company || row.company_name || row.supplier_company || "",
+    capability_category: safeText(row.capability_category || row.category || row.capability_line, "能力资料"),
+    process: safeText(row.process || row.manufacturing_method || row.equipment || row.capability_line, "需要供应商确认"),
+    status: safeText(row.supplier_status || row.status || row.capability_status, "待人工核实"),
+    risk: safeText(row.risk_level || row.risk, "暂无风险等级"),
+    summary: truncateText(row.summary || row.public_description || row.monthly_capacity, "需要供应商确认", 240),
     created_at: row.created_at || "",
     updated_at: row.updated_at || "",
   };
@@ -448,6 +487,55 @@ async function readInquiries(response, supabase) {
   );
 }
 
+async function readAiReview(response, supabase) {
+  const warnings = [];
+  const aiReviews = await readSource({
+    supabase,
+    table: "ai_inquiry_analyses",
+    warning: "ai_review_source_unavailable",
+    warnings,
+  });
+
+  sendJson(
+    response,
+    200,
+    standardPayload({
+      resource: "ai-review",
+      records: aiReviews.map(aiReviewRecord),
+      summary: {
+        total_records: aiReviews.length,
+        review_required_records: aiReviews.filter((record) => record.approval_required !== false || statusNeedsReview(record.approval_status || record.status)).length,
+        risk_flag_records: aiReviews.filter((record) => arrayValue(record.risk_flags).length > 0).length,
+      },
+      warnings,
+    })
+  );
+}
+
+async function readSupplierCapabilities(response, supabase) {
+  const warnings = [];
+  const capabilities = await readSource({
+    supabase,
+    table: "manufacturing_capabilities",
+    warning: "supplier_capabilities_source_unavailable",
+    warnings,
+  });
+
+  sendJson(
+    response,
+    200,
+    standardPayload({
+      resource: "supplier-capabilities",
+      records: capabilities.map(supplierCapabilityRecord),
+      summary: {
+        total_records: capabilities.length,
+        review_required_records: capabilities.filter((record) => statusNeedsReview(record.supplier_status || record.status || record.capability_status)).length,
+      },
+      warnings,
+    })
+  );
+}
+
 module.exports = async function handler(request, response) {
   try {
     if (request.method !== "GET") {
@@ -481,6 +569,18 @@ module.exports = async function handler(request, response) {
     if (resource === "inquiries") {
       const supabase = getSupabaseClient(request);
       await readInquiries(response, supabase);
+      return;
+    }
+
+    if (resource === "ai-review") {
+      const supabase = getSupabaseClient(request);
+      await readAiReview(response, supabase);
+      return;
+    }
+
+    if (resource === "supplier-capabilities") {
+      const supabase = getSupabaseClient(request);
+      await readSupplierCapabilities(response, supabase);
       return;
     }
   } catch (error) {

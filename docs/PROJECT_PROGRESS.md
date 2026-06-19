@@ -2,17 +2,17 @@
 
 ## 1. Current Progress Summary
 
-- Full product vision progress: 32%
-- Internal MVP / foundation progress: 73%
-- Current phase: Phase UI-2B - Admin Read Dispatcher Production Verified; Dashboard, Customer, and Inquiry UI Migrated To Admin Read Paths
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, and Dashboard/Customer/Inquiry UI migration to the admin-read namespace completed; still no write actions, external channel integration, approval execution, or business execution
+- Full product vision progress: 33%
+- Internal MVP / foundation progress: 75%
+- Current phase: Phase UI-2B - Admin Read Dispatcher Expanded For AI Review And Supplier Capability Resources
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, and AI/Supplier Capability admin-read resource expansion completed; still no write actions, external channel integration, approval execution, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
-- Full vision: 32% `[██████░░░░░░░░░░░░░░]`
-- Internal MVP: 73% `[███████████████░░░░░]`
+- Full vision: 33% `[███████░░░░░░░░░░░░░]`
+- Internal MVP: 75% `[███████████████░░░░░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
@@ -24,6 +24,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Static Admin UI Main Workflow: 100% `[████████████████████]`
 - Commercial Workflow Static Preview: 100% `[████████████████████]`
 - UI-2 Read-only Data Wiring: 35% `[███████░░░░░░░░░░░░░]`
+- Admin-read AI/Supplier Capability Resource Expansion: 100% `[████████████████████]`
 - Read-only Inquiry Data Wiring: 100% `[████████████████████]`
 - Read-only Customer Data Wiring: 100% `[████████████████████]`
 - Read-only AI Review Data Wiring: 100% `[████████████████████]`
@@ -76,6 +77,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Dashboard Summary Admin-read UI Path Migration
 - Customer And Inquiry Admin-read UI Path Migration
 - Customer/Inquiry Admin-read Production Deployment
+- Admin-read AI/Supplier Capability Resource Expansion
 
 ## 4. Current Frozen Foundations
 
@@ -93,6 +95,8 @@ These percentages are planning estimates. They should move only after milestone 
 - Dashboard Summary UI now targets `GET /api/admin-read/dashboard-summary`
 - Customer Center UI now targets `GET /api/admin-read/customers`
 - Inquiry Center UI now targets `GET /api/admin-read/inquiries`
+- Admin Read Dispatcher now supports `GET /api/admin-read/ai-review`
+- Admin Read Dispatcher now supports `GET /api/admin-read/supplier-capabilities`
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
 
@@ -126,11 +130,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-RELEASE-018 - Deploy Admin Read UI Path Migration And Smoke Test
-2. CBM-CODEX-RELEASE-013 - Authenticated Admin API Smoke Test Execution if safe token exists
-3. CBM-CODEX-SPRINT-DATA-011 - Migrate Remaining Read-only UI Paths To Admin Read If Planned
+1. CBM-CODEX-SPRINT-DATA-011 - Migrate AI And Supplier Capability UI To Admin Read Paths
+2. CBM-CODEX-RELEASE-020 - Deploy AI/Supplier Admin-read Resource Expansion And Smoke Test
+3. CBM-CODEX-RELEASE-013 - Authenticated Admin API Smoke Test Execution if safe token exists
 4. CBM-CODEX-SPRINT-API-PLAN-002 - File Metadata Read-only API Plan
-5. CBM-CODEX-SPRINT-API-PLAN-003 - Quotation Read-only API Plan
+5. CBM-CODEX-SPRINT-DATA-012 - Production Admin-read Path Coverage Audit
 
 ## 9. How To Update This File
 
