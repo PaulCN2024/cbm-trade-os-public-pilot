@@ -1638,9 +1638,21 @@ function renderWorkbenchCard(card) {
       <div class="workbench-card-value">
         <strong>${escapeHtml(card.value)}</strong>
       </div>
+      <span class="workbench-card-meter" style="--meter-width: ${getWorkbenchCardMeterWidth(card)}%;" aria-hidden="true"><i></i></span>
       <small>${escapeHtml(card.subtitle)}</small>
     </article>
   `;
+}
+
+function getWorkbenchCardMeterWidth(card) {
+  const numericValue = Number.parseInt(String(card?.value ?? "").replace(/[^\d]/g, ""), 10);
+  if (Number.isFinite(numericValue)) {
+    return Math.max(18, Math.min(92, numericValue * 12));
+  }
+  if (card?.tone === "danger") return 72;
+  if (card?.tone === "warning") return 58;
+  if (card?.tone === "info") return 48;
+  return 36;
 }
 
 function renderWorkbenchQueueItem(item) {
