@@ -171,6 +171,7 @@ const AI_REVIEW_ENDPOINT = "/api/admin-read/ai-review";
 const SUPPLIER_CAPABILITIES_ENDPOINT = "/api/admin-read/supplier-capabilities";
 const DOCUMENTS_ENDPOINT = "/api/admin-read/documents";
 const PRE_QUOTATION_REVIEW_ENDPOINT = "/api/admin-read/pre-quotation-review";
+const QUOTATIONS_ENDPOINT = "/api/admin-read/quotations";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
 
@@ -661,6 +662,48 @@ const quoteReviewQueueItems = [
     aiSuggestion: "草稿仅供参考，必须人工确认最终规格、价格和交期边界。",
     humanNextStep: "整理报价资料，人工复核后再决定是否进入正式流程。",
     disabledCapabilities: ["不可自动发送", "不可自动生成 PI", "不可确认订单"],
+  },
+];
+
+const quotationMetadataFallback = [
+  {
+    quote_no: "QT-DEMO-001",
+    inquiry_id: "Panama facade inquiry",
+    customer_name: "Panama facade contractor demo",
+    quote_status: "草稿仅供内部查看",
+    currency: "USD",
+    total_amount: "金额暂不展示",
+    item_count: "明细暂不展示",
+    human_review_required: true,
+    safety_status: "静态预览 fallback",
+    created_at: "2026-06-20",
+    updated_at: "2026-06-20",
+  },
+  {
+    quote_no: "QT-DEMO-002",
+    inquiry_id: "Peru drywall profile inquiry",
+    customer_name: "Peru building materials importer demo",
+    quote_status: "待人工复核",
+    currency: "USD",
+    total_amount: "金额暂不展示",
+    item_count: "明细暂不展示",
+    human_review_required: true,
+    safety_status: "静态预览 fallback",
+    created_at: "2026-06-20",
+    updated_at: "2026-06-20",
+  },
+  {
+    quote_no: "QT-DEMO-003",
+    inquiry_id: "Indonesia ceiling system inquiry",
+    customer_name: "Indonesia factory project demo",
+    quote_status: "信息待补充",
+    currency: "USD",
+    total_amount: "金额暂不展示",
+    item_count: "明细暂不展示",
+    human_review_required: true,
+    safety_status: "静态预览 fallback",
+    created_at: "2026-06-20",
+    updated_at: "2026-06-20",
   },
 ];
 
@@ -1253,6 +1296,7 @@ const capabilityWorkflowItems = [
 const aiDraftApiState = createReadOnlyState("drafts");
 const documentApiState = createReadOnlyState("documents");
 const preQuotationApiState = createReadOnlyState("reviews");
+const quotationMetadataApiState = createReadOnlyState("quotations");
 
 function badge(label, type = "") {
   return `<span class="badge ${type}">${escapeHtml(label)}</span>`;
@@ -1346,6 +1390,7 @@ function setSection(sectionId) {
   }
   if (sectionId === "quotations") {
     loadPreQuotationReviewReadOnly();
+    loadQuotationMetadataReadOnly();
   }
 }
 
@@ -4071,6 +4116,7 @@ function renderFileReview() {
 
 function renderQuotations() {
   const reviewModel = getQuoteReviewViewModel();
+  const metadataModel = getQuotationMetadataViewModel();
   const statusNotice =
     preQuotationApiState.status === "loading"
       ? renderDataStatus("loading", "正在加载报价前复核", `正在请求 GET ${PRE_QUOTATION_REVIEW_ENDPOINT}。`)
@@ -4080,6 +4126,16 @@ function renderQuotations() {
       ? renderDataStatus("empty", "暂无实时报价前复核", "当前没有可用实时复核数据，继续显示静态预览（安全示例）。")
       : preQuotationApiState.status === "loaded"
       ? renderDataStatus("success", "报价前复核数据已加载", `数据来源：${preQuotationApiState.source}。只读复核列表，未连接价格计算、报价、PI、合同或订单动作。`)
+      : "";
+  const metadataStatusNotice =
+    quotationMetadataApiState.status === "loading"
+      ? renderDataStatus("loading", "正在加载报价元数据", `正在请求 GET ${QUOTATIONS_ENDPOINT}。`)
+      : quotationMetadataApiState.status === "error"
+      ? renderDataStatus("error", "报价元数据 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。系统提示：${quotationMetadataApiState.error}`)
+      : quotationMetadataApiState.status === "empty"
+      ? renderDataStatus("empty", "暂无实时报价元数据", "当前没有可用实时报价元数据，继续显示静态预览 fallback。")
+      : quotationMetadataApiState.status === "loaded"
+      ? renderDataStatus("success", "报价元数据已加载", `数据来源：${quotationMetadataApiState.source}。只读报价记录，仅展示安全元数据，不展示明细、成本、利润、付款或银行信息。`)
       : "";
   return `
     <div class="quote-review-preview" aria-label="报价前复核只读工作流预览">
@@ -4124,6 +4180,32 @@ function renderQuotations() {
           ${reviewModel.items.map(renderQuoteQueueItem).join("")}
         </div>
       </section>
+
+      <section class="quote-review-section quotation-metadata-section" aria-label="正式报价元数据只读列表">
+        ${metadataStatusNotice}
+        <div class="workbench-section-header">
+          <div>
+            <span>QUOTATION METADATA</span>
+            <h3>正式报价元数据</h3>
+          </div>
+          <p>${escapeHtml(metadataModel.isLive ? "只读展示已存在的报价元数据，不计算价格、不生成报价单、不发送客户。" : "静态预览 fallback，不代表真实报价或客户可用状态。")}</p>
+        </div>
+        <div class="quotation-metadata-intro">
+          <div>
+            <span class="state-label">${escapeHtml(metadataModel.sourceLabel)}</span>
+            <p>报价前复核用于判断资料是否适合人工准备报价；正式报价元数据只展示已有报价记录的安全摘要。</p>
+          </div>
+          <div class="quote-review-badges">
+            ${badge("只读报价记录", "active")}
+            ${badge("仅供内部查看", "draft")}
+            ${badge("明细暂不展示", "pending")}
+            ${badge("不发送客户", "pending")}
+          </div>
+        </div>
+        <div class="quotation-metadata-grid">
+          ${metadataModel.items.map(renderQuotationMetadataCard).join("")}
+        </div>
+      </section>
     </div>
   `;
 }
@@ -4145,6 +4227,123 @@ function getQuoteReviewViewModel() {
         : "静态预览（安全示例）",
     queueCountLabel: isLive ? `${items.length} 条 admin-read 复核记录` : "6 条静态示例",
   };
+}
+
+function getQuotationMetadataViewModel() {
+  const isLive = quotationMetadataApiState.status === "loaded" && quotationMetadataApiState.quotations.length > 0;
+  const items = isLive
+    ? quotationMetadataApiState.quotations
+    : quotationMetadataFallback.map((record, index) => mapQuotationMetadataRecord(record, index));
+  return {
+    isLive,
+    items,
+    sourceLabel: isLive
+      ? "实时只读数据"
+      : quotationMetadataApiState.status === "error"
+        ? "API 暂不可用，显示静态预览"
+        : "静态预览 fallback",
+  };
+}
+
+function normalizeQuotationMetadataRecords(records) {
+  return (Array.isArray(records) ? records : []).map(mapQuotationMetadataRecord);
+}
+
+function mapQuotationMetadataRecord(record, index) {
+  const status = normalizeQuotationMetadataStatus(record.quote_status || record.status || record.safety_status);
+  return {
+    quoteNo: firstDisplayValue([record.quote_no, record.quotation_no, record.code, `QT-META-${index + 1}`]),
+    inquiryRef: firstDisplayValue([record.inquiry_id, record.inquiry_title, record.inquiry_ref, "询盘关联待人工确认"]),
+    customerName: firstDisplayValue([record.customer_name, record.company_name, "客户信息待人工确认"]),
+    quoteStatus: status,
+    currency: normalizeQuotationCurrency(record.currency),
+    totalAmount: normalizeQuotationAmount(record.total_amount, record.amount_total),
+    itemCount: normalizeQuotationItemCount(record.item_count, record.items_count),
+    reviewRequired: normalizeQuotationReviewRequired(record.human_review_required, status),
+    safetyStatus: normalizeQuotationSafetyStatus(record.safety_status, status),
+    createdAt: normalizeDateLabel(record.created_at),
+    updatedAt: normalizeDateLabel(record.updated_at),
+  };
+}
+
+function normalizeQuotationMetadataStatus(value) {
+  const status = String(value || "").trim().toLowerCase();
+  if (!status) return "待人工复核";
+  if (status.includes("missing") || status.includes("incomplete") || status.includes("信息待补充")) return "信息待补充";
+  if (status.includes("draft") || status.includes("草稿")) return "草稿仅供内部查看";
+  if (status.includes("review") || status.includes("pending") || status.includes("复核")) return "待人工复核";
+  if (status.includes("approved") || status.includes("sent") || status.includes("confirmed")) return "状态需人工复核";
+  return String(value);
+}
+
+function normalizeQuotationCurrency(value) {
+  const currency = String(value || "").trim().toUpperCase();
+  return currency || "USD";
+}
+
+function normalizeQuotationAmount(...values) {
+  const value = values.find((item) => item !== undefined && item !== null && item !== "");
+  if (value === undefined) return "金额暂不展示";
+  if (typeof value === "number" && Number.isFinite(value)) return `只读合计 ${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  return String(value);
+}
+
+function normalizeQuotationItemCount(...values) {
+  const value = values.find((item) => item !== undefined && item !== null && item !== "");
+  if (value === undefined) return "明细暂不展示";
+  if (typeof value === "number" && Number.isFinite(value)) return `${value} 项（明细暂不展示）`;
+  return `${String(value)}（明细暂不展示）`;
+}
+
+function normalizeQuotationReviewRequired(value, status) {
+  if (value === false && status === "草稿仅供内部查看") return "仍需人工确认";
+  return value === false ? "未标记，但仍需人工确认" : "待人工复核";
+}
+
+function normalizeQuotationSafetyStatus(value, status) {
+  const safety = String(value || "").trim();
+  if (safety) return safety;
+  if (status === "信息待补充") return "资料待补充";
+  if (status === "草稿仅供内部查看") return "仅供内部查看";
+  return "人工复核必需";
+}
+
+function normalizeDateLabel(value) {
+  const date = String(value || "").trim();
+  return date || "日期待确认";
+}
+
+function renderQuotationMetadataCard(item) {
+  return `
+    <article class="quotation-metadata-card">
+      <div class="quotation-metadata-card-header">
+        <div>
+          <span class="workbench-category">报价元数据</span>
+          <h4>${escapeHtml(item.quoteNo)}</h4>
+        </div>
+        <span class="quote-status">${escapeHtml(item.quoteStatus)}</span>
+      </div>
+      <dl>
+        <dt>客户</dt>
+        <dd>${escapeHtml(item.customerName)}</dd>
+        <dt>关联询盘</dt>
+        <dd>${escapeHtml(item.inquiryRef)}</dd>
+        <dt>币种 / 合计</dt>
+        <dd>${escapeHtml(item.currency)} / ${escapeHtml(item.totalAmount)}</dd>
+        <dt>明细</dt>
+        <dd>${escapeHtml(item.itemCount)}</dd>
+        <dt>人工复核</dt>
+        <dd>${escapeHtml(item.reviewRequired)}</dd>
+        <dt>安全状态</dt>
+        <dd>${escapeHtml(item.safetyStatus)}</dd>
+        <dt>更新时间</dt>
+        <dd>${escapeHtml(item.updatedAt || item.createdAt)}</dd>
+      </dl>
+      <div class="disabled-chip-row">
+        ${renderDisabledCapabilities(["不计算价格", "不生成报价单", "不发送客户", "不生成 PI / 合同 / 订单", "不展示报价明细"])}
+      </div>
+    </article>
+  `;
 }
 
 function normalizePreQuotationReviewRecords(records) {
@@ -4659,6 +4858,25 @@ function loadPreQuotationReviewReadOnly() {
 }
 
 function refreshPreQuotationReviewView() {
+  if (activeSectionId !== "quotations") return;
+  mainContent.innerHTML = renderQuotations();
+  reviewPanel.innerHTML = renderQuotationReview();
+}
+
+function loadQuotationMetadataReadOnly() {
+  return loadReadOnlyList({
+    state: quotationMetadataApiState,
+    collectionKey: "quotations",
+    endpoint: QUOTATIONS_ENDPOINT,
+    payloadKey: "quotations",
+    fallbackRecords: quotationMetadataFallback,
+    fallbackSource: fallbackLabel,
+    refresh: refreshQuotationMetadataView,
+    normalize: normalizeQuotationMetadataRecords,
+  });
+}
+
+function refreshQuotationMetadataView() {
   if (activeSectionId !== "quotations") return;
   mainContent.innerHTML = renderQuotations();
   reviewPanel.innerHTML = renderQuotationReview();

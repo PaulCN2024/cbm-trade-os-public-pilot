@@ -1420,6 +1420,78 @@ tr:last-child td {
   gap: 10px;
 }
 
+.quotation-metadata-section {
+  padding-top: 6px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.quotation-metadata-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid #dce8f6;
+  border-radius: var(--radius);
+  background: #f8fbff;
+}
+
+.quotation-metadata-intro p {
+  max-width: 720px;
+  margin: 6px 0 0;
+  color: var(--muted-strong);
+  font-size: 13px;
+}
+
+.quotation-metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quotation-metadata-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.quotation-metadata-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.quotation-metadata-card h4 {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.quotation-metadata-card dl {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 6px 10px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.quotation-metadata-card dt {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.quotation-metadata-card dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--muted-strong);
+  overflow-wrap: anywhere;
+}
+
 .quote-summary-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2614,6 +2686,7 @@ tr:last-child td {
   .ai-review-summary-grid,
   .file-summary-grid,
   .quote-summary-grid,
+  .quotation-metadata-grid,
   .commercial-summary-grid,
   .supplier-summary-grid,
   .capability-summary-grid,
@@ -2652,6 +2725,8 @@ tr:last-child td {
     .file-review-card dl,
     .quote-summary-grid,
     .quote-review-card dl,
+    .quotation-metadata-grid,
+    .quotation-metadata-card dl,
     .commercial-summary-grid,
     .commercial-review-card dl,
     .supplier-summary-grid,
@@ -2673,6 +2748,7 @@ tr:last-child td {
   .ai-review-preview-header,
   .file-center-header,
   .quote-review-header,
+  .quotation-metadata-intro,
   .commercial-workflow-header,
   .supplier-workflow-header,
   .capability-workflow-header,
@@ -2690,6 +2766,7 @@ tr:last-child td {
   .file-review-heading,
   .quote-review-queue-main,
   .quote-review-heading,
+  .quotation-metadata-card-header,
   .commercial-review-queue-main,
   .commercial-review-heading,
   .supplier-queue-main,
