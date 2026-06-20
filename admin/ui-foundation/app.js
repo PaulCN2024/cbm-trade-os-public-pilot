@@ -2,6 +2,7 @@ import { getAdminAccessToken } from "../../lib/admin-auth.js";
 
 const navItems = [
   { id: "dashboard", label: "工作台" },
+  { id: "prospecting", label: "AI 开发客户" },
   { id: "inquiries", label: "询盘" },
   { id: "customers", label: "客户" },
   { id: "companies", label: "客户公司" },
@@ -26,6 +27,14 @@ const sections = {
     sectionHelp: "今日待处理概览和复核优先级预览；数据可能来自实时只读路径或静态预览（安全示例）。",
     content: renderDashboard,
     review: renderDashboardReview,
+  },
+  prospecting: {
+    title: "AI 开发客户",
+    description: "基于目标市场或样本客户发现相似潜在客户；当前为静态只读预览，不搜索、不抓取、不发送。",
+    sectionTitle: "AI 开发客户",
+    sectionHelp: "AI Prospecting 静态预览。当前不调用搜索 API、不解析文件、不创建客户、不外发消息。",
+    content: renderProspecting,
+    review: renderProspectingReview,
   },
   companies: {
     title: "公司",
@@ -977,6 +986,86 @@ const workbenchQueueItems = [
   },
 ];
 
+const prospectingModeCards = [
+  {
+    title: "目标市场开发",
+    description: "根据国家、产品、客户类型和公开来源范围，规划后续合规开发方向。",
+    chips: [
+      "国家/地区：秘鲁、巴拿马、印尼",
+      "产品：铝合金门窗、幕墙、轻钢龙骨、吊顶系统",
+      "客户类型：工程承包商、进口商、分销商",
+      "数据来源：公开官网 / 行业目录 / 展会页面",
+    ],
+    status: ["搜索 API 未接入", "当前仅为流程预览", "不执行自动搜索"],
+  },
+  {
+    title: "相似客户发现",
+    description: "从一个样本客户画像出发，展示未来如何寻找相似公司和产品需求。",
+    chips: [
+      "样本客户：Panama Facade Contractor Demo",
+      "样本来源：官网 URL / 询盘文本 / 产品照片 / PDF 资料",
+      "AI 提取画像：幕墙工程商、门窗需求、商业建筑项目",
+      "相似客户方向：同区域工程公司、建材进口商、门窗分销商",
+    ],
+    status: ["文件上传/解析/OCR 未开放", "当前仅为静态预览", "不自动创建客户"],
+  },
+];
+
+const prospectingLeadCards = [
+  {
+    company: "Andean Drywall Distributor Demo",
+    region: "Peru",
+    productFit: "轻钢龙骨 / drywall profiles",
+    score: 82,
+    risk: "中",
+    riskTone: "warning",
+    evidence: ["行业目录", "官网关键词"],
+    nextStep: "人工确认公司类型与联系方式",
+  },
+  {
+    company: "Panama Facade Systems Demo",
+    region: "Panama",
+    productFit: "铝合金门窗 / curtain wall",
+    score: 88,
+    risk: "低",
+    riskTone: "active",
+    evidence: ["官网项目案例"],
+    nextStep: "人工查看项目类型",
+  },
+  {
+    company: "Indonesia Ceiling Supply Demo",
+    region: "Indonesia",
+    productFit: "吊顶系统 / ceiling system",
+    score: 76,
+    risk: "中",
+    riskTone: "warning",
+    evidence: ["建材分销页面"],
+    nextStep: "确认是否进口商/分销商",
+  },
+];
+
+const prospectingWorkflowSteps = [
+  "目标市场/样本客户",
+  "AI 提取画像",
+  "相似客户发现",
+  "来源证据",
+  "合规检查",
+  "人工复核",
+  "开发草稿",
+  "未来审批发送",
+];
+
+const prospectingSafetyItems = [
+  "不抓取 LinkedIn",
+  "不绕过登录",
+  "不自动采集私人联系方式",
+  "不自动发送邮件/WhatsApp",
+  "不创建客户",
+  "不生成报价",
+  "保留来源记录",
+  "后续支持 do-not-contact / opt-out",
+];
+
 const inquiryWorkflowSummaryCards = [
   {
     label: "真实感试用询盘",
@@ -1751,6 +1840,186 @@ function renderWorkbenchStaticReview(model = getDashboardWorkbenchViewModel()) {
       <h4>禁用能力</h4>
       <div class="disabled-chip-row">
         ${renderDisabledCapabilities(["不可发送", "不可报价", "不可生成 PI", "不可下单", "不可触发付款 / 生产 / 发货"])}
+      </div>
+    </div>
+  `;
+}
+
+function renderProspecting() {
+  return `
+    <div class="prospecting-preview" aria-label="AI 开发客户静态预览">
+      <div class="prospecting-header">
+        <div>
+          <span class="state-label">AI Prospecting</span>
+          <h3>AI 开发客户</h3>
+          <p>AI Prospecting Center：基于目标市场或样本客户，发现相似潜在客户。当前为只读预览，不执行搜索、不抓取、不发送。</p>
+        </div>
+        <div class="prospecting-badges" aria-label="AI 开发客户预览状态">
+          ${badge("只读预览", "draft")}
+          ${badge("不自动搜索", "pending")}
+          ${badge("不自动发送", "pending")}
+          ${badge("人工复核", "approval")}
+          ${badge("合规优先", "active")}
+        </div>
+      </div>
+
+      <section class="prospecting-section" aria-label="开发模式预览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>开发模式</h3>
+            <p>先把目标市场开发和相似客户发现拆成两个只读流程，不连接真实搜索或外联。</p>
+          </div>
+          <span>静态流程</span>
+        </div>
+        <div class="prospecting-grid">
+          ${prospectingModeCards.map(renderProspectingModeCard).join("")}
+        </div>
+      </section>
+
+      <div class="prospecting-layout">
+        <section class="prospecting-section" aria-label="相似客户线索队列">
+          <div class="workbench-section-header">
+            <div>
+              <h3>相似客户发现</h3>
+              <p>候选线索仅为 demo 数据，分数只表示未来 AI 可解释评分方向。</p>
+            </div>
+            <span>3 条 demo 线索</span>
+          </div>
+          <div class="prospecting-lead-list">
+            ${prospectingLeadCards.map(renderProspectingLeadCard).join("")}
+          </div>
+        </section>
+
+        <aside class="ai-explain-panel" aria-label="AI 推荐理由">
+          <div class="workbench-review-heading">
+            <div>
+              <h3>AI 为什么推荐</h3>
+              <p class="workbench-review-note">固定示例：Panama Facade Contractor Demo 相似客户方向。</p>
+            </div>
+            ${badge("暂不执行动作", "pending")}
+          </div>
+
+          <dl class="prospecting-explain-list">
+            <dt>匹配的样本特征</dt>
+            <dd>幕墙工程商、门窗需求、商业建筑项目、拉美市场。</dd>
+            <dt>相关产品</dt>
+            <dd>铝合金门窗、curtain wall、facade system、轻钢龙骨和吊顶系统。</dd>
+            <dt>缺失信息</dt>
+            <dd>采购角色、进口能力、联系人合规来源、近期项目证据仍需人工确认。</dd>
+            <dt>合规提醒</dt>
+            <dd>AI 仅基于公开来源和样本画像生成相似客户建议。当前阶段不自动搜索、不保存真实线索、不发送开发信，所有线索必须人工复核。</dd>
+          </dl>
+        </aside>
+      </div>
+
+      <section class="prospecting-section prospecting-safety-panel" aria-label="合规安全预览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>合规 / 安全边界</h3>
+            <p>开发客户必须先有公开来源、证据记录、人工复核和未来 opt-out / do-not-contact 机制。</p>
+          </div>
+          <span>合规优先</span>
+        </div>
+        <div class="prospecting-compliance-grid">
+          ${prospectingSafetyItems.map((item) => `<span class="compliance-chip">${escapeHtml(item)}</span>`).join("")}
+        </div>
+      </section>
+
+      <section class="prospecting-section" aria-label="未来开发流程">
+        <div class="workbench-section-header">
+          <div>
+            <h3>未来工作流</h3>
+            <p>从目标或样本进入 AI 画像，再进入来源证据、合规检查和人工复核；发送必须等未来审批链。</p>
+          </div>
+          <span>不执行</span>
+        </div>
+        <div class="workflow-stepper" aria-label="AI 开发客户未来流程">
+          ${prospectingWorkflowSteps.map(renderProspectingWorkflowStep).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderProspectingModeCard(card) {
+  return `
+    <article class="prospecting-mode-card">
+      <div>
+        <h4>${escapeHtml(card.title)}</h4>
+        <p>${escapeHtml(card.description)}</p>
+      </div>
+      <div class="prospecting-chip-row">
+        ${card.chips.map((item) => `<span class="evidence-chip">${escapeHtml(item)}</span>`).join("")}
+      </div>
+      <div class="prospecting-status-row" aria-label="${escapeHtml(card.title)}状态">
+        ${card.status.map((item) => badge(item, item.includes("未") || item.includes("不") ? "pending" : "draft")).join("")}
+      </div>
+    </article>
+  `;
+}
+
+function renderProspectingLeadCard(lead) {
+  const evidenceHtml = renderChipList(lead.evidence, "evidence-chip");
+  return `
+    <article class="prospecting-lead-card">
+      <div class="prospecting-lead-heading">
+        <div>
+          <span class="workbench-category">${escapeHtml(lead.region)}</span>
+          <h4>${escapeHtml(lead.company)}</h4>
+          <small>${escapeHtml(lead.productFit)}</small>
+        </div>
+        <span class="lead-score" aria-label="相似度 ${escapeHtml(lead.score)}">相似度 ${escapeHtml(lead.score)}</span>
+      </div>
+      <div class="prospecting-lead-meta">
+        ${badge(`风险：${lead.risk}`, lead.riskTone)}
+        <span>来源证据：${evidenceHtml}</span>
+      </div>
+      <p><strong>人工下一步：</strong>${escapeHtml(lead.nextStep)}</p>
+      <div class="disabled-chip-row" aria-label="禁用能力">
+        ${renderDisabledCapabilities(["不可自动搜索", "不可自动发送", "不可创建客户", "不可生成报价"])}
+      </div>
+    </article>
+  `;
+}
+
+function renderProspectingWorkflowStep(step, index) {
+  return `
+    <div class="workflow-step">
+      <span>${index + 1}</span>
+      <strong>${escapeHtml(step)}</strong>
+    </div>
+  `;
+}
+
+function renderProspectingReview() {
+  return `
+    <div class="review-stack">
+      <div class="review-card">
+        <h3>AI 开发客户只读边界</h3>
+        <ul class="check-list">
+          <li>静态预览，不调用搜索 API，不抓取网页，不解析文件</li>
+          <li>不自动发送 Email / WhatsApp，不创建客户，不创建任务</li>
+          <li>不生成报价、PI、订单，不触发付款 / 生产 / 发货</li>
+        </ul>
+      </div>
+      <div class="review-card">
+        <h3>样本客户方向</h3>
+        <dl>
+          <dt>样本客户</dt>
+          <dd>Panama Facade Contractor Demo</dd>
+          <dt>样本来源</dt>
+          <dd>官网 URL / 询盘文本 / 产品照片 / PDF 资料（未来输入类型，仅预览）</dd>
+          <dt>相似客户方向</dt>
+          <dd>同区域工程公司、建材进口商、门窗分销商</dd>
+          <dt>人工复核</dt>
+          <dd>必须确认来源、公司类型、产品匹配和合规边界后才能进入任何后续流程。</dd>
+        </dl>
+      </div>
+      <div class="review-card">
+        <h3>禁用能力</h3>
+        <div class="disabled-chip-row">
+          ${renderDisabledCapabilities(["不可抓取 LinkedIn", "不可绕过登录", "不可采集私人联系方式", "不可发送开发信", "不可创建客户", "不可生成报价"])}
+        </div>
       </div>
     </div>
   `;
