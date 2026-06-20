@@ -3333,6 +3333,290 @@ tbody tr:hover {
     var(--surface);
 }
 
+/* Visual QA Round 2: hierarchy and density polish */
+.topbar {
+  box-shadow:
+    0 18px 42px rgba(15, 23, 42, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+.main-panel {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%),
+    var(--surface);
+}
+
+.review-panel {
+  box-shadow:
+    0 20px 46px rgba(15, 23, 42, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.92) inset;
+}
+
+.panel-header p,
+.workbench-header p,
+.ai-review-preview-header p,
+.file-center-header p,
+.quote-review-header p,
+.commercial-workflow-header p,
+.supplier-workflow-header p,
+.capability-workflow-header p,
+.customer-workflow-header p,
+.inquiry-workflow-header p {
+  max-width: 860px;
+}
+
+.workbench-section-header,
+.ai-review-section > h3,
+.file-center-section > h3,
+.quote-review-section > h3,
+.commercial-workflow-section > h3,
+.supplier-workflow-section > h3,
+.capability-workflow-section > h3,
+.customer-workflow-section > h3,
+.inquiry-workflow-section > h3 {
+  padding: 8px 10px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.workbench-section-header p {
+  max-width: 680px;
+  color: #64748b;
+  font-size: 12.5px;
+}
+
+.workbench-summary-grid,
+.ai-review-summary-grid,
+.file-summary-grid,
+.quote-summary-grid,
+.commercial-summary-grid,
+.supplier-summary-grid,
+.capability-summary-grid,
+.customer-summary-grid,
+.inquiry-summary-grid {
+  align-items: stretch;
+}
+
+.workbench-card,
+.ai-review-summary-card,
+.file-summary-card,
+.quote-summary-card,
+.commercial-summary-card,
+.supplier-summary-card,
+.capability-summary-card,
+.customer-summary-card,
+.inquiry-summary-card {
+  gap: 7px;
+}
+
+.workbench-card span,
+.ai-review-summary-card span,
+.file-summary-card span,
+.quote-summary-card span,
+.commercial-summary-card span,
+.supplier-summary-card span,
+.capability-summary-card span,
+.customer-summary-card span,
+.inquiry-summary-card span {
+  color: #475569;
+  font-weight: 700;
+}
+
+.workbench-card-value {
+  line-height: 1;
+}
+
+.workbench-card-meter {
+  height: 5px;
+  margin: 7px 0 8px;
+}
+
+.workbench-layout {
+  gap: 18px;
+}
+
+.workbench-queue,
+.ai-review-queue,
+.file-review-queue,
+.quote-review-queue,
+.commercial-review-queue,
+.supplier-queue,
+.capability-queue,
+.customer-queue,
+.inquiry-queue {
+  gap: 10px;
+}
+
+.workbench-queue-item,
+.ai-review-queue-item,
+.file-review-queue-item,
+.quote-review-queue-item,
+.commercial-review-queue-item,
+.supplier-queue-item,
+.capability-queue-item,
+.customer-queue-item,
+.inquiry-queue-item {
+  cursor: default;
+}
+
+.workbench-queue-item:hover,
+.ai-review-queue-item:hover,
+.file-review-queue-item:hover,
+.quote-review-queue-item:hover,
+.commercial-review-queue-item:hover,
+.supplier-queue-item:hover,
+.capability-queue-item:hover,
+.customer-queue-item:hover,
+.inquiry-queue-item:hover {
+  transform: none;
+}
+
+.workbench-queue-item p,
+.ai-review-queue-item p,
+.file-review-queue-item p,
+.quote-review-queue-item p,
+.commercial-review-queue-item p,
+.supplier-queue-item p,
+.capability-queue-item p,
+.customer-queue-item p,
+.inquiry-queue-item p {
+  color: #536176;
+  line-height: 1.58;
+}
+
+.workbench-queue-item p strong,
+.ai-review-queue-item p strong,
+.file-review-queue-item p strong,
+.quote-review-queue-item p strong,
+.commercial-review-queue-item p strong,
+.supplier-queue-item p strong,
+.capability-queue-item p strong,
+.customer-queue-item p strong,
+.inquiry-queue-item p strong {
+  color: #334155;
+}
+
+.workbench-review-panel,
+.ai-review-card,
+.file-review-card,
+.quote-review-card,
+.commercial-review-card,
+.supplier-review-card,
+.capability-review-card,
+.customer-review-card,
+.inquiry-review-card {
+  border-color: #cddceb;
+  box-shadow:
+    0 14px 34px rgba(15, 23, 42, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.92) inset;
+}
+
+.workbench-review-group,
+.ai-review-group,
+.file-review-group,
+.quote-review-group,
+.commercial-review-group,
+.supplier-review-group,
+.capability-review-group,
+.customer-review-group,
+.inquiry-review-group {
+  padding-top: 11px;
+}
+
+.disabled-chip {
+  pointer-events: none;
+  user-select: none;
+}
+
+.quote-review-preview,
+.commercial-workflow-preview {
+  padding-top: 2px;
+}
+
+.quote-review-section,
+.commercial-workflow-section {
+  padding: 2px 0;
+}
+
+.quotation-metadata-section {
+  margin-top: 2px;
+  padding-top: 18px;
+  border-top: 2px dashed #d7e1ee;
+}
+
+.quotation-metadata-intro {
+  border-color: #c7d2fe;
+  background:
+    linear-gradient(135deg, #f8fbff, #ffffff 64%, #fefce8),
+    var(--surface);
+}
+
+.quotation-metadata-card {
+  background:
+    linear-gradient(180deg, #ffffff, #fbfdff),
+    var(--surface);
+}
+
+.quotation-metadata-card dt,
+.quote-review-card dt,
+.commercial-review-card dt {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.quotation-metadata-card dd,
+.quote-review-card dd,
+.commercial-review-card dd {
+  color: #1e293b;
+}
+
+.quote-row-group,
+.commercial-row-group {
+  padding: 8px 10px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.quote-review-queue-meta,
+.commercial-review-queue-meta,
+.quote-chip-row,
+.commercial-chip-row,
+.workbench-badges,
+.disabled-chip-row {
+  row-gap: 7px;
+}
+
+.quote-risk,
+.quote-status,
+.quote-chip,
+.commercial-risk,
+.commercial-status,
+.commercial-chip,
+.mode-pill,
+.badge,
+.disabled-chip {
+  line-height: 1.2;
+}
+
+.state-grid {
+  align-items: stretch;
+}
+
+.state-card {
+  min-height: 156px;
+}
+
+.state-card h3 {
+  color: #1e293b;
+}
+
+.state-card p {
+  color: #536176;
+  line-height: 1.6;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nav-button,
   .button,
