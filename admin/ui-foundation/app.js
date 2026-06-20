@@ -2143,12 +2143,12 @@ function renderReadOnlyCompanyCard() {
       <div class="form-grid">
         <label class="field">
           <span>允许动作</span>
-          <input type="text" value="只读查看" readonly />
+          <input type="text" value="只读查看" readonly disabled aria-readonly="true" aria-disabled="true" title="只读预览，暂不支持公司资料编辑或写入" />
           <small>未连接创建或更新 API。</small>
         </label>
         <label class="field">
           <span>安全边界</span>
-          <input type="text" value="不自动发送或承诺" readonly />
+          <input type="text" value="不自动发送或承诺" readonly disabled aria-readonly="true" aria-disabled="true" title="当前为内部试用，不执行发送、承诺或公司资料修改" />
           <small>Messages, quotations and PI are not sent.</small>
         </label>
       </div>
