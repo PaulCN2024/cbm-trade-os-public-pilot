@@ -2,11 +2,14 @@
 
 ## Purpose
 
-Record whether the Knowledge Base read-only foundation SQL was applied during `CBM-CODEX-COMBO-KNOWLEDGE-DATA-AUTO-APPROVAL-001`.
+Record whether the Knowledge Base read-only foundation SQL was applied during:
+
+- `CBM-CODEX-COMBO-KNOWLEDGE-DATA-AUTO-APPROVAL-001`
+- `CBM-CODEX-SUPABASE-EXECUTION-CHANNEL-001`
 
 ## Approval Status
 
-Paul approval was not requested for remote database execution because the local Supabase CLI was unavailable.
+Paul approval was not requested for remote database execution because the local Supabase CLI execution channel remained unavailable.
 
 The command:
 
@@ -14,18 +17,29 @@ The command:
 supabase --version
 ```
 
-returned:
+initially returned:
 
 ```text
 supabase: command not found
 ```
+
+During `CBM-CODEX-SUPABASE-EXECUTION-CHANNEL-001`, Paul approved a Homebrew install attempt and an npx fallback version check.
+
+Results:
+
+- `brew install supabase` installed and linked Supabase CLI `2.107.0`.
+- `supabase --version` failed because the underlying binary was terminated with `Killed: 9`.
+- macOS `spctl` reported the Homebrew-installed binary as `invalid signature`.
+- `npx -y supabase@2.107.0 --version` did not return a version and was terminated after timing out.
+
+No Supabase login, project link, SQL apply, seed apply, or row count verification was attempted.
 
 ## SQL Application Status
 
 - Migration applied: no
 - Demo seed applied: no
 - Method used: none
-- Reason skipped: Supabase CLI was not installed/available in the current shell, and this task forbids installing packages or changing system/project dependencies.
+- Reason skipped: Supabase CLI could not be executed safely after the approved Homebrew install and npx fallback checks.
 
 ## SQL Files Prepared
 
@@ -88,3 +102,7 @@ No secrets were printed, requested, written to files, or committed.
 ## Next Step
 
 Resolve Supabase execution access in a separate approved step, then apply the prepared migration and seed files after Paul explicitly approves the exact database commands.
+
+Current channel status is documented in:
+
+- `docs/ops/supabase-execution-channel-setup-report.md`
