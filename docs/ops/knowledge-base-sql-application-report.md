@@ -126,3 +126,22 @@ No Supabase login, project link, SQL execution, seed execution, row count verifi
 Repair details are documented in:
 
 - `docs/ops/supabase-cli-repair-report.md`
+
+## Manual SQL Execution Pack Prepared
+
+`CBM-CODEX-KNOWLEDGE-SQL-MANUAL-PACK-001` prepared a manual Supabase Dashboard SQL Editor execution path because the local Supabase CLI remains unavailable.
+
+Prepared files:
+
+- `docs/ops/knowledge-base-manual-sql-combined.sql`
+- `docs/ops/knowledge-base-manual-sql-execution-pack.md`
+- `docs/ops/knowledge-base-post-sql-verification-checklist.md`
+
+Status:
+
+- CLI remains unavailable.
+- Manual SQL Editor path is selected.
+- Combined SQL pack was created from the existing migration and DEMO seed SQL files.
+- Codex did not execute SQL.
+- Codex did not touch the remote database.
+- Codex is waiting for Paul manual execution and row count results.
