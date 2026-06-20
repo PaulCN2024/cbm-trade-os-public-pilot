@@ -43,6 +43,17 @@ const PRE_QUOTATION_DISABLED_ACTIONS = Object.freeze([
   "arrange_shipment",
 ]);
 
+const QUOTATION_DISABLED_ACTIONS = Object.freeze([
+  "calculate_price",
+  "generate_quote",
+  "send_quote",
+  "generate_pi",
+  "confirm_order",
+  "request_payment",
+  "start_production",
+  "arrange_shipment",
+]);
+
 const DASHBOARD_HIGH_RISK_TERMS = Object.freeze([
   "price",
   "payment",
@@ -168,7 +179,8 @@ function isSupportedResource(resource) {
     resource === "ai-review" ||
     resource === "supplier-capabilities" ||
     resource === "documents" ||
-    resource === "pre-quotation-review"
+    resource === "pre-quotation-review" ||
+    resource === "quotations"
   );
 }
 
@@ -424,6 +436,50 @@ function preQuotationSummary(records) {
     missing_documents: records.filter((record) => record.readiness_status === "missing_documents").length,
     draft_only: records.filter((record) => record.readiness_status === "draft_only").length,
     high_risk: records.filter((record) => record.risk === "高风险").length,
+  };
+}
+
+function quotationCustomerName(row, customerMap) {
+  const customer = customerMap.get(row.customer_id);
+  return safeText(customerDisplayName(customer), "需要人工确认");
+}
+
+function quotationSafetyStatus(row) {
+  if (row.approval_required !== false) return "human_review_required";
+  return "metadata_only";
+}
+
+function quotationStatus(row) {
+  const status = String(row.status || "").toUpperCase();
+  if (!status || status.includes("DRAFT") || status.includes("NEW") || status.includes("PENDING") || status.includes("REVIEW")) {
+    return "待人工复核";
+  }
+  return "仅供内部查看";
+}
+
+function quotationRecord(row, customerMap) {
+  return {
+    id: row.id || "",
+    quote_no: row.quote_no || "",
+    inquiry_id: row.inquiry_id || "",
+    customer_name: quotationCustomerName(row, customerMap),
+    quote_status: quotationStatus(row),
+    currency: row.currency || "",
+    total_amount: row.total_amount === null || row.total_amount === undefined ? "" : row.total_amount,
+    human_review_required: true,
+    safety_status: quotationSafetyStatus(row),
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function quotationSummary(records) {
+  return {
+    total_quotations: records.length,
+    draft_only: records.filter((record) => record.quote_status === "待人工复核").length,
+    needs_review: records.filter((record) => record.human_review_required).length,
+    missing_review: records.filter((record) => !record.quote_no || record.customer_name === "需要人工确认").length,
+    high_risk: records.filter((record) => record.safety_status === "human_review_required").length,
   };
 }
 
@@ -778,6 +834,42 @@ async function readPreQuotationReview(response, supabase) {
   });
 }
 
+async function readQuotations(response, supabase) {
+  const warnings = ["quotation_projection_limited", "quotation_items_hidden_for_safety", "unsafe_cost_fields_not_exposed"];
+  const quotations = await readSource({
+    supabase,
+    table: "quotations",
+    select: "id,quote_no,inquiry_id,customer_id,status,currency,total_amount,approval_required,created_at,updated_at",
+    warning: "quotations_source_unavailable",
+    warnings,
+  });
+
+  const customers = quotations.length
+    ? await readSource({
+        supabase,
+        table: "customers",
+        select: "id,name,contact_name,company_name,company,created_at,updated_at",
+        warning: "quotation_customers_unavailable",
+        warnings,
+      })
+    : [];
+  const customerMap = new Map(customers.map((record) => [record.id, record]));
+  const records = quotations.map((record) => quotationRecord(record, customerMap));
+
+  sendJson(response, 200, {
+    meta: {
+      generated_at: new Date().toISOString(),
+      source: "admin_read",
+      resource: "quotations",
+      is_fallback: warnings.includes("quotations_source_unavailable"),
+    },
+    records,
+    summary: quotationSummary(records),
+    safety: safetyPayload(QUOTATION_DISABLED_ACTIONS),
+    warnings,
+  });
+}
+
 module.exports = async function handler(request, response) {
   try {
     if (request.method !== "GET") {
@@ -835,6 +927,12 @@ module.exports = async function handler(request, response) {
     if (resource === "pre-quotation-review") {
       const supabase = getSupabaseClient(request);
       await readPreQuotationReview(response, supabase);
+      return;
+    }
+
+    if (resource === "quotations") {
+      const supabase = getSupabaseClient(request);
+      await readQuotations(response, supabase);
       return;
     }
   } catch (error) {
