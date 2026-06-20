@@ -39,9 +39,9 @@ const sections = {
   },
   "knowledge-center": {
     title: "AI 知识库",
-    description: "企业知识库静态预览：沉淀产品、供应商、报价规则、文件资料、沟通模板和安全边界。",
+    description: "企业知识库只读数据预览，优先展示 admin-read 数据，失败时显示安全 fallback。",
     sectionTitle: "AI 知识库",
-    sectionHelp: "AI Knowledge Center 静态只读预览。当前不上传文件、不解析文档、不执行 RAG、不生成 AI 答案。",
+    sectionHelp: "AI Knowledge Center 只读预览。当前不上传文件、不解析文档、不执行 RAG、不生成 AI 答案。",
     content: renderKnowledgeCenter,
     review: renderKnowledgeCenterReview,
   },
@@ -190,8 +190,14 @@ const SUPPLIER_CAPABILITIES_ENDPOINT = "/api/admin-read/supplier-capabilities";
 const DOCUMENTS_ENDPOINT = "/api/admin-read/documents";
 const PRE_QUOTATION_REVIEW_ENDPOINT = "/api/admin-read/pre-quotation-review";
 const QUOTATIONS_ENDPOINT = "/api/admin-read/quotations";
+const KNOWLEDGE_SUMMARY_ENDPOINT = "/api/admin-read/knowledge-summary";
+const KNOWLEDGE_CATEGORIES_ENDPOINT = "/api/admin-read/knowledge-categories";
+const KNOWLEDGE_ITEMS_ENDPOINT = "/api/admin-read/knowledge-items";
+const KNOWLEDGE_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/knowledge-review-queue";
+const KNOWLEDGE_LINKED_CONTEXT_ENDPOINT = "/api/admin-read/knowledge-linked-context";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
+const knowledgeApiState = createKnowledgeState();
 
 const companyPreviewFallback = [
   {
@@ -1223,6 +1229,113 @@ const knowledgeSafetyItems = [
   "不执行 RAG",
 ];
 
+function knowledgeStatusLabel(value) {
+  const labels = {
+    draft: "草稿",
+    needs_review: "待人工验证",
+    verified: "已人工验证",
+    outdated: "可能过期",
+    archived: "已归档",
+    low: "低风险",
+    medium: "中风险",
+    high: "高风险",
+    internal_only: "仅内部",
+    ai_reference_only: "AI 内部参考",
+    customer_safe_after_review: "人工复核后可对客",
+    confidential: "机密",
+    manual_sop: "内部 SOP",
+    supplier_record: "供应商记录",
+    customer_inquiry: "客户询盘",
+    quotation_note: "报价备注",
+    product_catalog: "产品目录",
+    installation_manual: "安装手册",
+    email_template: "邮件模板",
+    ai_draft: "AI 草稿",
+    external_public_reference: "公开来源",
+    file_metadata: "文件元数据",
+  };
+  return labels[value] || value || "待确认";
+}
+
+function knowledgeTone(value) {
+  if (value === "high" || value === "confidential") return "danger";
+  if (value === "medium" || value === "needs_review" || value === "draft" || value === "outdated") return "warning";
+  if (value === "verified" || value === "low") return "active";
+  return "info";
+}
+
+function knowledgeSourceLabel(item) {
+  const sourceType = knowledgeStatusLabel(item.source_type || "");
+  const reference = item.source_reference || item.source || "";
+  return [sourceType, reference].filter(Boolean).join(" · ") || "来源待补充";
+}
+
+function knowledgeHumanVerifiedLabel(item) {
+  if (item.humanVerified !== undefined) return item.humanVerified;
+  return item.human_verified ? "是" : "否";
+}
+
+function knowledgeItemChips(item) {
+  if (Array.isArray(item.chips) && item.chips.length) return item.chips;
+  return [
+    knowledgeStatusLabel(item.verification_status),
+    knowledgeStatusLabel(item.risk_level),
+    knowledgeStatusLabel(item.visibility_scope),
+    item.human_verified ? "已人工验证" : "待人工验证",
+  ].filter(Boolean);
+}
+
+function fallbackKnowledgeViewModel() {
+  return {
+    isLive: false,
+    sourceLabel: fallbackLabel,
+    overviewCards: knowledgeOverviewCards,
+    items: knowledgeItems,
+    reviewQueue: knowledgeVerificationQueue,
+    linkedContext: [],
+    usageRows: knowledgeUsageRows,
+    queueCountLabel: "静态安全示例",
+    headerCopy:
+      "AI Knowledge Center：沉淀产品、供应商、报价规则、文件资料、沟通模板和业务 SOP。当前显示安全 fallback，不上传文件、不解析文档、不执行 RAG。",
+  };
+}
+
+function getKnowledgeCenterViewModel() {
+  const fallback = fallbackKnowledgeViewModel();
+  const isLive = knowledgeApiState.status === "loaded" && knowledgeApiState.source === "api";
+  if (!isLive) {
+    return fallback;
+  }
+
+  const summary = knowledgeApiState.summary || {};
+  const overviewCards = knowledgeApiState.categories.map((category) => ({
+    label: category.name_zh || category.name_en || category.slug || "知识分类",
+    count: String(category.item_count ?? 0),
+    description: category.description || "只读知识分类",
+    status: `已验证 ${category.verified_count ?? 0} / 待验证 ${category.needs_review_count ?? 0}`,
+    note: category.slug || "admin-read knowledge category",
+    tone: category.needs_review_count > 0 ? "warning" : "active",
+  }));
+
+  return {
+    isLive: true,
+    sourceLabel: "实时只读数据",
+    overviewCards: overviewCards.length ? overviewCards : fallback.overviewCards,
+    items: knowledgeApiState.items,
+    reviewQueue: knowledgeApiState.reviewQueue,
+    linkedContext: knowledgeApiState.linkedContext,
+    usageRows: [
+      { label: "知识总数", value: `${summary.total_items ?? knowledgeApiState.items.length} 条` },
+      { label: "已验证", value: `${summary.verified_items ?? 0} 条` },
+      { label: "待人工验证", value: `${summary.needs_review_items ?? knowledgeApiState.reviewQueue.length} 条` },
+      { label: "高风险", value: `${summary.high_risk_items ?? 0} 条` },
+    ],
+    queueCountLabel: `${knowledgeApiState.reviewQueue.length} 条待验证记录`,
+    headerCopy:
+      "AI Knowledge Center：展示 admin-read 知识库只读数据；不上传文件、不解析文档、不执行 RAG、不生成 AI 答案。",
+  };
+}
+
 const inquiryWorkflowSummaryCards = [
   {
     label: "真实感试用询盘",
@@ -1631,6 +1744,9 @@ function setSection(sectionId) {
   if (sectionId === "ai-drafts") {
     loadAiDraftsReadOnly();
   }
+  if (sectionId === "knowledge-center") {
+    loadKnowledgeCenterReadOnly();
+  }
   if (sectionId === "files") {
     loadDocumentsReadOnly();
   }
@@ -1736,6 +1852,19 @@ function createDashboardSummaryState() {
   return {
     status: "idle",
     summary: null,
+    error: "",
+    source: "not loaded",
+  };
+}
+
+function createKnowledgeState() {
+  return {
+    status: "idle",
+    summary: null,
+    categories: [],
+    items: [],
+    reviewQueue: [],
+    linkedContext: [],
     error: "",
     source: "not loaded",
   };
@@ -2183,16 +2312,30 @@ function renderProspectingReview() {
 }
 
 function renderKnowledgeCenter() {
+  const model = getKnowledgeCenterViewModel();
+  const statusNotice =
+    knowledgeApiState.status === "loading"
+      ? renderDataStatus("loading", "正在加载知识库", `正在使用当前管理员会话请求 GET ${KNOWLEDGE_ITEMS_ENDPOINT}。`)
+      : knowledgeApiState.status === "error"
+      ? renderDataStatus("error", "知识库 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。系统提示：${knowledgeApiState.error}`)
+      : knowledgeApiState.status === "empty"
+      ? renderDataStatus("empty", "暂无实时知识库数据", "当前没有可用实时知识库记录，继续显示静态预览 fallback。")
+      : knowledgeApiState.status === "loaded"
+      ? renderDataStatus("success", "知识库数据已加载", `数据来源：${model.sourceLabel}。只读列表，未连接创建、编辑、验证或 RAG 动作。`)
+      : "";
+
   return `
     <div class="ai-knowledge-preview" aria-label="AI 知识库静态预览">
+      ${statusNotice}
       <div class="ai-knowledge-header">
         <div>
           <span class="state-label">AI Knowledge Center</span>
           <h3>AI 知识库</h3>
-          <p>AI Knowledge Center：沉淀产品、供应商、报价规则、文件资料、沟通模板和业务 SOP。当前为只读预览，不上传文件、不解析文档、不执行 RAG。</p>
+          <p>${escapeHtml(model.headerCopy)}</p>
         </div>
         <div class="ai-knowledge-badges" aria-label="AI 知识库预览状态">
-          ${badge("只读预览", "draft")}
+          ${badge(model.sourceLabel, model.isLive ? "active" : "draft")}
+          ${badge("只读", "active")}
           ${badge("不上传文件", "pending")}
           ${badge("不执行 RAG", "pending")}
           ${badge("人工验证", "approval")}
@@ -2204,12 +2347,12 @@ function renderKnowledgeCenter() {
         <div class="workbench-section-header">
           <div>
             <h3>知识总览</h3>
-            <p>先展示企业知识库的分类、来源、验证状态和安全边界，不连接真实知识库或向量检索。</p>
+            <p>展示企业知识库的分类、来源、验证状态和安全边界；真实数据不可用时显示安全 fallback。</p>
           </div>
-          <span>静态知识分类</span>
+          <span>${escapeHtml(model.isLive ? "admin-read 知识分类" : "静态知识分类")}</span>
         </div>
         <div class="knowledge-grid">
-          ${knowledgeOverviewCards.map(renderKnowledgeOverviewCard).join("")}
+          ${model.overviewCards.map(renderKnowledgeOverviewCard).join("")}
         </div>
       </section>
 
@@ -2217,13 +2360,13 @@ function renderKnowledgeCenter() {
         <section class="ai-knowledge-section" aria-label="知识条目预览">
           <div class="workbench-section-header">
             <div>
-              <h3>知识条目</h3>
-              <p>示例条目展示未来知识库如何记录来源、可信度和人工验证状态。</p>
+            <h3>知识条目</h3>
+              <p>知识条目展示来源、可信度、人工验证状态、风险等级和可见范围。</p>
             </div>
-            <span>4 条 demo 知识</span>
+            <span>${escapeHtml(model.isLive ? `${model.items.length} 条只读知识` : "4 条 demo 知识")}</span>
           </div>
           <div class="knowledge-item-list">
-            ${knowledgeItems.map(renderKnowledgeItemCard).join("")}
+            ${model.items.map(renderKnowledgeItemCard).join("") || renderKnowledgeEmptyState("暂无知识条目")}
           </div>
         </section>
 
@@ -2236,7 +2379,7 @@ function renderKnowledgeCenter() {
             ${badge("不生成答案", "pending")}
           </div>
           <dl class="knowledge-usage-list">
-            ${knowledgeUsageRows
+            ${model.usageRows
               .map(
                 (row) => `
                   <dt>${escapeHtml(row.label)}</dt>
@@ -2254,10 +2397,10 @@ function renderKnowledgeCenter() {
             <h3>人工验证队列</h3>
             <p>AI 生成或归纳的知识必须先进入人工验证；未验证内容不可用于客户承诺。</p>
           </div>
-          <span>待人工确认</span>
+          <span>${escapeHtml(model.queueCountLabel)}</span>
         </div>
         <div class="knowledge-verification-grid">
-          ${knowledgeVerificationQueue.map(renderKnowledgeVerificationCard).join("")}
+          ${model.reviewQueue.map(renderKnowledgeVerificationCard).join("") || renderKnowledgeEmptyState("暂无待验证知识")}
         </div>
       </section>
 
@@ -2292,7 +2435,7 @@ function renderKnowledgeCenter() {
 
 function renderKnowledgeOverviewCard(card) {
   return `
-    <article class="knowledge-card knowledge-card-${escapeHtml(card.tone)}">
+    <article class="knowledge-card knowledge-card-${escapeHtml(card.tone || "neutral")}">
       <div>
         <span class="knowledge-category-chip">${escapeHtml(card.label)}</span>
         <strong class="knowledge-count">${escapeHtml(card.count)}</strong>
@@ -2307,40 +2450,62 @@ function renderKnowledgeOverviewCard(card) {
 }
 
 function renderKnowledgeItemCard(item) {
+  const category = item.category || item.category_slug || "知识条目";
+  const confidence = item.confidence || knowledgeStatusLabel(item.confidence_level);
+  const summary = item.summary || "知识摘要待补充";
+  const source = item.source || knowledgeSourceLabel(item);
+  const humanVerified = knowledgeHumanVerifiedLabel(item);
   return `
     <article class="knowledge-item-card">
       <div class="knowledge-item-heading">
         <div>
-          <span class="workbench-category">${escapeHtml(item.category)}</span>
+          <span class="workbench-category">${escapeHtml(category)}</span>
           <h4>${escapeHtml(item.title)}</h4>
         </div>
-        ${badge(`可信度：${item.confidence}`, "pending")}
+        ${badge(`可信度：${confidence}`, knowledgeTone(item.confidence_level))}
       </div>
-      <p>${escapeHtml(item.summary)}</p>
+      <p>${escapeHtml(summary)}</p>
       <dl class="knowledge-item-meta">
         <dt>来源</dt>
-        <dd>${escapeHtml(item.source)}</dd>
+        <dd>${escapeHtml(source)}</dd>
         <dt>人工验证</dt>
-        <dd>${escapeHtml(item.humanVerified)}</dd>
+        <dd>${escapeHtml(humanVerified)}</dd>
       </dl>
       <div class="knowledge-chip-row">
-        ${renderChipList(item.chips, "knowledge-category-chip")}
+        ${renderChipList(knowledgeItemChips(item), "knowledge-category-chip")}
       </div>
     </article>
   `;
 }
 
 function renderKnowledgeVerificationCard(item) {
+  const status = item.status || knowledgeStatusLabel(item.verification_status);
+  const note = item.note || item.reason || "需要人工确认来源、有效期、风险和可见范围。";
   return `
     <article class="knowledge-verification-card">
       <div>
-        <span class="verification-badge">${escapeHtml(item.status)}</span>
+        <span class="verification-badge">${escapeHtml(status)}</span>
         <h4>${escapeHtml(item.title)}</h4>
       </div>
-      <p>${escapeHtml(item.note)}</p>
+      <p>${escapeHtml(note)}</p>
       <div class="disabled-chip-row">
         ${renderDisabledCapabilities(["不可用于客户承诺", "不可自动发送", "不可自动报价"])}
       </div>
+    </article>
+  `;
+}
+
+function renderKnowledgeEmptyState(message) {
+  return `
+    <article class="knowledge-item-card">
+      <div class="knowledge-item-heading">
+        <div>
+          <span class="workbench-category">空状态</span>
+          <h4>${escapeHtml(message)}</h4>
+        </div>
+        ${badge("只读", "active")}
+      </div>
+      <p>当前没有可显示的实时知识库记录；不会创建、编辑、上传、RAG 或生成 AI 答案。</p>
     </article>
   `;
 }
@@ -2355,12 +2520,13 @@ function renderKnowledgeRoadmapStep(step, index) {
 }
 
 function renderKnowledgeCenterReview() {
+  const model = getKnowledgeCenterViewModel();
   return `
     <div class="review-stack">
       <div class="review-card">
         <h3>AI 知识库只读边界</h3>
         <ul class="check-list">
-          <li>静态预览，不创建知识条目，不写入数据库，不调用 AI 或 RAG</li>
+          <li>${model.isLive ? "实时只读数据已接入 admin-read；" : "当前显示静态 fallback；"}不创建知识条目，不写入数据库，不调用 AI 或 RAG</li>
           <li>不上传、不下载、不解析文件，不 OCR，不展示原始私有文件内容</li>
           <li>不自动发送 Email / WhatsApp，不创建客户，不生成报价、PI、订单或生产动作</li>
         </ul>
@@ -2370,8 +2536,10 @@ function renderKnowledgeCenterReview() {
         <dl>
           <dt>当前用途</dt>
           <dd>展示未来企业知识库如何支撑询盘分析、供应商匹配、报价前复核和 AI Copilot。</dd>
+          <dt>数据状态</dt>
+          <dd>${escapeHtml(model.sourceLabel)}</dd>
           <dt>验证状态</dt>
-          <dd>示例知识全部为待人工验证或静态预览，不得用于客户承诺。</dd>
+          <dd>${escapeHtml(model.queueCountLabel)}；未验证知识不得用于客户承诺。</dd>
           <dt>来源要求</dt>
           <dd>未来知识必须记录来源、可信度、有效期和人工复核结果。</dd>
           <dt>缺失能力</dt>
@@ -2386,6 +2554,75 @@ function renderKnowledgeCenterReview() {
       </div>
     </div>
   `;
+}
+
+async function fetchKnowledgeResource(endpoint) {
+  const token = getAdminAccessToken();
+  const response = await fetch(endpoint, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || `${endpoint} failed with ${response.status}`);
+  }
+  return payload;
+}
+
+function knowledgeRecords(payload) {
+  return Array.isArray(payload?.records) ? payload.records : [];
+}
+
+function knowledgeIsFallbackPayload(...payloads) {
+  return payloads.some((payload) => payload?.meta?.source === "fallback_demo" || payload?.meta?.is_fallback === true);
+}
+
+async function loadKnowledgeCenterReadOnly() {
+  knowledgeApiState.status = "loading";
+  knowledgeApiState.error = "";
+  knowledgeApiState.source = "api";
+  refreshKnowledgeCenterView();
+
+  try {
+    const [summaryPayload, categoriesPayload, itemsPayload, queuePayload, linkedContextPayload] = await Promise.all([
+      fetchKnowledgeResource(KNOWLEDGE_SUMMARY_ENDPOINT),
+      fetchKnowledgeResource(KNOWLEDGE_CATEGORIES_ENDPOINT),
+      fetchKnowledgeResource(KNOWLEDGE_ITEMS_ENDPOINT),
+      fetchKnowledgeResource(KNOWLEDGE_REVIEW_QUEUE_ENDPOINT),
+      fetchKnowledgeResource(KNOWLEDGE_LINKED_CONTEXT_ENDPOINT),
+    ]);
+
+    knowledgeApiState.summary = summaryPayload.summary || null;
+    knowledgeApiState.categories = knowledgeRecords(categoriesPayload);
+    knowledgeApiState.items = knowledgeRecords(itemsPayload);
+    knowledgeApiState.reviewQueue = knowledgeRecords(queuePayload);
+    knowledgeApiState.linkedContext = knowledgeRecords(linkedContextPayload);
+
+    if (knowledgeIsFallbackPayload(summaryPayload, categoriesPayload, itemsPayload, queuePayload, linkedContextPayload)) {
+      knowledgeApiState.status = "error";
+      knowledgeApiState.error = "knowledge admin-read source unavailable; showing fallback demo";
+      knowledgeApiState.source = fallbackLabel;
+    } else {
+      knowledgeApiState.status = knowledgeApiState.categories.length || knowledgeApiState.items.length ? "loaded" : "empty";
+      knowledgeApiState.source = "api";
+    }
+  } catch (error) {
+    knowledgeApiState.status = "error";
+    knowledgeApiState.error = error.message || "Unknown API error";
+    knowledgeApiState.summary = null;
+    knowledgeApiState.categories = [];
+    knowledgeApiState.items = [];
+    knowledgeApiState.reviewQueue = [];
+    knowledgeApiState.linkedContext = [];
+    knowledgeApiState.source = fallbackLabel;
+  }
+
+  refreshKnowledgeCenterView();
+}
+
+function refreshKnowledgeCenterView() {
+  if (activeSectionId !== "knowledge-center") return;
+  mainContent.innerHTML = renderKnowledgeCenter();
+  reviewPanel.innerHTML = renderKnowledgeCenterReview();
 }
 
 async function loadDashboardSummaryReadOnly() {

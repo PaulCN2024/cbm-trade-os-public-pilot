@@ -54,6 +54,23 @@ const QUOTATION_DISABLED_ACTIONS = Object.freeze([
   "arrange_shipment",
 ]);
 
+const KNOWLEDGE_DISABLED_ACTIONS = Object.freeze([
+  "create_knowledge",
+  "edit_knowledge",
+  "delete_knowledge",
+  "approve_knowledge",
+  "reject_knowledge",
+  "upload_file",
+  "parse_file",
+  "run_ocr",
+  "run_rag",
+  "generate_ai_answer",
+  "send_to_customer",
+  "create_quote",
+  "generate_pi",
+  "confirm_order",
+]);
+
 const DASHBOARD_HIGH_RISK_TERMS = Object.freeze([
   "price",
   "payment",
@@ -180,7 +197,12 @@ function isSupportedResource(resource) {
     resource === "supplier-capabilities" ||
     resource === "documents" ||
     resource === "pre-quotation-review" ||
-    resource === "quotations"
+    resource === "quotations" ||
+    resource === "knowledge-summary" ||
+    resource === "knowledge-categories" ||
+    resource === "knowledge-items" ||
+    resource === "knowledge-review-queue" ||
+    resource === "knowledge-linked-context"
   );
 }
 
@@ -481,6 +503,319 @@ function quotationSummary(records) {
     missing_review: records.filter((record) => !record.quote_no || record.customer_name === "需要人工确认").length,
     high_risk: records.filter((record) => record.safety_status === "human_review_required").length,
   };
+}
+
+const KNOWLEDGE_FALLBACK_CATEGORIES = Object.freeze([
+  {
+    id: "DEMO_PRODUCT_KNOWLEDGE",
+    slug: "DEMO_PRODUCT_KNOWLEDGE",
+    name_zh: "产品知识",
+    name_en: "Product Knowledge",
+    description: "DEMO product and specification knowledge for read-only trial display.",
+    sort_order: 10,
+  },
+  {
+    id: "DEMO_SUPPLIER_KNOWLEDGE",
+    slug: "DEMO_SUPPLIER_KNOWLEDGE",
+    name_zh: "供应商知识",
+    name_en: "Supplier Knowledge",
+    description: "DEMO supplier capability notes for internal review only.",
+    sort_order: 20,
+  },
+  {
+    id: "DEMO_QUOTATION_RULES",
+    slug: "DEMO_QUOTATION_RULES",
+    name_zh: "报价规则",
+    name_en: "Quotation Rules",
+    description: "DEMO quotation readiness and manual confirmation rules.",
+    sort_order: 30,
+  },
+  {
+    id: "DEMO_FILE_KNOWLEDGE",
+    slug: "DEMO_FILE_KNOWLEDGE",
+    name_zh: "文件知识",
+    name_en: "File Knowledge",
+    description: "DEMO file and document source tracking rules.",
+    sort_order: 40,
+  },
+  {
+    id: "DEMO_COMMUNICATION_TEMPLATES",
+    slug: "DEMO_COMMUNICATION_TEMPLATES",
+    name_zh: "沟通模板",
+    name_en: "Communication Templates",
+    description: "DEMO customer and supplier communication principles.",
+    sort_order: 50,
+  },
+  {
+    id: "DEMO_TRADE_SOP",
+    slug: "DEMO_TRADE_SOP",
+    name_zh: "贸易 SOP",
+    name_en: "Trade SOP",
+    description: "DEMO operating procedures for internal workflow review.",
+    sort_order: 60,
+  },
+  {
+    id: "DEMO_COMPLIANCE_SAFETY",
+    slug: "DEMO_COMPLIANCE_SAFETY",
+    name_zh: "合规与安全",
+    name_en: "Compliance And Safety",
+    description: "DEMO safety boundaries for AI-assisted workflows.",
+    sort_order: 70,
+  },
+]);
+
+const KNOWLEDGE_FALLBACK_ITEMS = Object.freeze([
+  {
+    id: "DEMO_WINDOW_CHECKLIST",
+    title: "Aluminum window inquiry checklist",
+    category_slug: "DEMO_PRODUCT_KNOWLEDGE",
+    category: "产品知识",
+    language: "en",
+    summary: "Check drawings, opening size, profile system, glass, hardware, color, quantity, and destination before quote readiness.",
+    source_type: "manual_sop",
+    source_reference: "DEMO_SOP_WINDOW_CHECKLIST",
+    confidence_level: "high",
+    human_verified: true,
+    verification_status: "verified",
+    risk_level: "medium",
+    visibility_scope: "ai_reference_only",
+    tags: ["DEMO", "window", "inquiry"],
+    updated_at: "",
+  },
+  {
+    id: "DEMO_CURTAIN_WALL_READINESS",
+    title: "Curtain wall quotation readiness checklist",
+    category_slug: "DEMO_PRODUCT_KNOWLEDGE",
+    category: "产品知识",
+    language: "en",
+    summary: "Curtain wall inquiries require elevation drawings, system type, glass specification, aluminum finish, quantity area, and installation responsibility confirmation.",
+    source_type: "manual_sop",
+    source_reference: "DEMO_SOP_CURTAIN_WALL_READINESS",
+    confidence_level: "medium",
+    human_verified: false,
+    verification_status: "needs_review",
+    risk_level: "high",
+    visibility_scope: "internal_only",
+    tags: ["DEMO", "curtain_wall", "quote_readiness"],
+    updated_at: "",
+  },
+  {
+    id: "DEMO_SUPPLIER_MATCHING",
+    title: "Supplier capability matching rule",
+    category_slug: "DEMO_SUPPLIER_KNOWLEDGE",
+    category: "供应商知识",
+    language: "en",
+    summary: "Supplier matching should consider product category, process, MOQ, surface treatment, packaging, quality risk, and recent manual confirmation.",
+    source_type: "supplier_record",
+    source_reference: "DEMO_SUPPLIER_MATCHING_RULE",
+    confidence_level: "medium",
+    human_verified: false,
+    verification_status: "needs_review",
+    risk_level: "high",
+    visibility_scope: "internal_only",
+    tags: ["DEMO", "supplier", "manual_confirmation"],
+    updated_at: "",
+  },
+  {
+    id: "DEMO_QUOTE_FOB_QINGDAO",
+    title: "FOB Qingdao quotation cost reminder",
+    category_slug: "DEMO_QUOTATION_RULES",
+    category: "报价规则",
+    language: "en",
+    summary: "FOB Qingdao quote preparation should confirm local port cost assumptions, export handling, packing, loading, and validity before customer use.",
+    source_type: "quotation_note",
+    source_reference: "DEMO_QUOTE_FOB_QINGDAO_REMINDER",
+    confidence_level: "medium",
+    human_verified: false,
+    verification_status: "needs_review",
+    risk_level: "high",
+    visibility_scope: "confidential",
+    tags: ["DEMO", "FOB", "quotation_rule"],
+    updated_at: "",
+  },
+  {
+    id: "DEMO_COMPLAINT_HANDLING",
+    title: "Customer complaint handling principle",
+    category_slug: "DEMO_COMMUNICATION_TEMPLATES",
+    category: "沟通模板",
+    language: "en",
+    summary: "Complaint responses should acknowledge receipt, request evidence, avoid responsibility judgment, and route to human review.",
+    source_type: "email_template",
+    source_reference: "DEMO_TEMPLATE_COMPLAINT_HANDLING",
+    confidence_level: "high",
+    human_verified: true,
+    verification_status: "verified",
+    risk_level: "high",
+    visibility_scope: "customer_safe_after_review",
+    tags: ["DEMO", "complaint", "human_review"],
+    updated_at: "",
+  },
+  {
+    id: "DEMO_NO_AUTO_SEND",
+    title: "No auto-send / no price commitment rule",
+    category_slug: "DEMO_COMPLIANCE_SAFETY",
+    category: "合规与安全",
+    language: "en",
+    summary: "AI may draft and summarize, but it must not send messages, confirm prices, confirm payment terms, or commit delivery without human approval.",
+    source_type: "manual_sop",
+    source_reference: "DEMO_COMPLIANCE_NO_AUTO_SEND_PRICE_COMMITMENT",
+    confidence_level: "high",
+    human_verified: true,
+    verification_status: "verified",
+    risk_level: "high",
+    visibility_scope: "internal_only",
+    tags: ["DEMO", "safety", "no_auto_send"],
+    updated_at: "",
+  },
+]);
+
+function knowledgeSafetyPayload() {
+  return {
+    mode: "read_only_preview",
+    human_review_required: true,
+    disabled_actions: [...KNOWLEDGE_DISABLED_ACTIONS],
+  };
+}
+
+function knowledgeFallbackWarnings(warnings) {
+  return warnings.length ? warnings : ["knowledge_source_unavailable"];
+}
+
+function knowledgeMeta(resource, warnings, source = "admin_read") {
+  return {
+    generated_at: new Date().toISOString(),
+    source,
+    resource,
+    is_fallback: source === "fallback_demo",
+    safety: source === "fallback_demo" ? "read_only_preview" : "auth_gated_read_only",
+    warnings,
+  };
+}
+
+function knowledgeCategoryRecord(row, itemCounts = new Map()) {
+  const counts = itemCounts.get(row.id) || { item_count: 0, verified_count: 0, needs_review_count: 0 };
+  return {
+    id: row.id || "",
+    slug: row.slug || "",
+    name_zh: row.name_zh || "",
+    name_en: row.name_en || "",
+    description: row.description || "",
+    sort_order: row.sort_order === null || row.sort_order === undefined ? 0 : row.sort_order,
+    item_count: counts.item_count,
+    verified_count: counts.verified_count,
+    needs_review_count: counts.needs_review_count,
+  };
+}
+
+function knowledgeItemRecord(row, categoryMap = new Map()) {
+  const category = categoryMap.get(row.category_id);
+  return {
+    id: row.id || "",
+    title: row.title || "",
+    category_slug: category?.slug || "",
+    category: category?.name_zh || category?.name_en || "",
+    language: row.language || "",
+    summary: row.summary || "",
+    source_type: row.source_type || "",
+    source_reference: row.source_reference || "",
+    confidence_level: row.confidence_level || "",
+    human_verified: row.human_verified === true,
+    verification_status: row.verification_status || "",
+    risk_level: row.risk_level || "",
+    visibility_scope: row.visibility_scope || "",
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    updated_at: row.updated_at || "",
+  };
+}
+
+function knowledgeReviewQueueRecord(row) {
+  return {
+    id: row.id || "",
+    title: row.title || "",
+    reason: row.verification_status === "outdated" ? "知识可能过期，需要人工更新" : "知识尚未完成人工验证",
+    verification_status: row.verification_status || "",
+    risk_level: row.risk_level || "",
+    source_type: row.source_type || "",
+    source_reference: row.source_reference || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function knowledgeLinkedContextRecord(row) {
+  return {
+    knowledge_item_id: row.knowledge_item_id || "",
+    linked_entity_type: row.linked_entity_type || "",
+    linked_entity_label: row.linked_entity_label || "",
+    relationship_type: row.relationship_type || "",
+  };
+}
+
+function knowledgeSummaryFromItems(items, categories) {
+  return {
+    total_items: items.length,
+    verified_items: items.filter((item) => item.human_verified === true || item.verification_status === "verified").length,
+    needs_review_items: items.filter((item) => item.human_verified !== true || item.verification_status === "needs_review" || item.verification_status === "draft").length,
+    outdated_items: items.filter((item) => item.verification_status === "outdated").length,
+    high_risk_items: items.filter((item) => item.risk_level === "high").length,
+    categories_count: categories.length,
+  };
+}
+
+function knowledgeCategoryCounts(items) {
+  return items.reduce((map, item) => {
+    const key = item.category_id;
+    if (!key) return map;
+    const counts = map.get(key) || { item_count: 0, verified_count: 0, needs_review_count: 0 };
+    counts.item_count += 1;
+    if (item.human_verified === true || item.verification_status === "verified") counts.verified_count += 1;
+    if (item.human_verified !== true || item.verification_status === "needs_review" || item.verification_status === "draft") counts.needs_review_count += 1;
+    map.set(key, counts);
+    return map;
+  }, new Map());
+}
+
+function fallbackKnowledgeCategories() {
+  const categoryCounts = KNOWLEDGE_FALLBACK_ITEMS.reduce((map, item) => {
+    const counts = map.get(item.category_slug) || { item_count: 0, verified_count: 0, needs_review_count: 0 };
+    counts.item_count += 1;
+    if (item.human_verified || item.verification_status === "verified") counts.verified_count += 1;
+    if (!item.human_verified || item.verification_status === "needs_review" || item.verification_status === "draft") counts.needs_review_count += 1;
+    map.set(item.category_slug, counts);
+    return map;
+  }, new Map());
+  return KNOWLEDGE_FALLBACK_CATEGORIES.map((category) => ({
+    ...category,
+    ...(categoryCounts.get(category.slug) || { item_count: 0, verified_count: 0, needs_review_count: 0 }),
+  }));
+}
+
+function fallbackKnowledgeReviewQueue() {
+  return KNOWLEDGE_FALLBACK_ITEMS.filter(
+    (item) => !item.human_verified || item.verification_status === "draft" || item.verification_status === "needs_review" || item.verification_status === "outdated"
+  ).map(knowledgeReviewQueueRecord);
+}
+
+function fallbackKnowledgeLinkedContext() {
+  return [
+    {
+      knowledge_item_id: "DEMO_WINDOW_CHECKLIST",
+      linked_entity_type: "product",
+      linked_entity_label: "Aluminum windows / doors",
+      relationship_type: "quote_readiness_reference",
+    },
+    {
+      knowledge_item_id: "DEMO_SUPPLIER_MATCHING",
+      linked_entity_type: "capability",
+      linked_entity_label: "Supplier capability review",
+      relationship_type: "manual_confirmation_required",
+    },
+    {
+      knowledge_item_id: "DEMO_NO_AUTO_SEND",
+      linked_entity_type: "trade_term",
+      linked_entity_label: "AI safety boundary",
+      relationship_type: "global_safety_rule",
+    },
+  ];
 }
 
 function dashboardSummaryCards({ inquiries, customers, aiAnalyses, followUps }, now = new Date()) {
@@ -870,6 +1205,170 @@ async function readQuotations(response, supabase) {
   });
 }
 
+async function readKnowledgeSources(supabase, warnings) {
+  const [categories, items] = await Promise.all([
+    readSource({
+      supabase,
+      table: "knowledge_categories",
+      select: "id,slug,name_zh,name_en,description,sort_order,is_active,created_at,updated_at",
+      warning: "knowledge_categories_unavailable",
+      warnings,
+      order: "sort_order",
+      orderOptions: { ascending: true },
+    }),
+    readSource({
+      supabase,
+      table: "knowledge_items",
+      select:
+        "id,title,category_id,language,summary,source_type,source_reference,confidence_level,human_verified,verification_status,risk_level,visibility_scope,tags,updated_at",
+      warning: "knowledge_items_unavailable",
+      warnings,
+      order: "updated_at",
+    }),
+  ]);
+
+  return { categories, items };
+}
+
+function sendKnowledgeFallback(response, resource, records, summary, warnings) {
+  sendJson(response, 200, {
+    meta: knowledgeMeta(resource, knowledgeFallbackWarnings(warnings), "fallback_demo"),
+    records,
+    summary,
+    safety: knowledgeSafetyPayload(),
+    warnings: knowledgeFallbackWarnings(warnings),
+  });
+}
+
+async function readKnowledgeSummary(response, supabase) {
+  const warnings = [];
+  const { categories, items } = await readKnowledgeSources(supabase, warnings);
+  if (warnings.length > 0) {
+    sendKnowledgeFallback(
+      response,
+      "knowledge-summary",
+      [],
+      knowledgeSummaryFromItems(KNOWLEDGE_FALLBACK_ITEMS, KNOWLEDGE_FALLBACK_CATEGORIES),
+      warnings
+    );
+    return;
+  }
+
+  sendJson(response, 200, {
+    meta: knowledgeMeta("knowledge-summary", warnings),
+    summary: knowledgeSummaryFromItems(items, categories),
+    safety: knowledgeSafetyPayload(),
+    warnings,
+  });
+}
+
+async function readKnowledgeCategories(response, supabase) {
+  const warnings = [];
+  const { categories, items } = await readKnowledgeSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const records = fallbackKnowledgeCategories();
+    sendKnowledgeFallback(response, "knowledge-categories", records, { total_records: records.length }, warnings);
+    return;
+  }
+
+  const records = categories.map((category) => knowledgeCategoryRecord(category, knowledgeCategoryCounts(items)));
+  sendJson(response, 200, {
+    meta: knowledgeMeta("knowledge-categories", warnings),
+    records,
+    summary: {
+      total_records: records.length,
+      active_categories: categories.filter((category) => category.is_active !== false).length,
+    },
+    safety: knowledgeSafetyPayload(),
+    warnings,
+  });
+}
+
+async function readKnowledgeItems(response, supabase) {
+  const warnings = [];
+  const { categories, items } = await readKnowledgeSources(supabase, warnings);
+  if (warnings.length > 0) {
+    sendKnowledgeFallback(
+      response,
+      "knowledge-items",
+      [...KNOWLEDGE_FALLBACK_ITEMS],
+      knowledgeSummaryFromItems(KNOWLEDGE_FALLBACK_ITEMS, KNOWLEDGE_FALLBACK_CATEGORIES),
+      warnings
+    );
+    return;
+  }
+
+  const categoryMap = new Map(categories.map((category) => [category.id, category]));
+  const records = items.slice(0, 50).map((item) => knowledgeItemRecord(item, categoryMap));
+  sendJson(response, 200, {
+    meta: knowledgeMeta("knowledge-items", warnings),
+    records,
+    summary: knowledgeSummaryFromItems(items, categories),
+    safety: knowledgeSafetyPayload(),
+    warnings,
+  });
+}
+
+async function readKnowledgeReviewQueue(response, supabase) {
+  const warnings = [];
+  const knowledgeItems = await readSource({
+    supabase,
+    table: "knowledge_items",
+    select: "id,title,source_type,source_reference,human_verified,verification_status,risk_level,updated_at",
+    warning: "knowledge_review_queue_unavailable",
+    warnings,
+    order: "updated_at",
+  });
+  if (warnings.length > 0) {
+    const records = fallbackKnowledgeReviewQueue();
+    sendKnowledgeFallback(response, "knowledge-review-queue", records, { total_records: records.length }, warnings);
+    return;
+  }
+
+  const records = knowledgeItems
+    .filter((item) => item.human_verified !== true || ["draft", "needs_review", "outdated"].includes(item.verification_status))
+    .slice(0, 50)
+    .map(knowledgeReviewQueueRecord);
+  sendJson(response, 200, {
+    meta: knowledgeMeta("knowledge-review-queue", warnings),
+    records,
+    summary: {
+      total_records: records.length,
+      high_risk_records: records.filter((record) => record.risk_level === "high").length,
+    },
+    safety: knowledgeSafetyPayload(),
+    warnings,
+  });
+}
+
+async function readKnowledgeLinkedContext(response, supabase) {
+  const warnings = [];
+  const linkedContext = await readSource({
+    supabase,
+    table: "knowledge_links",
+    select: "knowledge_item_id,linked_entity_type,linked_entity_label,relationship_type,created_at",
+    warning: "knowledge_linked_context_unavailable",
+    warnings,
+    order: "created_at",
+  });
+  if (warnings.length > 0) {
+    const records = fallbackKnowledgeLinkedContext();
+    sendKnowledgeFallback(response, "knowledge-linked-context", records, { total_records: records.length }, warnings);
+    return;
+  }
+
+  const records = linkedContext.slice(0, 50).map(knowledgeLinkedContextRecord);
+  sendJson(response, 200, {
+    meta: knowledgeMeta("knowledge-linked-context", warnings),
+    records,
+    summary: {
+      total_records: records.length,
+    },
+    safety: knowledgeSafetyPayload(),
+    warnings,
+  });
+}
+
 module.exports = async function handler(request, response) {
   try {
     if (request.method !== "GET") {
@@ -933,6 +1432,36 @@ module.exports = async function handler(request, response) {
     if (resource === "quotations") {
       const supabase = getSupabaseClient(request);
       await readQuotations(response, supabase);
+      return;
+    }
+
+    if (resource === "knowledge-summary") {
+      const supabase = getSupabaseClient(request);
+      await readKnowledgeSummary(response, supabase);
+      return;
+    }
+
+    if (resource === "knowledge-categories") {
+      const supabase = getSupabaseClient(request);
+      await readKnowledgeCategories(response, supabase);
+      return;
+    }
+
+    if (resource === "knowledge-items") {
+      const supabase = getSupabaseClient(request);
+      await readKnowledgeItems(response, supabase);
+      return;
+    }
+
+    if (resource === "knowledge-review-queue") {
+      const supabase = getSupabaseClient(request);
+      await readKnowledgeReviewQueue(response, supabase);
+      return;
+    }
+
+    if (resource === "knowledge-linked-context") {
+      const supabase = getSupabaseClient(request);
+      await readKnowledgeLinkedContext(response, supabase);
       return;
     }
   } catch (error) {
