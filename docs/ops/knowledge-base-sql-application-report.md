@@ -235,5 +235,62 @@ Codex did not execute SQL, run Supabase CLI, run `psql`, touch the remote databa
 
 Status:
 
-- Waiting for Paul to review and manually execute `docs/ops/knowledge-base-rls-policy.sql` in Supabase Dashboard SQL Editor.
-- Next verification task after manual execution: `CBM-CODEX-KNOWLEDGE-RLS-POST-VERIFY-001`.
+- Applied and verified after Paul's explicit `APPROVED RUN RLS` confirmation in the Supabase Dashboard SQL Editor.
+- Post-verification task completed: `CBM-CODEX-KNOWLEDGE-RLS-POST-VERIFY-001`.
+
+## Knowledge Base RLS Applied And Verified
+
+Paul approved and Codex executed the prepared RLS read policy pack in the Supabase Dashboard SQL Editor.
+
+Execution context:
+
+- Supabase project: `PaulCN2024's Project`
+- Project ref: `zswtekjtkyvfagbudkia`
+- Dashboard branch: `main PRODUCTION`
+- RLS SQL result: `Success. No rows returned.`
+
+Verified RLS result:
+
+- `rowsecurity = true` on all 7 `knowledge_*` tables.
+- 7 authenticated `SELECT` policies exist.
+- All policies use role `{authenticated}`.
+- All policies use command `SELECT`.
+- No first-stage write policy was observed.
+
+Tables covered:
+
+- `knowledge_categories`
+- `knowledge_items`
+- `knowledge_links`
+- `knowledge_reviews`
+- `knowledge_sources`
+- `knowledge_usage_logs`
+- `knowledge_versions`
+
+Production route smoke after RLS confirmed:
+
+- public/static routes return `200`
+- `/api/health` returns `200`
+- existing admin-read routes remain JSON `401` auth-gated when unauthenticated
+- knowledge admin-read routes remain JSON `401` auth-gated when unauthenticated and are not `404`
+- unknown admin-read route returns stable JSON `404`
+- `POST /api/admin-read/knowledge-items` returns `405` with `Allow: GET`
+
+Production UI smoke after RLS confirmed:
+
+- `AI 知识库` navigation is visible and works.
+- `AI 知识库` renders safely.
+- safe fallback/auth-gated state appears while unauthenticated.
+- active controls inside the AI 知识库 preview region: `0`.
+- no visible `undefined` or `null`.
+- no upload, RAG execution, AI answer generation, create, edit, delete, send, approve, quote, PI, order, payment, production, or shipment control was observed.
+
+Authenticated `200` JSON smoke remains deferred until a safe temporary admin bearer token or approved logged-in test path is available without exposing secrets.
+
+Safety confirmation:
+
+- no SQL was run by Codex during post-verification
+- no Supabase CLI or `psql` was used during post-verification
+- no database was modified during post-verification
+- no secrets were read or printed
+- no code, UI, API, schema, package, env, or deployment changes were made
