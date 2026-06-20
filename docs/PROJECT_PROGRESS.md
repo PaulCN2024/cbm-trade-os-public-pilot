@@ -2,16 +2,16 @@
 
 ## 1. Current Progress Summary
 
-- Full product vision progress: 38%
+- Full product vision progress: 39%
 - Internal MVP / foundation progress: 100%
-- Current phase: Phase UI-3 - AI Prospecting Center Static UI Preview Production Checkpoint Completed
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, Authenticated Trial Access Preparation, Paul Manual Trial Feedback Template, Read-only To Controlled Write Roadmap, Admin-read Expansion Backlog, Internal Trial Success Criteria, Admin UI Visual Upgrade Round 1, Admin UI Visual Upgrade Round 1 Production Deployment, Admin UI Visual QA And Micro Polish Round 2, Admin UI Visual QA Round 2 Production Deployment, AI-first Admin UI Redesign Blueprint, AI-first UI Redesign Visual Storyboard, AI-first UI Redesign Implementation Plan, AI Prospecting Lookalike Customer Planning, AI Prospecting Compliance Safety Planning, AI Prospecting Center Static UI Preview, Vercel Protection Smoke Resolution Plan, AI Prospecting Center Static UI Preview Production Checkpoint, Products Section Active Inputs Disabled, Companies Section Active Controls Disabled, and Phase UI-2 Internal MVP Completion Report completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, prospecting search execution, scraping, outreach automation, customer creation, or business execution
+- Current phase: Phase UI-3 - AI Knowledge Center Planning Completed
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, Authenticated Trial Access Preparation, Paul Manual Trial Feedback Template, Read-only To Controlled Write Roadmap, Admin-read Expansion Backlog, Internal Trial Success Criteria, Admin UI Visual Upgrade Round 1, Admin UI Visual Upgrade Round 1 Production Deployment, Admin UI Visual QA And Micro Polish Round 2, Admin UI Visual QA Round 2 Production Deployment, AI-first Admin UI Redesign Blueprint, AI-first UI Redesign Visual Storyboard, AI-first UI Redesign Implementation Plan, AI Prospecting Lookalike Customer Planning, AI Prospecting Compliance Safety Planning, AI Prospecting Center Static UI Preview, Vercel Protection Smoke Resolution Plan, AI Prospecting Center Static UI Preview Production Checkpoint, Products Section Active Inputs Disabled, Companies Section Active Controls Disabled, Phase UI-2 Internal MVP Completion Report, AI Knowledge Center Planning, AI Knowledge Center UI Storyboard, and Knowledge RAG Roadmap completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, RAG, embeddings, vector database, file upload, file parsing, OCR, prospecting search execution, scraping, outreach automation, customer creation, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
-- Full vision: 38% `[████░░░░░░]`
+- Full vision: 39% `[████░░░░░░]`
 - Internal MVP: 100% `[██████████]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
@@ -67,6 +67,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Quotation Metadata Admin-read Safe Projection Planning: 100% `[████████████████████]`
 - Approval Audit Migration Draft Planning: 100% `[████████████████████]`
 - Static Disabled Action Registry Module Planning: 100% `[████████████████████]`
+- AI Knowledge Center Planning: 100% `[████████████████████]`
 
 ## 3. Completed Major Milestones
 
@@ -164,6 +165,9 @@ These percentages are planning estimates. They should move only after milestone 
 - Products Section Active Inputs Disabled
 - Companies Section Active Controls Disabled
 - Phase UI-2 Internal MVP Completion Report
+- AI Knowledge Center Planning
+- AI Knowledge Center UI Storyboard
+- Knowledge RAG Roadmap
 
 ## 4. Current Frozen Foundations
 
@@ -226,6 +230,9 @@ These percentages are planning estimates. They should move only after milestone 
 - Products Section Active Inputs Disabled is completed as a UI safety fix; the Products read-only trial fields are disabled/mock-only and do not imply editing, filtering, saving, searching, or product mutation
 - Companies Section Active Controls Disabled is completed as a UI safety fix; the Companies read-only trial fields are disabled/mock-only and do not imply editing, filtering, saving, searching, or company mutation
 - Phase UI-2 Internal MVP Completion Report is completed as documentation-only milestone closure; the internal MVP baseline is read-only and does not enable business execution
+- AI Knowledge Center Planning is completed as documentation only; it defines product, supplier, customer, quotation, file, SOP, communication, compliance, and AI safety knowledge categories without implementing RAG, embeddings, schema, API routes, UI code, file ingestion, OCR, or business execution
+- AI Knowledge Center UI Storyboard is completed as ASCII wireframes only; no Admin UI code or browser behavior was changed
+- Knowledge RAG Roadmap is completed as planning only; future retrieval must require taxonomy, source tracking, human verification, privacy boundaries, provider abstraction, citations, and safety evaluation before implementation
 - Vercel Protection Smoke Resolution Plan is completed as documentation only; no Vercel settings, secrets, deploys, UI code, API code, schema, package files or business behavior were changed
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
@@ -260,10 +267,10 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-RELEASE-029 - Rerun AI Prospecting Production Smoke With Vercel Bypass
-2. CBM-CODEX-SPRINT-PROSPECTING-SCHEMA-PLAN-001 - Prospecting Data Model Plan
-3. CBM-CODEX-SPRINT-PROSPECTING-API-PLAN-001 - Compliant Search API Integration Plan
-4. CBM-CODEX-SPRINT-PROSPECTING-SAFETY-001 - Outreach Compliance And Opt-out Plan
+1. CBM-CODEX-SPRINT-KNOWLEDGE-UI-001 - Add AI Knowledge Center Static UI Preview
+2. CBM-CODEX-SPRINT-KNOWLEDGE-SCHEMA-PLAN-001 - Knowledge Base Data Model Plan
+3. CBM-CODEX-SPRINT-KNOWLEDGE-RAG-PLAN-001 - RAG And Embedding Architecture Plan
+4. CBM-CODEX-SPRINT-KNOWLEDGE-SAFETY-001 - Knowledge Verification And Source Safety Plan
 5. CBM-CODEX-SPRINT-UI-AI-FIRST-001 - Add AI Copilot Layout Shell
 
 ## 9. How To Update This File
