@@ -10,7 +10,7 @@ const navItems = [
   { id: "manufacturing-capabilities", label: "制造能力" },
   { id: "ai-drafts", label: "AI 复核" },
   { id: "files", label: "文件" },
-  { id: "quotations", label: "报价" },
+  { id: "quotations", label: "报价前复核" },
   { id: "orders", label: "订单" },
   { id: "production", label: "生产" },
   { id: "shipping", label: "发货" },
@@ -23,7 +23,7 @@ const sections = {
     title: "CBM 工作台",
     description: "内部只读试用版：用于查看、复核和记录问题，不执行发送、审批、报价或下单动作。",
     sectionTitle: "工作台",
-    sectionHelp: "今日待处理概览和复核优先级预览；数据可能来自实时只读路径或静态 fallback。",
+    sectionHelp: "今日待处理概览和复核优先级预览；数据可能来自实时只读路径或静态预览（安全示例）。",
     content: renderDashboard,
     review: renderDashboardReview,
   },
@@ -92,16 +92,16 @@ const sections = {
     review: renderFileReview,
   },
   quotations: {
-    title: "报价前复核",
-    description: "报价前只读复核，用于检查资料完整性、供应商反馈和风险边界。",
-    sectionTitle: "报价前复核",
-    sectionHelp: "只读 admin-read 复核列表。当前不生成报价、不计算价格、不生成 PI、合同或订单。",
+    title: "报价前复核（只读）",
+    description: "当前仅检查询盘是否具备人工报价条件；正式报价模块稍后开放。",
+    sectionTitle: "报价前复核（只读）",
+    sectionHelp: "只读 admin-read 复核列表。当前不计算价格、不生成报价单、不生成 PI、合同或订单，也不发送客户。",
     content: renderQuotations,
     review: renderQuotationReview,
   },
   orders: {
     title: "订单中心",
-    description: "未来订单模块静态预览，仅展示人工复核方向，不确认订单或付款。",
+    description: "未来订单模块静态预览，仅供内部流程评审，不代表真实订单状态。",
     sectionTitle: "订单中心",
     sectionHelp: "静态只读预览。当前不确认订单、不生成合同、不确认收款或下达生产。",
     content: renderOrders,
@@ -109,7 +109,7 @@ const sections = {
   },
   production: {
     title: "生产中心",
-    description: "未来生产模块静态预览，仅展示资料缺口和交期风险，不下达生产。",
+    description: "未来生产模块静态预览，仅供内部流程评审，不代表真实生产状态。",
     sectionTitle: "生产中心",
     sectionHelp: "静态只读预览。当前不下达生产、不确认交期、包装或质量责任。",
     content: renderProduction,
@@ -117,7 +117,7 @@ const sections = {
   },
   shipping: {
     title: "发货中心",
-    description: "未来发货模块静态预览，仅展示装柜、物流和单据缺口，不安排发货。",
+    description: "未来发货模块静态预览，仅供内部流程评审，不代表真实发货状态。",
     sectionTitle: "发货中心",
     sectionHelp: "静态只读预览。当前不确认发货、不生成装箱单、不通知客户。",
     content: renderShipping,
@@ -125,7 +125,7 @@ const sections = {
   },
   "after-sales": {
     title: "售后中心",
-    description: "未来售后模块静态预览，仅展示反馈和证据，不承认责任或承诺赔付。",
+    description: "未来售后模块静态预览，仅供内部流程评审，不代表真实售后结论。",
     sectionTitle: "售后中心",
     sectionHelp: "静态只读预览。当前不承认责任、不承诺赔付、不发送最终结论。",
     content: renderAfterSales,
@@ -133,7 +133,7 @@ const sections = {
   },
   settings: {
     title: "设置",
-    description: "设置页仅展示未来配置入口和安全边界，不连接账号或保存配置。",
+    description: "设置页仅展示未来配置入口和安全边界，不连接账号、不保存配置。",
     sectionTitle: "设置",
     sectionHelp: "静态只读边界预览。当前不连接账号、不调用 AI、不修改权限。",
     content: renderSettings,
@@ -161,9 +161,9 @@ const reviewPanel = document.querySelector("#reviewPanel");
 
 let activeSectionId = "dashboard";
 
-const fallbackLabel = "Preview fallback / local preview data - not live Supabase data";
+const fallbackLabel = "静态预览（安全示例，非实时数据）";
 const apiUnavailableMessage =
-  "Real API data is unavailable. You may not be logged in, the API may not be deployed, or this is local preview mode.";
+  "实时只读数据暂不可用，可能是尚未登录、接口未部署或当前为本地预览。";
 const DASHBOARD_SUMMARY_ENDPOINT = "/api/admin-read/dashboard-summary";
 const CUSTOMERS_ENDPOINT = "/api/admin-read/customers";
 const INQUIRIES_ENDPOINT = "/api/admin-read/inquiries";
@@ -761,7 +761,7 @@ const commercialWorkflowSections = {
     ],
     queueItems: [
       { title: "沿海项目铝型材发黄反馈", status: "高风险", risk: "高", riskTone: "danger", detail: "客户反馈沿海项目铝型材发黄，可能涉及环境和表面处理。", missingInfo: ["环境说明", "表面处理记录", "批次照片"], nextStep: "收集证据链并让供应商复核后再判断责任。", disabled: ["不可承认责任", "不可承诺赔付", "不可发送最终结论"] },
-      { title: "PD/PT 门安装支持反馈", status: "技术资料缺失", risk: "中", riskTone: "warning", detail: "客户需要安装支持，系统差异和五金资料未确认。", missingInfo: ["安装手册", "五金配置", "视频说明"], nextStep: "整理资料并人工确认可发送版本。", disabled: ["不可承诺安装结果", "不可确认售后责任", "不可自动发送"] },
+      { title: "PD/PT 门安装支持反馈", status: "技术资料缺失", risk: "中", riskTone: "warning", detail: "客户需要安装支持，系统差异和五金资料未确认。", missingInfo: ["安装手册", "五金配置", "视频说明"], nextStep: "整理资料并人工确认内部参考版本。", disabled: ["不可承诺安装结果", "不可确认售后责任", "不可自动发送"] },
       { title: "吊顶系统安装疑问", status: "待技术复核", risk: "中", riskTone: "warning", detail: "安装疑问涉及材料表和施工损耗。", missingInfo: ["施工现场信息", "材料表", "安装照片"], nextStep: "由技术人员复核后再回复客户。", disabled: ["不可确认安装责任", "不可承诺补偿", "不可发送最终结论"] },
       { title: "高尔夫球车配置争议", status: "待供应商确认", risk: "中", riskTone: "warning", detail: "配置争议需要供应商核对订单和出货资料。", missingInfo: ["配置表", "出货照片", "供应商反馈"], nextStep: "核对供应商资料后再判断处理方案。", disabled: ["不可承认责任", "不可承诺赔付", "不可确认补货"] },
       { title: "门窗五金售后反馈", status: "证据不足", risk: "中", riskTone: "warning", detail: "客户反馈五金问题，但缺少安装位置和使用情况。", missingInfo: ["安装位置", "使用照片", "数量"], nextStep: "请客户补充照片和数量后人工复核。", disabled: ["不可确认责任", "不可补发配件", "不可承诺赔付"] },
@@ -1302,9 +1302,9 @@ function renderDashboard() {
     dashboardSummaryApiState.status === "loading"
       ? renderDataStatus("loading", "正在加载工作台汇总", `正在使用当前管理员会话请求 GET ${DASHBOARD_SUMMARY_ENDPOINT}。`)
       : dashboardSummaryApiState.status === "error"
-      ? renderDataStatus("error", "工作台汇总 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${dashboardSummaryApiState.error}`)
+      ? renderDataStatus("error", "工作台汇总 API 暂不可用", `${apiUnavailableMessage} 显示静态预览（安全示例）。系统提示：${dashboardSummaryApiState.error}`)
       : dashboardSummaryApiState.status === "empty"
-      ? renderDataStatus("empty", "暂无实时工作台汇总", "当前没有可用实时汇总数据，继续显示静态预览 fallback。")
+      ? renderDataStatus("empty", "暂无实时工作台汇总", "当前没有可用实时汇总数据，继续显示静态预览（安全示例）。")
       : "";
 
   return `
@@ -1406,8 +1406,8 @@ function getDashboardWorkbenchViewModel() {
         dashboardSummaryApiState.status === "error"
           ? "API 暂不可用，显示静态预览"
           : dashboardSummaryApiState.status === "loading"
-          ? "静态预览 fallback"
-          : "静态预览 fallback",
+          ? "静态预览（安全示例）"
+          : "静态预览（安全示例）",
       summaryLabel: "静态数据",
       queueCountLabel: "5 条静态示例",
       headerCopy: "内部只读试用数据，仅用于验证工作台信息层级；不调用 API、不执行助手、不写入数据。",
@@ -1698,7 +1698,7 @@ function renderCompanies() {
 
   const statusNotice =
     companyApiState.status === "error"
-      ? renderDataStatus("error", "公司 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${companyApiState.error}`)
+      ? renderDataStatus("error", "公司 API 暂不可用", `${apiUnavailableMessage} 显示静态预览（安全示例）。系统提示：${companyApiState.error}`)
       : renderDataStatus("success", "公司数据已加载", `数据来源：${companyApiState.source}。只读列表，未连接创建、更新或删除动作。`);
 
   return `
@@ -1795,7 +1795,7 @@ function renderCustomers() {
 
   const statusNotice =
     customerApiState.status === "error"
-      ? renderDataStatus("error", "客户 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${customerApiState.error}`)
+      ? renderDataStatus("error", "客户 API 暂不可用", `${apiUnavailableMessage} 显示静态预览（安全示例）。系统提示：${customerApiState.error}`)
       : renderDataStatus("success", "客户数据已加载", `数据来源：${customerApiState.source}。只读 CRM 列表，未连接创建、更新、导入、导出或删除动作。`);
 
   return `
@@ -1885,7 +1885,7 @@ function getCustomerWorkflowViewModel() {
       ? "实时只读数据"
       : customerApiState.status === "error"
         ? "API 暂不可用，显示静态预览"
-        : "静态预览 fallback",
+        : "静态预览（安全示例）",
     queueCountLabel: isLive ? `${items.length} 条只读记录` : "5 条静态示例",
   };
 }
@@ -2321,7 +2321,7 @@ function getSupplierWorkflowViewModel() {
       ? "实时只读数据"
       : capabilityApiState.status === "error"
         ? "API 暂不可用，显示静态预览"
-        : "静态预览 fallback",
+        : "静态预览（安全示例）",
     queueCountLabel: isLive ? `${items.length} 条只读能力派生记录` : "5 条静态示例",
   };
 }
@@ -2450,7 +2450,7 @@ function renderInquiries() {
 
   const statusNotice =
     inquiryApiState.status === "error"
-      ? renderDataStatus("error", "询盘 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${inquiryApiState.error}`)
+      ? renderDataStatus("error", "询盘 API 暂不可用", `${apiUnavailableMessage} 显示静态预览（安全示例）。系统提示：${inquiryApiState.error}`)
       : renderDataStatus("success", "询盘数据已加载", `数据来源：${inquiryApiState.source}。只读询盘列表，未连接创建、AI 自动处理、发送、报价或 PI 动作。`);
 
   return `
@@ -2540,7 +2540,7 @@ function getInquiryWorkflowViewModel() {
       ? "实时只读数据"
       : inquiryApiState.status === "error"
         ? "API 暂不可用，显示静态预览"
-        : "静态预览 fallback",
+        : "静态预览（安全示例）",
     queueCountLabel: isLive ? `${items.length} 条只读记录` : "5 条静态示例",
   };
 }
@@ -2676,7 +2676,7 @@ function buildInquirySummaryCardsFromRecords(items) {
     { label: "缺失信息", value: String(missingCount), subtitle: "资料、规格或客户需求待补齐", tone: "warning" },
     { label: "高风险", value: String(highRiskCount), subtitle: "价格、付款、交期或质量相关", tone: "danger" },
     { label: "待人工复核", value: String(reviewCount || items.length), subtitle: "不能自动发送或报价", tone: "warning" },
-    { label: "静态 fallback", value: "保留", subtitle: "API 不可用时继续显示示例", tone: "neutral" },
+    { label: "静态预览", value: "保留", subtitle: "实时数据不可用时显示安全示例", tone: "neutral" },
     { label: "写入动作", value: "0", subtitle: "未连接创建、报价、PI 或发送", tone: "info" },
   ];
 }
@@ -2907,7 +2907,7 @@ function renderProducts() {
 
   const statusNotice =
     productApiState.status === "error"
-      ? renderDataStatus("error", "产品 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${productApiState.error}`)
+      ? renderDataStatus("error", "产品 API 暂不可用", `${apiUnavailableMessage} 显示静态预览（安全示例）。系统提示：${productApiState.error}`)
       : renderDataStatus("success", "产品数据已加载", `数据来源：${productApiState.source}。只读列表，未连接创建、更新或删除动作。`);
 
   return `
@@ -3024,7 +3024,7 @@ function renderManufacturingCapabilities() {
 
   const statusNotice =
     capabilityApiState.status === "error"
-      ? renderDataStatus("error", "制造能力 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${capabilityApiState.error}`)
+      ? renderDataStatus("error", "制造能力 API 暂不可用", `${apiUnavailableMessage} 显示静态预览（安全示例）。系统提示：${capabilityApiState.error}`)
       : renderDataStatus("success", "制造能力数据已加载", `数据来源：${capabilityApiState.source}。只读列表，未连接创建、更新、删除或供应商确认动作。`);
 
   return `
@@ -3114,7 +3114,7 @@ function getCapabilityWorkflowViewModel() {
       ? "实时只读数据"
       : capabilityApiState.status === "error"
         ? "API 暂不可用，显示静态预览"
-        : "静态预览 fallback",
+        : "静态预览（安全示例）",
     queueCountLabel: isLive ? `${items.length} 条只读记录` : "5 条静态示例",
   };
 }
@@ -3405,7 +3405,7 @@ function renderAiDrafts() {
     aiDraftApiState.status === "empty"
       ? renderDataStatus("empty", "暂无实时 AI 询盘分析草稿", "当前没有可用实时数据。AI 复核中心 V2 使用静态只读预览，不执行任何业务动作。")
       : aiDraftApiState.status === "error"
-      ? renderDataStatus("error", "AI 询盘分析 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${aiDraftApiState.error}`)
+      ? renderDataStatus("error", "AI 询盘分析 API 暂不可用", `${apiUnavailableMessage} 显示静态预览（安全示例）。系统提示：${aiDraftApiState.error}`)
       : renderDataStatus("success", "AI 询盘分析草稿已加载", `数据来源：${aiDraftApiState.source}。只读草稿列表，未连接发送、审批、应用建议、报价或 PI 动作。`);
 
   return `
@@ -3428,7 +3428,7 @@ function getAiReviewViewModel() {
       ? "实时只读数据"
       : aiDraftApiState.status === "error"
         ? "API 暂不可用，显示静态预览"
-        : "静态预览 fallback",
+        : "静态预览（安全示例）",
     queueCountLabel: isLive ? `${items.length} 条只读记录` : "6 条静态示例",
   };
 }
@@ -3785,7 +3785,7 @@ function getFileCenterViewModel() {
       ? "实时只读数据"
       : documentApiState.status === "error"
         ? "API 暂不可用，显示静态预览"
-        : "静态预览 fallback",
+        : "静态预览（安全示例）",
     queueCountLabel: isLive ? `${items.length} 条只读文件元数据` : "6 条静态示例",
   };
 }
@@ -3873,9 +3873,9 @@ function renderFiles() {
     documentApiState.status === "loading"
       ? renderDataStatus("loading", "正在加载文件元数据", `正在使用当前管理员会话请求 GET ${DOCUMENTS_ENDPOINT}。`)
       : documentApiState.status === "error"
-      ? renderDataStatus("error", "文件元数据 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${documentApiState.error}`)
+      ? renderDataStatus("error", "文件元数据 API 暂不可用", `${apiUnavailableMessage} 显示静态预览（安全示例）。系统提示：${documentApiState.error}`)
       : documentApiState.status === "empty"
-      ? renderDataStatus("empty", "暂无实时文件元数据", "当前没有可用文件元数据，继续显示静态预览 fallback。")
+      ? renderDataStatus("empty", "暂无实时文件元数据", "当前没有可用文件元数据，继续显示静态预览（安全示例）。")
       : "";
 
   return `
@@ -4022,9 +4022,9 @@ function renderQuotations() {
     preQuotationApiState.status === "loading"
       ? renderDataStatus("loading", "正在加载报价前复核", `正在请求 GET ${PRE_QUOTATION_REVIEW_ENDPOINT}。`)
       : preQuotationApiState.status === "error"
-      ? renderDataStatus("error", "报价前复核 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。Technical detail: ${preQuotationApiState.error}`)
+      ? renderDataStatus("error", "报价前复核 API 暂不可用", `${apiUnavailableMessage} 显示静态预览（安全示例）。系统提示：${preQuotationApiState.error}`)
       : preQuotationApiState.status === "empty"
-      ? renderDataStatus("empty", "暂无实时报价前复核", "当前没有可用实时复核数据，继续显示静态预览 fallback。")
+      ? renderDataStatus("empty", "暂无实时报价前复核", "当前没有可用实时复核数据，继续显示静态预览（安全示例）。")
       : preQuotationApiState.status === "loaded"
       ? renderDataStatus("success", "报价前复核数据已加载", `数据来源：${preQuotationApiState.source}。只读复核列表，未连接价格计算、报价、PI、合同或订单动作。`)
       : "";
@@ -4089,7 +4089,7 @@ function getQuoteReviewViewModel() {
       ? "实时只读数据"
       : preQuotationApiState.status === "error"
         ? "API 暂不可用，显示静态预览"
-        : "静态预览 fallback",
+        : "静态预览（安全示例）",
     queueCountLabel: isLive ? `${items.length} 条 admin-read 复核记录` : "6 条静态示例",
   };
 }
@@ -4459,7 +4459,7 @@ function renderCommercialWorkflowSection(sectionId) {
           <span class="state-label">${escapeHtml(config.title)}</span>
           <h3>${escapeHtml(config.title)}</h3>
           <p>${escapeHtml(config.subtitle)}</p>
-          <p class="commercial-safety-note">静态预览数据，仅用于界面验证；所有价格、报价、PI、合同、订单、付款、生产、发货和赔付承诺必须人工复核。</p>
+          <p class="commercial-safety-note">当前为未来模块静态预览，仅供内部流程评审，不代表真实业务状态；所有价格、报价、PI、合同、订单、付款、生产、发货和赔付承诺必须人工复核。</p>
         </div>
         <div class="commercial-workflow-badges">
           ${badge("静态预览", "draft")}
@@ -4568,7 +4568,7 @@ function renderCommercialWorkflowReview(sectionId) {
       </div>
       <div class="commercial-review-group">
         <h4>安全说明</h4>
-        <p>本页只做静态只读预览，不调用 API、不写入数据、不执行审批、发送、订单、付款、生产或发货。</p>
+        <p>本页是未来模块静态预览，仅供内部流程评审；不调用 API、不写入数据、不执行审批、发送、报价、PI、订单、付款、生产或发货。</p>
       </div>
     </div>
   `;
