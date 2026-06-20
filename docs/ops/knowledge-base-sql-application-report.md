@@ -106,3 +106,23 @@ Resolve Supabase execution access in a separate approved step, then apply the pr
 Current channel status is documented in:
 
 - `docs/ops/supabase-execution-channel-setup-report.md`
+
+## Supabase CLI Repair Status
+
+`CBM-CODEX-SUPABASE-CLI-REPAIR-001` attempted to repair the local Supabase CLI execution channel without running SQL or touching the database.
+
+Result:
+
+- Homebrew core `supabase 2.107.0` was reinstalled after Paul approval.
+- `supabase --version` still failed because the underlying binary was terminated with `SIGKILL`.
+- macOS still reported no usable signature.
+- The official `supabase/tap` was added after Paul approval.
+- The Homebrew core formula was uninstalled before the tap attempt.
+- `brew install supabase/tap/supabase` did not complete because the release artifact download remained incomplete and was terminated.
+- The local `supabase` command is currently unavailable.
+
+No Supabase login, project link, SQL execution, seed execution, row count verification, secret handling, code change, or deployment occurred.
+
+Repair details are documented in:
+
+- `docs/ops/supabase-cli-repair-report.md`
