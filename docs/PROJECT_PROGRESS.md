@@ -3,16 +3,16 @@
 ## 1. Current Progress Summary
 
 - Full product vision progress: 36%
-- Internal MVP / foundation progress: 95%
-- Current phase: Phase UI-2B - Authenticated Trial Access Preparation Completed
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, and Authenticated Trial Access Preparation completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
+- Internal MVP / foundation progress: 96%
+- Current phase: Phase UI-3 - Trial Feedback And Safe Evolution Planning Pack Completed
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, Authenticated Trial Access Preparation, Paul Manual Trial Feedback Template, Read-only To Controlled Write Roadmap, Admin-read Expansion Backlog, and Internal Trial Success Criteria completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
 - Full vision: 36% `[████░░░░░░]`
-- Internal MVP: 95% `[██████████]`
+- Internal MVP: 96% `[██████████]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
@@ -32,6 +32,10 @@ These percentages are planning estimates. They should move only after milestone 
 - Quotation Metadata Admin-read Production Deployment: 100% `[████████████████████]`
 - Internal Trial Readiness Update: 100% `[████████████████████]`
 - Authenticated Trial Access Preparation: 100% `[████████████████████]`
+- Paul Manual Trial Feedback Template: 100% `[████████████████████]`
+- Read-only To Controlled Write Roadmap: 100% `[████████████████████]`
+- Admin-read Expansion Backlog: 100% `[████████████████████]`
+- Internal Trial Success Criteria: 100% `[████████████████████]`
 - Pre-Quotation UI Admin-read Migration: 100% `[████████████████████]`
 - File Center Admin-read Migration: 100% `[████████████████████]`
 - AI/Supplier Capability Admin-read Migration: 100% `[████████████████████]`
@@ -129,6 +133,10 @@ These percentages are planning estimates. They should move only after milestone 
 - Quotation Metadata Admin-read Production Deployment
 - Internal Trial Readiness Update
 - Authenticated Trial Access Preparation
+- Paul Manual Trial Feedback Template
+- Read-only To Controlled Write Roadmap
+- Admin-read Expansion Backlog
+- Internal Trial Success Criteria
 
 ## 4. Current Frozen Foundations
 
@@ -141,7 +149,7 @@ These percentages are planning estimates. They should move only after milestone 
 
 ## 5. Current Active Area
 
-- Current active area: Phase UI-2B / Admin Read UI Path Migration
+- Current active area: Phase UI-3 / Trial Feedback And Safe Evolution Planning
 - Admin Read Dispatcher production verification is complete
 - Dashboard Summary UI now targets `GET /api/admin-read/dashboard-summary`
 - Customer Center UI now targets `GET /api/admin-read/customers`
@@ -173,6 +181,10 @@ These percentages are planning estimates. They should move only after milestone 
 - Quotation Metadata Admin-read production deployment is completed and smoke verified
 - Internal Trial Readiness Update is completed; the next meaningful work should be based on Paul's real trial feedback
 - Authenticated Trial Access Preparation is completed; authenticated JSON smoke remains deferred until Paul logs in or provides a safe temporary admin token
+- Paul Manual Trial Feedback Template is completed for structured hands-on production review
+- Read-only To Controlled Write Roadmap is completed as planning only
+- Admin-read Expansion Backlog is completed as planning only
+- Internal Trial Success Criteria is completed for deciding whether the internal read-only trial is successful
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
 
@@ -208,9 +220,9 @@ All business-risk actions remain human-reviewed and separately approved.
 
 1. CBM-CODEX-SPRINT-TRIAL-002 - Paul Manual Trial Feedback Incorporation
 2. CBM-CODEX-RELEASE-013 - Authenticated Admin API Smoke Test Execution if safe token exists
-3. CBM-CODEX-SPRINT-SCHEMA-DRAFT-001 - Draft Approval Audit Migration File For Review Only
-4. CBM-CODEX-SPRINT-UI-SAFETY-005 - Create Static Disabled Action Registry Module
-5. CBM-CODEX-SPRINT-DOCS-004 - Trial Review Summary For Paul
+3. CBM-CODEX-SPRINT-UI-SAFETY-005 - Create Static Disabled Action Registry Module
+4. CBM-CODEX-SPRINT-SCHEMA-DRAFT-001 - Draft Approval Audit Migration File For Review Only
+5. CBM-CODEX-SPRINT-API-PLAN-004 - Settings Summary Admin-read Plan
 
 ## 9. How To Update This File
 
