@@ -1129,6 +1129,265 @@ tr:last-child td {
   line-height: 1.5;
 }
 
+.ai-knowledge-preview {
+  display: grid;
+  gap: 18px;
+}
+
+.ai-knowledge-header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(191, 219, 254, 0.86);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, 0.92), rgba(255, 255, 255, 0.98) 56%, rgba(240, 253, 244, 0.52)),
+    var(--surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.ai-knowledge-header::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--blue), #0891b2, var(--green));
+}
+
+.ai-knowledge-header h3 {
+  margin: 6px 0 8px;
+  font-size: 23px;
+}
+
+.ai-knowledge-header p {
+  max-width: 760px;
+  margin: 3px 0;
+}
+
+.ai-knowledge-badges,
+.knowledge-chip-row,
+.knowledge-safety-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-knowledge-section {
+  display: grid;
+  gap: 12px;
+}
+
+.knowledge-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.knowledge-card,
+.knowledge-item-card,
+.knowledge-verification-card,
+.ai-knowledge-panel,
+.knowledge-risk-note {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, #ffffff, #fbfdff),
+    var(--surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.knowledge-card::before,
+.knowledge-item-card::before,
+.knowledge-verification-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--blue), #22c55e);
+  opacity: 0.82;
+}
+
+.knowledge-card-warning::before,
+.knowledge-card-danger::before {
+  background: linear-gradient(180deg, #f97316, #ef4444);
+}
+
+.knowledge-card-neutral::before {
+  background: linear-gradient(180deg, #64748b, #94a3b8);
+}
+
+.knowledge-card-active::before {
+  background: linear-gradient(180deg, var(--green), #0ea5e9);
+}
+
+.knowledge-card > div:first-child {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.knowledge-count {
+  color: var(--ink);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.knowledge-card p,
+.knowledge-item-card p,
+.knowledge-verification-card p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.knowledge-card-status {
+  display: grid;
+  gap: 8px;
+}
+
+.knowledge-category-chip,
+.verification-badge,
+.knowledge-source-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px 9px;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #f8fbff;
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.verification-badge {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.knowledge-source-pill {
+  border-color: #dcfce7;
+  background: #f0fdf4;
+  color: #166534;
+  border-radius: var(--radius-sm);
+}
+
+.ai-knowledge-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.knowledge-item-list {
+  display: grid;
+  gap: 12px;
+}
+
+.knowledge-item-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.knowledge-item-heading h4,
+.knowledge-verification-card h4 {
+  margin: 6px 0 0;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.knowledge-item-meta,
+.knowledge-usage-list {
+  display: grid;
+  grid-template-columns: minmax(78px, 0.28fr) minmax(0, 1fr);
+  gap: 8px 12px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.knowledge-item-meta dt,
+.knowledge-usage-list dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.knowledge-item-meta dd,
+.knowledge-usage-list dd {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.knowledge-verification-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.knowledge-roadmap {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.knowledge-roadmap-step {
+  display: grid;
+  gap: 8px;
+  min-height: 86px;
+  padding: 12px;
+  border: 1px solid #dbeafe;
+  border-radius: var(--radius);
+  background: #f8fbff;
+}
+
+.knowledge-roadmap-step span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.knowledge-roadmap-step strong {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.knowledge-risk-note {
+  border-color: #fed7aa;
+  background:
+    linear-gradient(180deg, #fff7ed, #ffffff),
+    var(--surface);
+}
+
 .workflow-stepper {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3592,6 +3851,7 @@ tbody tr:hover {
 
 .panel-header p,
 .workbench-header p,
+.ai-knowledge-header p,
 .ai-review-preview-header p,
 .file-center-header p,
 .quote-review-header p,
@@ -3604,6 +3864,7 @@ tbody tr:hover {
 }
 
 .workbench-section-header,
+.ai-knowledge-section > .workbench-section-header,
 .ai-review-section > h3,
 .file-center-section > h3,
 .quote-review-section > h3,
@@ -3625,6 +3886,9 @@ tbody tr:hover {
 }
 
 .workbench-summary-grid,
+.knowledge-grid,
+.knowledge-verification-grid,
+.knowledge-roadmap,
 .ai-review-summary-grid,
 .file-summary-grid,
 .quote-summary-grid,
@@ -3637,6 +3901,10 @@ tbody tr:hover {
 }
 
 .workbench-card,
+.knowledge-card,
+.knowledge-item-card,
+.knowledge-verification-card,
+.ai-knowledge-panel,
 .ai-review-summary-card,
 .file-summary-card,
 .quote-summary-card,
@@ -3649,6 +3917,9 @@ tbody tr:hover {
 }
 
 .workbench-card span,
+.knowledge-card span,
+.knowledge-item-card span,
+.knowledge-verification-card span,
 .ai-review-summary-card span,
 .file-summary-card span,
 .quote-summary-card span,
@@ -3671,6 +3942,10 @@ tbody tr:hover {
 }
 
 .workbench-layout {
+  gap: 18px;
+}
+
+.ai-knowledge-layout {
   gap: 18px;
 }
 
@@ -3736,6 +4011,7 @@ tbody tr:hover {
 }
 
 .workbench-review-panel,
+.ai-knowledge-panel,
 .ai-review-card,
 .file-review-card,
 .quote-review-card,
@@ -3751,6 +4027,7 @@ tbody tr:hover {
 }
 
 .workbench-review-group,
+.knowledge-usage-list,
 .ai-review-group,
 .file-review-group,
 .quote-review-group,
@@ -3898,13 +4175,17 @@ tbody tr:hover {
   .metrics-grid,
   .state-grid,
   .workbench-layout,
-  .prospecting-layout {
+  .prospecting-layout,
+  .ai-knowledge-layout {
     grid-template-columns: 1fr;
   }
 
   .workbench-summary-grid,
   .prospecting-grid,
   .workflow-stepper,
+  .knowledge-grid,
+  .knowledge-verification-grid,
+  .knowledge-roadmap,
   .ai-review-summary-grid,
   .file-summary-grid,
   .quote-summary-grid,
@@ -3942,6 +4223,11 @@ tbody tr:hover {
     .workbench-review-list,
     .prospecting-grid,
     .workflow-stepper,
+    .knowledge-grid,
+    .knowledge-verification-grid,
+    .knowledge-roadmap,
+    .knowledge-item-meta,
+    .knowledge-usage-list,
     .ai-review-summary-grid,
     .ai-review-card dl,
     .ai-review-technical,
@@ -3970,6 +4256,7 @@ tbody tr:hover {
 
   .workbench-header,
   .prospecting-header,
+  .ai-knowledge-header,
   .ai-review-preview-header,
   .file-center-header,
   .quote-review-header,
@@ -3986,6 +4273,7 @@ tbody tr:hover {
   .workbench-queue-topline,
   .workbench-review-heading,
   .prospecting-lead-heading,
+  .knowledge-item-heading,
   .ai-review-queue-main,
   .ai-review-heading,
   .file-review-queue-main,

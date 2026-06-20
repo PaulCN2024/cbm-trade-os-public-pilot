@@ -3,6 +3,7 @@ import { getAdminAccessToken } from "../../lib/admin-auth.js";
 const navItems = [
   { id: "dashboard", label: "工作台" },
   { id: "prospecting", label: "AI 开发客户" },
+  { id: "knowledge-center", label: "AI 知识库" },
   { id: "inquiries", label: "询盘" },
   { id: "customers", label: "客户" },
   { id: "companies", label: "客户公司" },
@@ -35,6 +36,14 @@ const sections = {
     sectionHelp: "AI Prospecting 静态预览。当前不调用搜索 API、不解析文件、不创建客户、不外发消息。",
     content: renderProspecting,
     review: renderProspectingReview,
+  },
+  "knowledge-center": {
+    title: "AI 知识库",
+    description: "企业知识库静态预览：沉淀产品、供应商、报价规则、文件资料、沟通模板和安全边界。",
+    sectionTitle: "AI 知识库",
+    sectionHelp: "AI Knowledge Center 静态只读预览。当前不上传文件、不解析文档、不执行 RAG、不生成 AI 答案。",
+    content: renderKnowledgeCenter,
+    review: renderKnowledgeCenterReview,
   },
   companies: {
     title: "公司",
@@ -1066,6 +1075,154 @@ const prospectingSafetyItems = [
   "后续支持 do-not-contact / opt-out",
 ];
 
+const knowledgeOverviewCards = [
+  {
+    label: "产品知识",
+    count: "42",
+    description: "铝合金门窗、幕墙、玻璃、五金、吊顶系统、轻钢龙骨等产品规格和应用场景。",
+    status: "待人工验证 / 静态预览",
+    note: "仅供询盘分析参考，不生成价格或交期承诺。",
+    tone: "info",
+  },
+  {
+    label: "供应商知识",
+    count: "18",
+    description: "供应商能力、工艺限制、MOQ、交期、包装和质量注意事项。",
+    status: "来源待补充",
+    note: "供应商能力不等于确认可生产，必须人工复核。",
+    tone: "warning",
+  },
+  {
+    label: "报价规则",
+    count: "12",
+    description: "FOB / CIF / EXW、港口费用、税费、装柜、报价有效期和人工确认规则。",
+    status: "待人工验证",
+    note: "不计算价格，不生成报价单，不承诺付款或交期。",
+    tone: "danger",
+  },
+  {
+    label: "文件知识",
+    count: "26",
+    description: "图纸、规格书、供应商资料、安装手册和客户文件的知识摘要方向。",
+    status: "元数据预览",
+    note: "不上传、不下载、不解析、不 OCR，不暴露私有文件内容。",
+    tone: "neutral",
+  },
+  {
+    label: "沟通模板",
+    count: "16",
+    description: "英文邮件、西语邮件、WhatsApp 回复、客户澄清问题和供应商询价模板。",
+    status: "草稿参考",
+    note: "模板只辅助起草，发送必须等人工审批。",
+    tone: "info",
+  },
+  {
+    label: "合规与安全",
+    count: "9",
+    description: "不自动发送、不越权采集、不承诺价格、不隐藏来源和 opt-out 边界。",
+    status: "安全优先",
+    note: "安全规则优先于任何 AI 建议或业务快捷操作。",
+    tone: "active",
+  },
+];
+
+const knowledgeItems = [
+  {
+    title: "铝合金门窗询盘信息补充清单",
+    category: "产品知识 / 询盘 SOP",
+    summary: "玻璃配置、开启方式、五金品牌、颜色、尺寸、交货港口需要人工确认。",
+    source: "内部 SOP 草稿",
+    confidence: "中",
+    humanVerified: "否",
+    chips: ["产品知识", "待人工验证", "仅供内部参考"],
+  },
+  {
+    title: "轻钢龙骨报价前确认规则",
+    category: "报价规则",
+    summary: "厚度、长度、包装、FOB费用、税费、装柜数量需要确认。",
+    source: "报价经验总结",
+    confidence: "中",
+    humanVerified: "否",
+    chips: ["报价规则", "来源待补充", "不可客户承诺"],
+  },
+  {
+    title: "供应商能力匹配注意事项",
+    category: "供应商知识",
+    summary: "铝型材、玻璃深加工、吊顶板材和轻钢龙骨需分别确认工艺、交期和包装。",
+    source: "供应商能力记录",
+    confidence: "中",
+    humanVerified: "否",
+    chips: ["供应商知识", "交期需复核", "不代表承诺"],
+  },
+  {
+    title: "客户投诉回复原则",
+    category: "沟通模板 / 售后 SOP",
+    summary: "先承认问题、解释调查流程、避免过早承诺赔偿、收集项目环境和照片证据。",
+    source: "内部沟通模板",
+    confidence: "中",
+    humanVerified: "否",
+    chips: ["沟通模板", "售后 SOP", "不可自动发送"],
+  },
+];
+
+const knowledgeVerificationQueue = [
+  {
+    title: "报价规则待确认",
+    status: "待人工验证",
+    note: "需要确认费用口径、有效期和是否可用于 AI 引用。",
+  },
+  {
+    title: "供应商交期规则待更新",
+    status: "可能过期",
+    note: "交期和产能随订单排产变化，不能作为客户承诺。",
+  },
+  {
+    title: "安装手册来源待补充",
+    status: "需补充来源",
+    note: "缺少文件版本和来源说明，只能作为内部提示。",
+  },
+];
+
+const knowledgeUsageRows = [
+  {
+    label: "可用于",
+    value: "询盘分析、报价前复核、供应商匹配、开发客户关键词",
+  },
+  {
+    label: "不可用于",
+    value: "自动报价、自动发送、自动承诺价格、自动确认供应商能力",
+  },
+  {
+    label: "缺失知识",
+    value: "真实产品目录、安装手册、供应商报价规则、国家市场规则",
+  },
+  {
+    label: "AI 使用边界",
+    value: "未来可引用经人工确认的知识给出建议，但当前阶段不会自动生成客户承诺或发送消息。",
+  },
+];
+
+const knowledgeRoadmapSteps = [
+  "知识分类",
+  "来源记录",
+  "人工验证",
+  "文档切分",
+  "Embedding / RAG",
+  "带来源引用回答",
+  "人工反馈优化",
+];
+
+const knowledgeSafetyItems = [
+  "未验证知识不能用于客户承诺",
+  "不自动发送",
+  "不自动报价",
+  "不隐藏来源",
+  "不使用过期规则",
+  "不暴露内部 confidential 规则给客户",
+  "不上传文件",
+  "不执行 RAG",
+];
+
 const inquiryWorkflowSummaryCards = [
   {
     label: "真实感试用询盘",
@@ -2019,6 +2176,212 @@ function renderProspectingReview() {
         <h3>禁用能力</h3>
         <div class="disabled-chip-row">
           ${renderDisabledCapabilities(["不可抓取 LinkedIn", "不可绕过登录", "不可采集私人联系方式", "不可发送开发信", "不可创建客户", "不可生成报价"])}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderKnowledgeCenter() {
+  return `
+    <div class="ai-knowledge-preview" aria-label="AI 知识库静态预览">
+      <div class="ai-knowledge-header">
+        <div>
+          <span class="state-label">AI Knowledge Center</span>
+          <h3>AI 知识库</h3>
+          <p>AI Knowledge Center：沉淀产品、供应商、报价规则、文件资料、沟通模板和业务 SOP。当前为只读预览，不上传文件、不解析文档、不执行 RAG。</p>
+        </div>
+        <div class="ai-knowledge-badges" aria-label="AI 知识库预览状态">
+          ${badge("只读预览", "draft")}
+          ${badge("不上传文件", "pending")}
+          ${badge("不执行 RAG", "pending")}
+          ${badge("人工验证", "approval")}
+          ${badge("来源可追溯", "active")}
+        </div>
+      </div>
+
+      <section class="ai-knowledge-section" aria-label="知识总览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>知识总览</h3>
+            <p>先展示企业知识库的分类、来源、验证状态和安全边界，不连接真实知识库或向量检索。</p>
+          </div>
+          <span>静态知识分类</span>
+        </div>
+        <div class="knowledge-grid">
+          ${knowledgeOverviewCards.map(renderKnowledgeOverviewCard).join("")}
+        </div>
+      </section>
+
+      <div class="ai-knowledge-layout">
+        <section class="ai-knowledge-section" aria-label="知识条目预览">
+          <div class="workbench-section-header">
+            <div>
+              <h3>知识条目</h3>
+              <p>示例条目展示未来知识库如何记录来源、可信度和人工验证状态。</p>
+            </div>
+            <span>4 条 demo 知识</span>
+          </div>
+          <div class="knowledge-item-list">
+            ${knowledgeItems.map(renderKnowledgeItemCard).join("")}
+          </div>
+        </section>
+
+        <aside class="ai-knowledge-panel" aria-label="AI 知识使用说明">
+          <div class="workbench-review-heading">
+            <div>
+              <h3>AI 如何使用知识</h3>
+              <p class="workbench-review-note">固定示例：企业知识库只作为 AI Copilot 的内部参考来源。</p>
+            </div>
+            ${badge("不生成答案", "pending")}
+          </div>
+          <dl class="knowledge-usage-list">
+            ${knowledgeUsageRows
+              .map(
+                (row) => `
+                  <dt>${escapeHtml(row.label)}</dt>
+                  <dd>${escapeHtml(row.value)}</dd>
+                `,
+              )
+              .join("")}
+          </dl>
+        </aside>
+      </div>
+
+      <section class="ai-knowledge-section" aria-label="人工验证队列">
+        <div class="workbench-section-header">
+          <div>
+            <h3>人工验证队列</h3>
+            <p>AI 生成或归纳的知识必须先进入人工验证；未验证内容不可用于客户承诺。</p>
+          </div>
+          <span>待人工确认</span>
+        </div>
+        <div class="knowledge-verification-grid">
+          ${knowledgeVerificationQueue.map(renderKnowledgeVerificationCard).join("")}
+        </div>
+      </section>
+
+      <section class="ai-knowledge-section" aria-label="RAG 路线预览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>RAG 路线预览</h3>
+            <p>未来 RAG 必须先有分类、来源、验证、切分和引用规则；当前只展示路线，不执行检索。</p>
+          </div>
+          <span>未来路线</span>
+        </div>
+        <div class="knowledge-roadmap" aria-label="AI 知识库未来 RAG 路线">
+          ${knowledgeRoadmapSteps.map(renderKnowledgeRoadmapStep).join("")}
+        </div>
+      </section>
+
+      <section class="ai-knowledge-section knowledge-risk-note" aria-label="AI 知识库安全边界">
+        <div class="workbench-section-header">
+          <div>
+            <h3>安全边界</h3>
+            <p>知识库帮助 AI 更懂业务，但不会替代人工判断、报价确认、供应商确认或客户沟通审批。</p>
+          </div>
+          <span>安全优先</span>
+        </div>
+        <div class="knowledge-safety-grid">
+          ${knowledgeSafetyItems.map((item) => `<span class="compliance-chip">${escapeHtml(item)}</span>`).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderKnowledgeOverviewCard(card) {
+  return `
+    <article class="knowledge-card knowledge-card-${escapeHtml(card.tone)}">
+      <div>
+        <span class="knowledge-category-chip">${escapeHtml(card.label)}</span>
+        <strong class="knowledge-count">${escapeHtml(card.count)}</strong>
+      </div>
+      <p>${escapeHtml(card.description)}</p>
+      <div class="knowledge-card-status">
+        <span class="verification-badge">${escapeHtml(card.status)}</span>
+        <span class="knowledge-source-pill">${escapeHtml(card.note)}</span>
+      </div>
+    </article>
+  `;
+}
+
+function renderKnowledgeItemCard(item) {
+  return `
+    <article class="knowledge-item-card">
+      <div class="knowledge-item-heading">
+        <div>
+          <span class="workbench-category">${escapeHtml(item.category)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+        </div>
+        ${badge(`可信度：${item.confidence}`, "pending")}
+      </div>
+      <p>${escapeHtml(item.summary)}</p>
+      <dl class="knowledge-item-meta">
+        <dt>来源</dt>
+        <dd>${escapeHtml(item.source)}</dd>
+        <dt>人工验证</dt>
+        <dd>${escapeHtml(item.humanVerified)}</dd>
+      </dl>
+      <div class="knowledge-chip-row">
+        ${renderChipList(item.chips, "knowledge-category-chip")}
+      </div>
+    </article>
+  `;
+}
+
+function renderKnowledgeVerificationCard(item) {
+  return `
+    <article class="knowledge-verification-card">
+      <div>
+        <span class="verification-badge">${escapeHtml(item.status)}</span>
+        <h4>${escapeHtml(item.title)}</h4>
+      </div>
+      <p>${escapeHtml(item.note)}</p>
+      <div class="disabled-chip-row">
+        ${renderDisabledCapabilities(["不可用于客户承诺", "不可自动发送", "不可自动报价"])}
+      </div>
+    </article>
+  `;
+}
+
+function renderKnowledgeRoadmapStep(step, index) {
+  return `
+    <div class="knowledge-roadmap-step">
+      <span>${index + 1}</span>
+      <strong>${escapeHtml(step)}</strong>
+    </div>
+  `;
+}
+
+function renderKnowledgeCenterReview() {
+  return `
+    <div class="review-stack">
+      <div class="review-card">
+        <h3>AI 知识库只读边界</h3>
+        <ul class="check-list">
+          <li>静态预览，不创建知识条目，不写入数据库，不调用 AI 或 RAG</li>
+          <li>不上传、不下载、不解析文件，不 OCR，不展示原始私有文件内容</li>
+          <li>不自动发送 Email / WhatsApp，不创建客户，不生成报价、PI、订单或生产动作</li>
+        </ul>
+      </div>
+      <div class="review-card">
+        <h3>知识使用原则</h3>
+        <dl>
+          <dt>当前用途</dt>
+          <dd>展示未来企业知识库如何支撑询盘分析、供应商匹配、报价前复核和 AI Copilot。</dd>
+          <dt>验证状态</dt>
+          <dd>示例知识全部为待人工验证或静态预览，不得用于客户承诺。</dd>
+          <dt>来源要求</dt>
+          <dd>未来知识必须记录来源、可信度、有效期和人工复核结果。</dd>
+          <dt>缺失能力</dt>
+          <dd>真实知识库、RAG、embedding、文档切分、检索引用和人工验证流程尚未实现。</dd>
+        </dl>
+      </div>
+      <div class="review-card">
+        <h3>禁用能力</h3>
+        <div class="disabled-chip-row">
+          ${renderDisabledCapabilities(["不可上传文件", "不可解析/OCR", "不可执行 RAG", "不可生成 AI 客户答案", "不可自动报价", "不可外发消息", "不可创建业务记录"])}
         </div>
       </div>
     </div>
