@@ -165,3 +165,29 @@ CBM-CODEX-SUPABASE-KNOWLEDGE-SQL-APPLY-001
 ```
 
 That future task must still require Paul approval before any remote SQL execution.
+
+## NPM Repair Attempt Status
+
+`CBM-CODEX-SUPABASE-CLI-NPM-REPAIR-001` attempted a safe npm-based Supabase CLI repair after the Homebrew paths remained unusable.
+
+Result:
+
+- `supabase` was not available in PATH before the npm repair attempt.
+- Node was available at `/opt/homebrew/bin/node`, version `v26.3.0`.
+- npm and npx were available at version `11.16.0`.
+- `npx -y supabase@latest --version` timed out after 90 seconds.
+- `npx -y supabase@2.107.0 --version` failed with npm `ENOENT` in the temporary `_npx` cache directory.
+- Paul approved `npm install -g supabase`.
+- `npm install -g supabase` completed and installed `/opt/homebrew/bin/supabase`.
+- `supabase --version` still failed because the npm-packaged darwin-arm64 binary was terminated with `SIGKILL`.
+- No SQL, migrations, seeds, login, link, database access, deployment, secrets, project code, package files, schema files, or UI files were touched.
+
+Final status:
+
+- Supabase CLI remains unavailable for safe automation on this Mac.
+- The npm global wrapper exists, but `supabase --version` is not usable.
+- Use Supabase Dashboard SQL Editor or a separately approved secure `psql` path for future database work until the macOS binary execution issue is resolved.
+
+Detailed report:
+
+- `docs/ops/supabase-cli-npm-repair-report.md`
