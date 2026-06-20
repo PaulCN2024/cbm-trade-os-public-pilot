@@ -478,9 +478,15 @@ tr:last-child td {
   padding: 9px 11px;
 }
 
-.field input[readonly] {
+.field input[readonly],
+.field input[disabled] {
   background: var(--surface-muted);
   color: var(--muted-strong);
+}
+
+.field input[disabled] {
+  cursor: not-allowed;
+  opacity: 1;
 }
 
 .field textarea {

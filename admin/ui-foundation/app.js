@@ -3354,12 +3354,12 @@ function renderReadOnlyProductCard() {
       <div class="form-grid">
         <label class="field">
           <span>允许动作</span>
-          <input type="text" value="只读产品查看" readonly />
+          <input type="text" value="只读产品查看" readonly disabled aria-readonly="true" aria-disabled="true" title="只读预览，暂不支持产品编辑或写入" />
           <small>未连接创建、更新或删除 API。</small>
         </label>
         <label class="field">
           <span>业务线</span>
-          <input type="text" value="A_ARCHITECTURAL / B_INDUSTRIAL / UNKNOWN" readonly />
+          <input type="text" value="A_ARCHITECTURAL / B_INDUSTRIAL / UNKNOWN" readonly disabled aria-readonly="true" aria-disabled="true" title="当前为内部试用，仅展示业务线枚举，不执行产品修改" />
           <small>Business-line labels are display-only in this step.</small>
         </label>
       </div>
