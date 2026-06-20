@@ -4,8 +4,8 @@
 
 - Full product vision progress: 36%
 - Internal MVP / foundation progress: 95%
-- Current phase: Phase UI-2B - Quotation Metadata Admin-read Production Deployment Completed
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, and Internal Trial Readiness Update completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
+- Current phase: Phase UI-2B - Authenticated Trial Access Preparation Completed
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, and Authenticated Trial Access Preparation completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
@@ -31,6 +31,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Quotation Metadata UI Admin-read Migration: 100% `[████████████████████]`
 - Quotation Metadata Admin-read Production Deployment: 100% `[████████████████████]`
 - Internal Trial Readiness Update: 100% `[████████████████████]`
+- Authenticated Trial Access Preparation: 100% `[████████████████████]`
 - Pre-Quotation UI Admin-read Migration: 100% `[████████████████████]`
 - File Center Admin-read Migration: 100% `[████████████████████]`
 - AI/Supplier Capability Admin-read Migration: 100% `[████████████████████]`
@@ -127,6 +128,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Quotation Metadata UI Admin-read Migration
 - Quotation Metadata Admin-read Production Deployment
 - Internal Trial Readiness Update
+- Authenticated Trial Access Preparation
 
 ## 4. Current Frozen Foundations
 
@@ -170,6 +172,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Quotation Metadata UI now targets `GET /api/admin-read/quotations`
 - Quotation Metadata Admin-read production deployment is completed and smoke verified
 - Internal Trial Readiness Update is completed; the next meaningful work should be based on Paul's real trial feedback
+- Authenticated Trial Access Preparation is completed; authenticated JSON smoke remains deferred until Paul logs in or provides a safe temporary admin token
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
 
