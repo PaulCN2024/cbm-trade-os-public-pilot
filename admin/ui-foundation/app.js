@@ -1,6 +1,7 @@
 import { getAdminAccessToken } from "../../lib/admin-auth.js";
 
 const navItems = [
+  { id: "ai-command-center", label: "AI 指挥台" },
   { id: "dashboard", label: "工作台" },
   { id: "prospecting", label: "AI 开发客户" },
   { id: "knowledge-center", label: "AI 知识库" },
@@ -21,6 +22,14 @@ const navItems = [
 ];
 
 const sections = {
+  "ai-command-center": {
+    title: "AI 指挥台",
+    description: "未来系统主入口静态预览：AI 理解任务、查找上下文、规划流程、准备草稿，并等待人工确认。",
+    sectionTitle: "AI 指挥台",
+    sectionHelp: "静态只读预览。当前不调用 AI、不执行工作流、不发送、不生成报价或 PI、不写入数据。",
+    content: renderAiCommandCenter,
+    review: renderAiCommandCenterReview,
+  },
   dashboard: {
     title: "CBM 工作台",
     description: "内部只读试用版：用于查看、复核和记录问题，不执行发送、审批、报价或下单动作。",
@@ -1001,6 +1010,134 @@ const workbenchQueueItems = [
   },
 ];
 
+const aiCommandExamples = [
+  "帮我处理这个秘鲁客户的轻钢龙骨询盘",
+  "帮我看看这个客户能不能报价",
+  "帮我找类似 Caribbean Green Construction 的客户",
+  "给这个产品生成一周 LinkedIn 内容选题",
+  "帮我跟进这个 7 天没回复的客户",
+];
+
+const aiCommandIntentCards = [
+  {
+    title: "询盘处理",
+    detects: "客户、国家、产品、缺失信息和下一步复核动作",
+    routesTo: "询盘 / 客户 / 知识库 / 文件",
+    safeOutput: "缺失信息清单、客户澄清问题草稿",
+    approval: "发送前需要人工确认",
+  },
+  {
+    title: "报价准备",
+    detects: "规格、数量、图纸、价格/交期/付款风险",
+    routesTo: "报价前复核 / 询盘 / 知识库",
+    safeOutput: "报价准备度、阻塞项、人工检查表",
+    approval: "正式报价需要人工确认",
+  },
+  {
+    title: "供应商匹配",
+    detects: "产品工艺、数量、包装和供应能力方向",
+    routesTo: "供应商 / 制造能力 / 知识库",
+    safeOutput: "候选供应方向、供应商询价草稿",
+    approval: "发送 RFQ 前需要人工确认",
+  },
+  {
+    title: "客户跟进",
+    detects: "未回复天数、客户阶段、跟进风险和语气",
+    routesTo: "客户 / 询盘 / 历史沟通",
+    safeOutput: "跟进建议、消息草稿",
+    approval: "外发消息需要人工确认",
+  },
+  {
+    title: "AI 开发客户",
+    detects: "样本客户、目标市场、产品匹配和合规来源",
+    routesTo: "AI 开发客户 / 知识库 / 客户",
+    safeOutput: "相似客户方向、研究计划",
+    approval: "开发信发送前需要人工确认",
+  },
+  {
+    title: "内容营销",
+    detects: "产品、受众、话题角度和风险词",
+    routesTo: "内容营销 / 知识库 / 产品",
+    safeOutput: "LinkedIn 选题和草稿方向",
+    approval: "发布前需要人工确认",
+  },
+  {
+    title: "知识查询",
+    detects: "产品规则、报价规则、SOP 和风险边界",
+    routesTo: "AI 知识库",
+    safeOutput: "带来源的内部参考摘要",
+    approval: "无需执行；客户承诺仍需确认",
+  },
+  {
+    title: "文件分析",
+    detects: "PDF/图纸/规格书里与报价有关的信息",
+    routesTo: "文件 / 询盘 / 报价前复核",
+    safeOutput: "提取清单、缺失字段、人工检查项",
+    approval: "报价或外发前需要人工确认",
+  },
+  {
+    title: "售后投诉",
+    detects: "投诉类型、证据缺口、责任/赔偿风险",
+    routesTo: "售后 / 文件 / 知识库",
+    safeOutput: "问题摘要、证据清单、回复草稿",
+    approval: "责任或赔偿表述需要人工确认",
+  },
+  {
+    title: "业务复盘",
+    detects: "今日优先级、风险、跟进和缺失知识",
+    routesTo: "工作台 / 客户 / 询盘 / 风险",
+    safeOutput: "每日优先级简报",
+    approval: "仅复盘无需执行",
+  },
+];
+
+const aiCommandContextItems = [
+  "客户资料",
+  "询盘记录",
+  "产品知识",
+  "供应商能力",
+  "报价规则",
+  "文件资料",
+  "历史沟通",
+  "风险规则",
+];
+
+const aiCommandWorkflowSteps = [
+  "识别客户和国家",
+  "提取产品 / 规格 / 数量 / 港口",
+  "查询知识库规则",
+  "检查供应商能力",
+  "识别缺失信息",
+  "生成客户确认问题草稿",
+  "生成供应商询价草稿",
+  "进入报价前复核",
+  "等待 Paul 人工确认",
+];
+
+const aiCommandDrafts = [
+  {
+    title: "客户确认问题草稿",
+    subtitle: "Short English / Spanish-friendly draft",
+    body: "Dear customer, thank you for your inquiry. To check quotation readiness, please help confirm the drawing/specification, target quantity, thickness, packing requirement and destination port. We will review the information internally before preparing any quotation.",
+    chips: ["草稿", "未发送", "需人工确认"],
+  },
+  {
+    title: "供应商询价草稿",
+    subtitle: "中文供应商询价草稿",
+    body: "请帮忙预审轻钢龙骨询价方向：需确认规格、厚度、材质/镀锌层、包装方式、MOQ、20GP 装柜范围、参考交期和报价有效期。当前仅内部询价草稿，未对客户承诺价格或交期。",
+    chips: ["草稿", "未发送", "需人工确认"],
+  },
+];
+
+const aiCommandDailyBriefingItems = [
+  { title: "今日最该处理的客户", detail: "秘鲁轻钢龙骨询盘、巴拿马门窗图纸补充、印尼吊顶系统规格确认。" },
+  { title: "需要补充信息的询盘", detail: "图纸、规格、数量、目的港、包装和交期目标仍需人工确认。" },
+  { title: "高风险报价", detail: "涉及价格、付款、交期、质量责任或供应商能力的内容必须先复核。" },
+  { title: "待跟进客户", detail: "7 天未回复客户需要人工决定是否发送跟进消息。" },
+  { title: "待验证知识", detail: "报价规则、供应商交期和产品 SOP 需要人工验证后才能引用。" },
+  { title: "内容营销建议", detail: "可准备 LinkedIn 选题草稿，但发布前必须人工确认来源和表述。" },
+];
+
 const prospectingModeCards = [
   {
     title: "目标市场开发",
@@ -1754,6 +1891,228 @@ function setSection(sectionId) {
     loadPreQuotationReviewReadOnly();
     loadQuotationMetadataReadOnly();
   }
+}
+
+function renderAiCommandCenter() {
+  return `
+    <div class="ai-command-center-preview" aria-label="AI 指挥台静态预览">
+      <div class="command-center-hero">
+        <div>
+          <span class="state-label">AI Command Center</span>
+          <h3>AI 指挥台</h3>
+          <p>用一句话告诉 AI 你要完成的外贸任务，AI 会自动理解意图、查找上下文、规划流程、生成草稿，并提示需要人工确认的动作。</p>
+        </div>
+        <div class="command-center-badges" aria-label="AI 指挥台预览状态">
+          ${badge("静态预览", "draft")}
+          ${badge("不调用 AI", "pending")}
+          ${badge("不自动发送", "pending")}
+          ${badge("人工确认", "approval")}
+          ${badge("来源与风险", "active")}
+        </div>
+      </div>
+
+      <section class="command-center-section" aria-label="AI 指令输入预览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>告诉 AI 你想完成什么</h3>
+            <p>这是静态指令预览区，不是可输入表单；当前不会提交、不会调用模型、不会执行动作。</p>
+          </div>
+          <span>只读指令示例</span>
+        </div>
+        <div class="command-input-preview" aria-label="只读 AI 指令示例">
+          <span>Tell AI what you want to do...</span>
+          ${aiCommandExamples.map((example) => `<p>${escapeHtml(example)}</p>`).join("")}
+        </div>
+      </section>
+
+      <section class="command-center-section" aria-label="意图识别卡片">
+        <div class="workbench-section-header">
+          <div>
+            <h3>任务意图识别</h3>
+            <p>AI 先判断任务类型，再路由到相应模块；输出保持只读，不直接执行外贸动作。</p>
+          </div>
+          <span>10 类 intent</span>
+        </div>
+        <div class="intent-grid">
+          ${aiCommandIntentCards.map(renderAiCommandIntentCard).join("")}
+        </div>
+      </section>
+
+      <section class="command-center-section" aria-label="上下文检索面板">
+        <div class="workbench-section-header">
+          <div>
+            <h3>跨模块上下文检索</h3>
+            <p>未来 AI 会先查找与任务相关的客户、询盘、知识、供应商、文件和风险规则，再给出建议。</p>
+          </div>
+          <span>来源优先</span>
+        </div>
+        <div class="context-retrieval-grid">
+          ${aiCommandContextItems
+            .map(
+              (item) => `
+                <article class="context-retrieval-card">
+                  <span>${escapeHtml(item)}</span>
+                  <p>只读检索来源，未来需要显示来源、可信度和缺失信息。</p>
+                </article>
+              `,
+            )
+            .join("")}
+        </div>
+      </section>
+
+      <div class="ai-command-layout">
+        <section class="command-center-section workflow-preview" aria-label="秘鲁客户轻钢龙骨询盘流程预览">
+          <div class="workbench-section-header">
+            <div>
+              <h3>示例流程：秘鲁客户轻钢龙骨询盘</h3>
+              <p>AI 把一句话拆成可复核流程；所有步骤都是预览，不会写入或外发。</p>
+            </div>
+            <span>等待 Paul 确认</span>
+          </div>
+          <div class="workflow-stepper" aria-label="AI 指挥台示例流程">
+            ${aiCommandWorkflowSteps.map(renderProspectingWorkflowStep).join("")}
+          </div>
+        </section>
+
+        <aside class="approval-boundary-panel" aria-label="人工审批边界">
+          <div class="workbench-review-heading">
+            <div>
+              <h3>人工审批边界</h3>
+              <p class="workbench-review-note">AI 准备工作，Paul 决定是否执行。</p>
+            </div>
+            ${badge("不自动执行", "pending")}
+          </div>
+          <div class="approval-boundary-grid">
+            <div>
+              <h4>AI 可以准备</h4>
+              <div class="command-center-chip-row">
+                ${renderChipList(["分析", "建议", "草稿", "风险提示"], "ai-command-chip")}
+              </div>
+            </div>
+            <div>
+              <h4>Paul 必须确认</h4>
+              <div class="disabled-chip-row">
+                ${renderDisabledCapabilities(["发送客户消息", "发送供应商询价", "正式报价", "PI", "订单", "付款 / 生产 / 发货", "售后赔偿"])}
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <section class="command-center-section" aria-label="草稿预览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>安全草稿预览</h3>
+            <p>草稿只用于人工复核。当前无复制、发送、审批或生成正式单据能力。</p>
+          </div>
+          <span>草稿 / 未发送</span>
+        </div>
+        <div class="draft-preview-grid">
+          ${aiCommandDrafts.map(renderAiCommandDraftCard).join("")}
+        </div>
+      </section>
+
+      <section class="command-center-section" aria-label="每日优先级简报预览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>每日优先级简报</h3>
+            <p>未来 AI 指挥台可把客户、询盘、风险、跟进、知识和内容任务汇总成当天最值得处理的事项。</p>
+          </div>
+          <span>未来简报</span>
+        </div>
+        <div class="daily-briefing-grid">
+          ${aiCommandDailyBriefingItems
+            .map(
+              (item) => `
+                <article class="daily-briefing-card">
+                  <h4>${escapeHtml(item.title)}</h4>
+                  <p>${escapeHtml(item.detail)}</p>
+                </article>
+              `,
+            )
+            .join("")}
+        </div>
+      </section>
+
+      <section class="command-center-section command-center-note" aria-label="AI 指挥台和 Copilot 关系">
+        <div>
+          <h3>AI 指挥台 vs AI Copilot</h3>
+          <p>AI 指挥台是系统入口，负责理解目标、路由模块和规划流程。AI Copilot 是每个模块里的上下文助手，负责在客户、询盘、知识、文件或报价复核页面里辅助解释和起草。</p>
+          <p>两者共享知识库、风险边界和人工审批规则；当前都不会调用 AI、不会自动发送、不会执行业务动作。</p>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderAiCommandIntentCard(card) {
+  return `
+    <article class="intent-card">
+      <div>
+        <h4>${escapeHtml(card.title)}</h4>
+        <p>${escapeHtml(card.detects)}</p>
+      </div>
+      <dl>
+        <dt>路由到</dt>
+        <dd>${escapeHtml(card.routesTo)}</dd>
+        <dt>安全输出</dt>
+        <dd>${escapeHtml(card.safeOutput)}</dd>
+        <dt>审批边界</dt>
+        <dd>${escapeHtml(card.approval)}</dd>
+      </dl>
+    </article>
+  `;
+}
+
+function renderAiCommandDraftCard(draft) {
+  return `
+    <article class="draft-preview-card">
+      <div class="draft-preview-heading">
+        <div>
+          <span class="workbench-category">${escapeHtml(draft.subtitle)}</span>
+          <h4>${escapeHtml(draft.title)}</h4>
+        </div>
+        ${badge("Review only", "draft")}
+      </div>
+      <p>${escapeHtml(draft.body)}</p>
+      <div class="command-center-chip-row">
+        ${renderChipList(draft.chips, "ai-command-chip")}
+      </div>
+    </article>
+  `;
+}
+
+function renderAiCommandCenterReview() {
+  return `
+    <div class="review-stack">
+      <div class="review-card">
+        <h3>AI 指挥台只读边界</h3>
+        <ul class="check-list">
+          <li>静态预览，不调用 AI provider，不连接 chat backend</li>
+          <li>不执行 workflow，不写入数据库，不创建客户、询盘、任务或报价</li>
+          <li>不发送 Email / WhatsApp，不发布内容，不发送 RFQ</li>
+          <li>不生成正式报价、PI、订单，不触发付款 / 生产 / 发货</li>
+        </ul>
+      </div>
+      <div class="review-card">
+        <h3>未来入口定位</h3>
+        <dl>
+          <dt>AI 指挥台</dt>
+          <dd>跨模块理解任务、查找上下文、规划流程和展示审批边界。</dd>
+          <dt>AI Copilot</dt>
+          <dd>每个模块里的上下文助手，帮助解释、总结、起草和提醒风险。</dd>
+          <dt>共享基础</dt>
+          <dd>知识库、风险边界、来源可信度、人工审批规则和未来审计记录。</dd>
+        </dl>
+      </div>
+      <div class="review-card">
+        <h3>禁用能力</h3>
+        <div class="disabled-chip-row">
+          ${renderDisabledCapabilities(["不可提交指令", "不可调用 AI", "不可自动发送", "不可自动报价", "不可生成 PI", "不可创建订单", "不可触发付款 / 生产 / 发货"])}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderDashboard() {
