@@ -2,16 +2,16 @@
 
 ## 1. Current Progress Summary
 
-- Full product vision progress: 41%
+- Full product vision progress: 42%
 - Internal MVP / foundation progress: 100%
-- Current phase: Phase UI-3 - Knowledge Base Read-only Data Foundation Fallback-compatible Completed
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, Authenticated Trial Access Preparation, Paul Manual Trial Feedback Template, Read-only To Controlled Write Roadmap, Admin-read Expansion Backlog, Internal Trial Success Criteria, Admin UI Visual Upgrade Round 1, Admin UI Visual Upgrade Round 1 Production Deployment, Admin UI Visual QA And Micro Polish Round 2, Admin UI Visual QA Round 2 Production Deployment, AI-first Admin UI Redesign Blueprint, AI-first UI Redesign Visual Storyboard, AI-first UI Redesign Implementation Plan, AI Prospecting Lookalike Customer Planning, AI Prospecting Compliance Safety Planning, AI Prospecting Center Static UI Preview, Vercel Protection Smoke Resolution Plan, AI Prospecting Center Static UI Preview Production Checkpoint, Products Section Active Inputs Disabled, Companies Section Active Controls Disabled, Phase UI-2 Internal MVP Completion Report, AI Knowledge Center Planning, AI Knowledge Center UI Storyboard, Knowledge RAG Roadmap, AI Knowledge Center Static UI Preview, AI Knowledge Center Static UI Preview Production Deployment, Knowledge Base Functional Foundation Plan, Knowledge Base Data Model Plan, Knowledge Admin-read API Plan, Knowledge Demo Seed Data Plan, Knowledge Human Verification Workflow, Knowledge UI Data-binding Plan, Knowledge Safety And Privacy Plan, Knowledge Implementation Roadmap, Knowledge Base Read-only Data Foundation, Knowledge Base Admin-read Routes, Knowledge Base UI Data Binding, Knowledge Base SQL Application Report, Knowledge Base Read-only Production Checkpoint, and Knowledge Base Manual SQL Execution Pack Prepared completed; SQL application is deferred because Supabase CLI is unavailable and manual SQL Editor execution is pending; still no write actions, external channel integration, approval execution, quotation generation, price calculation, RAG, embeddings, vector database, file upload, file parsing, OCR, prospecting search execution, scraping, outreach automation, customer creation, or business execution
+- Current phase: Phase UI-3 - Knowledge Base SQL Applied And Verified; post-SQL production verification next
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, Authenticated Trial Access Preparation, Paul Manual Trial Feedback Template, Read-only To Controlled Write Roadmap, Admin-read Expansion Backlog, Internal Trial Success Criteria, Admin UI Visual Upgrade Round 1, Admin UI Visual Upgrade Round 1 Production Deployment, Admin UI Visual QA And Micro Polish Round 2, Admin UI Visual QA Round 2 Production Deployment, AI-first Admin UI Redesign Blueprint, AI-first UI Redesign Visual Storyboard, AI-first UI Redesign Implementation Plan, AI Prospecting Lookalike Customer Planning, AI Prospecting Compliance Safety Planning, AI Prospecting Center Static UI Preview, Vercel Protection Smoke Resolution Plan, AI Prospecting Center Static UI Preview Production Checkpoint, Products Section Active Inputs Disabled, Companies Section Active Controls Disabled, Phase UI-2 Internal MVP Completion Report, AI Knowledge Center Planning, AI Knowledge Center UI Storyboard, Knowledge RAG Roadmap, AI Knowledge Center Static UI Preview, AI Knowledge Center Static UI Preview Production Deployment, Knowledge Base Functional Foundation Plan, Knowledge Base Data Model Plan, Knowledge Admin-read API Plan, Knowledge Demo Seed Data Plan, Knowledge Human Verification Workflow, Knowledge UI Data-binding Plan, Knowledge Safety And Privacy Plan, Knowledge Implementation Roadmap, Knowledge Base Read-only Data Foundation, Knowledge Base Admin-read Routes, Knowledge Base UI Data Binding, Knowledge Base SQL Application Report, Knowledge Base Read-only Production Checkpoint, Knowledge Base Manual SQL Execution Pack Prepared, and Knowledge Base SQL Applied And Verified completed; Supabase CLI remains unavailable, but the approved Dashboard SQL Editor execution succeeded and row counts were verified; still no external channel integration, approval execution, quotation generation, price calculation, RAG, embeddings, vector database, file upload, file parsing, OCR, prospecting search execution, scraping, outreach automation, customer creation, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
-- Full vision: 41% `[████░░░░░░]`
+- Full vision: 42% `[████░░░░░░]`
 - Internal MVP: 100% `[██████████]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
@@ -74,6 +74,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Knowledge Base Read-only Data Foundation: 100% `[████████████████████]`
 - Knowledge Base Read-only Production Checkpoint: 100% `[████████████████████]`
 - Knowledge Base Manual SQL Execution Pack Prepared: 100% `[████████████████████]`
+- Knowledge Base SQL Applied And Verified: 100% `[████████████████████]`
 
 ## 3. Completed Major Milestones
 
@@ -190,6 +191,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Knowledge Base SQL Application Report
 - Knowledge Base Read-only Production Checkpoint
 - Knowledge Base Manual SQL Execution Pack Prepared
+- Knowledge Base SQL Applied And Verified
 
 ## 4. Current Frozen Foundations
 
@@ -258,16 +260,17 @@ These percentages are planning estimates. They should move only after milestone 
 - AI Knowledge Center Static UI Preview is completed as a static read-only Admin UI module; it adds navigation, knowledge category cards, sample knowledge items, human verification queue, AI usage panel, RAG roadmap preview, and safety notes without RAG, embeddings, upload, parsing, OCR, AI answer generation, API changes, schema changes, write actions, or business execution
 - AI Knowledge Center Static UI Preview production deployment is completed and smoke verified; the production Admin UI serves the new static preview and admin-read routes remain auth-gated/read-only without RAG, embedding, file ingestion, AI answer generation, write actions, or business execution
 - Knowledge Base Functional Foundation Planning is completed as documentation only; it defines the future read-only knowledge data model, admin-read API plan, demo seed plan, human verification workflow, UI data-binding plan, safety/privacy plan, and implementation roadmap without schema changes, migrations, SQL, API code, UI code, RAG, embeddings, file ingestion, AI answer generation, write actions, or business execution
-- Knowledge Base Read-only Data Foundation is completed in fallback-compatible mode; migration SQL and DEMO seed SQL are prepared and safety-scanned, Admin Read Dispatcher knowledge routes are added, AI Knowledge Center UI binds to admin-read knowledge endpoints with safe fallback, and SQL application is deferred because Supabase CLI is unavailable
-- Knowledge Base Read-only Production Checkpoint is completed; the production deployment is Ready, new knowledge admin-read routes are deployed and auth-gated, AI Knowledge Center renders with safe fallback, and SQL application remains deferred because Supabase CLI is unavailable
-- Knowledge Base Manual SQL Execution Pack Prepared is completed; combined SQL, manual Dashboard SQL Editor guide, and post-SQL verification checklist are ready for Paul manual execution, while Codex still has not touched the database
+- Knowledge Base Read-only Data Foundation is completed in fallback-compatible mode; migration SQL and DEMO seed SQL were prepared and safety-scanned, Admin Read Dispatcher knowledge routes are added, AI Knowledge Center UI binds to admin-read knowledge endpoints with safe fallback, and the approved Dashboard SQL Editor execution has now applied the knowledge base tables and DEMO seed data
+- Knowledge Base Read-only Production Checkpoint is completed; the production deployment is Ready, new knowledge admin-read routes are deployed and auth-gated, AI Knowledge Center renders with safe fallback, and SQL application has now been completed via approved Supabase Dashboard SQL Editor execution
+- Knowledge Base Manual SQL Execution Pack Prepared is completed; combined SQL, manual Dashboard SQL Editor guide, and post-SQL verification checklist were used as the execution source
+- Knowledge Base SQL Applied And Verified is completed; Supabase Dashboard SQL Editor returned success, row counts were verified as 7 categories, 12 items, 12 sources, 12 reviews, and item statuses were draft 2, needs_review 6, verified 4; follow-up security work is required because Supabase Advisor reports RLS Disabled in Public for the new `knowledge_*` tables
 - Vercel Protection Smoke Resolution Plan is completed as documentation only; no Vercel settings, secrets, deploys, UI code, API code, schema, package files or business behavior were changed
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
 
 ## 6. Not Yet Started / Still Early
 
-- Schema expansion
+- Controlled business schema expansion beyond the Knowledge Base read-only foundation
 - API write routes
 - Approval workflow execution
 - AI Provider / Model Gateway integration
@@ -295,11 +298,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-COMBO-KNOWLEDGE-DATA-READONLY-001 - Implement Knowledge Base Read-only Data Foundation after Paul approves the schema plan
-2. CBM-CODEX-SPRINT-KNOWLEDGE-RAG-PLAN-001 - RAG And Embedding Architecture Plan
+1. CBM-CODEX-KNOWLEDGE-POST-SQL-VERIFY-001 - Verify Knowledge Base production API/UI behavior after SQL application
+2. CBM-CODEX-SPRINT-KNOWLEDGE-RLS-PLAN-001 - Plan Knowledge Base RLS/read policy safety before real confidential data
 3. CBM-CODEX-SPRINT-KNOWLEDGE-SAFETY-001 - Knowledge Verification And Source Safety Plan
-4. CBM-CODEX-SPRINT-UI-AI-FIRST-001 - Add AI Copilot Layout Shell
-5. CBM-CODEX-SPRINT-TRIAL-002 - Paul Manual Trial Feedback Incorporation
+4. CBM-CODEX-SPRINT-KNOWLEDGE-RAG-PLAN-001 - RAG And Embedding Architecture Plan
+5. CBM-CODEX-SPRINT-UI-AI-FIRST-001 - Add AI Copilot Layout Shell
 
 ## 9. How To Update This File
 

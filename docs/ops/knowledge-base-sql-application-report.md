@@ -6,10 +6,15 @@ Record whether the Knowledge Base read-only foundation SQL was applied during:
 
 - `CBM-CODEX-COMBO-KNOWLEDGE-DATA-AUTO-APPROVAL-001`
 - `CBM-CODEX-SUPABASE-EXECUTION-CHANNEL-001`
+- later approved Supabase Dashboard SQL Editor execution by Codex on Paul's logged-in browser session
 
 ## Approval Status
 
-Paul approval was not requested for remote database execution because the local Supabase CLI execution channel remained unavailable.
+Initial Paul approval was not requested for remote database execution because the local Supabase CLI execution channel remained unavailable.
+
+Later, Paul explicitly instructed Codex to operate the Supabase Dashboard SQL Editor directly after logging in, and confirmed execution with `APPROVED`.
+
+Codex used the logged-in Supabase Dashboard browser session only after Paul confirmed the operation. No Supabase CLI, `psql`, database password, service-role key, browser cookies, localStorage, sessionStorage, or secret values were read or printed.
 
 The command:
 
@@ -32,14 +37,26 @@ Results:
 - macOS `spctl` reported the Homebrew-installed binary as `invalid signature`.
 - `npx -y supabase@2.107.0 --version` did not return a version and was terminated after timing out.
 
-No Supabase login, project link, SQL apply, seed apply, or row count verification was attempted.
+No Supabase login, project link, SQL apply, seed apply, or row count verification was attempted during the CLI execution-channel tasks.
+
+The later Dashboard execution used:
+
+- Organization: `PaulCN2024's Org`
+- Project: `PaulCN2024's Project`
+- Project ref: `zswtekjtkyvfagbudkia`
+- Supabase project URL shown in Dashboard: `https://zswtekjtkyvfagbudkia.supabase.co`
 
 ## SQL Application Status
 
-- Migration applied: no
-- Demo seed applied: no
-- Method used: none
-- Reason skipped: Supabase CLI could not be executed safely after the approved Homebrew install and npx fallback checks.
+- Migration applied: yes
+- Demo seed applied: yes
+- Method used: Supabase Dashboard SQL Editor in the logged-in browser session, after Paul's explicit approval
+- Execution result: `Success. No rows returned.`
+- Verification result: passed
+
+The combined SQL file executed was:
+
+- `docs/ops/knowledge-base-manual-sql-combined.sql`
 
 ## SQL Files Prepared
 
@@ -69,7 +86,7 @@ No blocked executable SQL was found.
 
 ## Expected Database Impact If Applied Later
 
-The migration would create these new tables if missing:
+The migration created these new tables if missing:
 
 - `knowledge_categories`
 - `knowledge_items`
@@ -79,7 +96,7 @@ The migration would create these new tables if missing:
 - `knowledge_versions`
 - `knowledge_usage_logs`
 
-The demo seed would insert:
+The demo seed inserted:
 
 - 7 `DEMO_` knowledge categories
 - at least 12 `DEMO_` knowledge items
@@ -88,12 +105,23 @@ The demo seed would insert:
 
 ## Row Counts
 
-Row counts were not verified because SQL was not applied.
+Row counts were verified in Supabase Dashboard SQL Editor after execution:
 
-Expected minimum counts after a future approved apply:
+- `knowledge_categories`: 7
+- `knowledge_items`: 12
+- `knowledge_sources`: 12
+- `knowledge_reviews`: 12
 
-- `knowledge_categories >= 7`
-- `knowledge_items >= 12`
+Knowledge item verification status counts:
+
+- `draft`: 2
+- `needs_review`: 6
+- `verified`: 4
+
+Expected minimum counts were met:
+
+- `knowledge_categories >= 7`: yes
+- `knowledge_items >= 12`: yes
 
 ## Secrets
 
@@ -101,7 +129,14 @@ No secrets were printed, requested, written to files, or committed.
 
 ## Next Step
 
-Resolve Supabase execution access in a separate approved step, then apply the prepared migration and seed files after Paul explicitly approves the exact database commands.
+Proceed to post-SQL verification of production admin-read knowledge routes and AI Knowledge Center UI behavior.
+
+Important security follow-up:
+
+- Supabase Advisor now reports `RLS Disabled in Public` for the newly created `knowledge_*` tables.
+- This was visible immediately after the Dashboard SQL execution.
+- Treat this as a follow-up security planning/remediation task before storing real confidential customer, supplier, quotation, file, or SOP data in these tables.
+- Do not insert real confidential knowledge data until RLS/read policy decisions are reviewed and approved.
 
 Current channel status is documented in:
 
@@ -142,6 +177,7 @@ Status:
 - CLI remains unavailable.
 - Manual SQL Editor path is selected.
 - Combined SQL pack was created from the existing migration and DEMO seed SQL files.
-- Codex did not execute SQL.
-- Codex did not touch the remote database.
-- Codex is waiting for Paul manual execution and row count results.
+- Paul later explicitly requested Codex to operate the browser SQL Editor directly and approved execution.
+- Codex executed the combined SQL once in Supabase Dashboard SQL Editor.
+- Row count verification passed.
+- No secrets were read or printed.
