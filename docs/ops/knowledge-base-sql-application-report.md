@@ -181,3 +181,26 @@ Status:
 - Codex executed the combined SQL once in Supabase Dashboard SQL Editor.
 - Row count verification passed.
 - No secrets were read or printed.
+
+## Post-SQL Production Verification
+
+`CBM-CODEX-KNOWLEDGE-POST-SQL-VERIFY-001` verified the post-SQL production state without running additional SQL, modifying the database, reading secrets, changing code, or deploying.
+
+Production route smoke confirmed:
+
+- `GET /api/admin-read/knowledge-summary` returns the existing JSON auth gate (`401`) rather than `404`.
+- `GET /api/admin-read/knowledge-categories` returns the existing JSON auth gate (`401`) rather than `404`.
+- `GET /api/admin-read/knowledge-items` returns the existing JSON auth gate (`401`) rather than `404`.
+- `GET /api/admin-read/knowledge-review-queue` returns the existing JSON auth gate (`401`) rather than `404`.
+- `GET /api/admin-read/knowledge-linked-context` returns the existing JSON auth gate (`401`) rather than `404`.
+- `GET /api/admin-read/unknown` returns stable JSON `404`.
+- `POST /api/admin-read/knowledge-items` returns `405` with `Allow: GET`.
+
+Production UI smoke confirmed:
+
+- `https://project-7vo99.vercel.app/admin/ui-foundation/index.html?trial=1` loads.
+- `AI 知识库` is visible and renders safely.
+- The section falls back to safe static/auth-gated preview when unauthenticated.
+- No upload, RAG execution, AI answer generation, create, edit, delete, send, approve, quote, PI, order, payment, production, or shipment control was observed.
+
+Authenticated `200` JSON smoke remains deferred until a safe temporary admin bearer token or approved logged-in test path is available without exposing secrets.
