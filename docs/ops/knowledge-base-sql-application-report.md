@@ -204,3 +204,36 @@ Production UI smoke confirmed:
 - No upload, RAG execution, AI answer generation, create, edit, delete, send, approve, quote, PI, order, payment, production, or shipment control was observed.
 
 Authenticated `200` JSON smoke remains deferred until a safe temporary admin bearer token or approved logged-in test path is available without exposing secrets.
+
+## Knowledge Base RLS Policy Pack Prepared
+
+`CBM-CODEX-SPRINT-KNOWLEDGE-RLS-PLAN-001` prepared the first-stage Knowledge Base RLS/read policy pack.
+
+Reason:
+
+- Supabase Advisor identified `RLS Disabled in Public` for the new `knowledge_*` tables.
+- The current data is DEMO-only, but real business knowledge must not be stored until RLS/read policies are reviewed and applied.
+
+Prepared files:
+
+- `docs/architecture/knowledge-base-rls-read-policy-plan.md`
+- `docs/ops/knowledge-base-rls-policy.sql`
+- `docs/ops/knowledge-base-rls-manual-sql-pack.md`
+- `docs/ops/knowledge-base-rls-verification-checklist.md`
+
+SQL safety scan result:
+
+- passed
+- SQL only targets `public.knowledge_*` tables
+- SQL enables RLS
+- SQL creates authenticated `SELECT` policies only
+- SQL adds no write policies
+- SQL includes no service-role behavior
+- SQL includes no RAG, embedding, vector, file, AI, or business execution behavior
+
+Codex did not execute SQL, run Supabase CLI, run `psql`, touch the remote database, deploy, read secrets, or modify code.
+
+Status:
+
+- Waiting for Paul to review and manually execute `docs/ops/knowledge-base-rls-policy.sql` in Supabase Dashboard SQL Editor.
+- Next verification task after manual execution: `CBM-CODEX-KNOWLEDGE-RLS-POST-VERIFY-001`.
