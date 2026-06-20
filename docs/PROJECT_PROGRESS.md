@@ -3,16 +3,16 @@
 ## 1. Current Progress Summary
 
 - Full product vision progress: 35%
-- Internal MVP / foundation progress: 89%
+- Internal MVP / foundation progress: 90%
 - Current phase: Phase UI-2B - Pre-Quotation UI Migrated To Admin Read Resource
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, and Internal Trial Usability Polish Round 1 completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, and Internal Trial Usability Polish Round 1 production deployment verified; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
 - Full vision: 35% `[███████░░░░░░░░░░░░░]`
-- Internal MVP: 89% `[█████████░]`
+- Internal MVP: 90% `[█████████░]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
 - Phase 0B helper layer: 95% `[███████████████████░]`
@@ -40,6 +40,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Internal Trial UI Wording Polish + Production Deployment: 100% `[████████████████████]`
 - First Internal Trial Feedback Pass: 100% `[████████████████████]`
 - Internal Trial Usability Polish Round 1: 100% `[████████████████████]`
+- Internal Trial Usability Polish Round 1 Production Deployment: 100% `[████████████████████]`
 
 ## 3. Completed Major Milestones
 
@@ -107,6 +108,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Internal Trial UI Wording Polish + Production Deployment
 - First Internal Trial Feedback Pass
 - Internal Trial Usability Polish Round 1
+- Internal Trial Usability Polish Round 1 Production Deployment
 
 ## 4. Current Frozen Foundations
 
@@ -139,6 +141,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Internal Trial UI wording polish is deployed and production-smoke verified
 - First Internal Trial Feedback Pass is completed as documentation-only production usability review
 - Internal Trial Usability Polish Round 1 is completed as a small UI wording and trial-clarity pass
+- Internal Trial Usability Polish Round 1 production deployment is completed and smoke verified
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
 
