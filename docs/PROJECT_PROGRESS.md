@@ -2,16 +2,16 @@
 
 ## 1. Current Progress Summary
 
-- Full product vision progress: 43%
+- Full product vision progress: 44%
 - Internal MVP / foundation progress: 100%
-- Current phase: Phase UI-3 - AI-first Full System Master Plan Complete; next stage is AI Command Center Planning
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, Authenticated Trial Access Preparation, Paul Manual Trial Feedback Template, Read-only To Controlled Write Roadmap, Admin-read Expansion Backlog, Internal Trial Success Criteria, Admin UI Visual Upgrade Round 1, Admin UI Visual Upgrade Round 1 Production Deployment, Admin UI Visual QA And Micro Polish Round 2, Admin UI Visual QA Round 2 Production Deployment, AI-first Admin UI Redesign Blueprint, AI-first UI Redesign Visual Storyboard, AI-first UI Redesign Implementation Plan, AI Prospecting Lookalike Customer Planning, AI Prospecting Compliance Safety Planning, AI Prospecting Center Static UI Preview, Vercel Protection Smoke Resolution Plan, AI Prospecting Center Static UI Preview Production Checkpoint, Products Section Active Inputs Disabled, Companies Section Active Controls Disabled, Phase UI-2 Internal MVP Completion Report, AI Knowledge Center Planning, AI Knowledge Center UI Storyboard, Knowledge RAG Roadmap, AI Knowledge Center Static UI Preview, AI Knowledge Center Static UI Preview Production Deployment, Knowledge Base Functional Foundation Plan, Knowledge Base Data Model Plan, Knowledge Admin-read API Plan, Knowledge Demo Seed Data Plan, Knowledge Human Verification Workflow, Knowledge UI Data-binding Plan, Knowledge Safety And Privacy Plan, Knowledge Implementation Roadmap, Knowledge Base Read-only Data Foundation, Knowledge Base Admin-read Routes, Knowledge Base UI Data Binding, Knowledge Base SQL Application Report, Knowledge Base Read-only Production Checkpoint, Knowledge Base Manual SQL Execution Pack Prepared, Knowledge Base SQL Applied And Verified, Knowledge Base Real Data Verification, Knowledge Base RLS Policy Pack Prepared, and Knowledge Base RLS Applied And Verified completed; Supabase CLI remains unavailable, but the approved Dashboard SQL Editor execution succeeded, row counts and first-stage RLS were verified, production knowledge admin-read routes are deployed/auth-gated, and AI 知识库 renders safely with fallback; still no external channel integration, approval execution, quotation generation, price calculation, RAG, embeddings, vector database, file upload, file parsing, OCR, prospecting search execution, scraping, outreach automation, customer creation, uncontrolled SQL execution, or business execution
+- Current phase: Phase UI-3 - AI Command Center Master Plan Complete; next stage is AI Command Center Static UI Preview
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, Authenticated Trial Access Preparation, Paul Manual Trial Feedback Template, Read-only To Controlled Write Roadmap, Admin-read Expansion Backlog, Internal Trial Success Criteria, Admin UI Visual Upgrade Round 1, Admin UI Visual Upgrade Round 1 Production Deployment, Admin UI Visual QA And Micro Polish Round 2, Admin UI Visual QA Round 2 Production Deployment, AI-first Admin UI Redesign Blueprint, AI-first UI Redesign Visual Storyboard, AI-first UI Redesign Implementation Plan, AI Prospecting Lookalike Customer Planning, AI Prospecting Compliance Safety Planning, AI Prospecting Center Static UI Preview, Vercel Protection Smoke Resolution Plan, AI Prospecting Center Static UI Preview Production Checkpoint, Products Section Active Inputs Disabled, Companies Section Active Controls Disabled, Phase UI-2 Internal MVP Completion Report, AI Knowledge Center Planning, AI Knowledge Center UI Storyboard, Knowledge RAG Roadmap, AI Knowledge Center Static UI Preview, AI Knowledge Center Static UI Preview Production Deployment, Knowledge Base Functional Foundation Plan, Knowledge Base Data Model Plan, Knowledge Admin-read API Plan, Knowledge Demo Seed Data Plan, Knowledge Human Verification Workflow, Knowledge UI Data-binding Plan, Knowledge Safety And Privacy Plan, Knowledge Implementation Roadmap, Knowledge Base Read-only Data Foundation, Knowledge Base Admin-read Routes, Knowledge Base UI Data Binding, Knowledge Base SQL Application Report, Knowledge Base Read-only Production Checkpoint, Knowledge Base Manual SQL Execution Pack Prepared, Knowledge Base SQL Applied And Verified, Knowledge Base Real Data Verification, Knowledge Base RLS Policy Pack Prepared, Knowledge Base RLS Applied And Verified, AI Command Center Master Plan, AI Command Center UI Storyboard, AI Command Center Workflow Router Plan, AI Command Center Safety Boundary, and AI Command Center Roadmap completed; Supabase CLI remains unavailable, but the approved Dashboard SQL Editor execution succeeded, row counts and first-stage RLS were verified, production knowledge admin-read routes are deployed/auth-gated, and AI 知识库 renders safely with fallback; still no external channel integration, approval execution, quotation generation, price calculation, RAG, embeddings, vector database, file upload, file parsing, OCR, prospecting search execution, scraping, outreach automation, customer creation, uncontrolled SQL execution, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
-- Full vision: 43% `[████░░░░░░]`
+- Full vision: 44% `[████░░░░░░]`
 - Internal MVP: 100% `[██████████]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
@@ -79,6 +79,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Knowledge Base RLS Policy Pack Prepared: 100% `[████████████████████]`
 - Knowledge Base RLS Applied And Verified: 100% `[████████████████████]`
 - AI-first Master Planning: 100% `[████████████████████]`
+- AI Command Center Planning: 100% `[████████████████████]`
 
 ## 3. Completed Major Milestones
 
@@ -204,6 +205,11 @@ These percentages are planning estimates. They should move only after milestone 
 - Codex AI-first Development Principles
 - AI-first Human Approval Boundary
 - AI-first Future Task Backlog
+- AI Command Center Master Plan
+- AI Command Center UI Storyboard
+- AI Command Center Workflow Router Plan
+- AI Command Center Safety Boundary
+- AI Command Center Roadmap
 
 ## 4. Current Frozen Foundations
 
@@ -216,7 +222,7 @@ These percentages are planning estimates. They should move only after milestone 
 
 ## 5. Current Active Area
 
-- Current active area: Phase UI-3 / AI Command Center Planning
+- Current active area: Phase UI-3 / AI Command Center Static UI Preview
 - Admin Read Dispatcher production verification is complete
 - Dashboard Summary UI now targets `GET /api/admin-read/dashboard-summary`
 - Customer Center UI now targets `GET /api/admin-read/customers`
@@ -284,6 +290,11 @@ These percentages are planning estimates. They should move only after milestone 
 - Codex AI-first Development Principles are completed; future Codex work should define business purpose, AI role, data source, knowledge dependency, safety boundary, human approval point, and workflow connection before coding
 - AI-first Human Approval Boundary is completed; AI may summarize, classify, extract, compare, suggest, draft, and prepare workflow, but risky external or irreversible actions require explicit approval
 - AI-first Future Task Backlog is completed; the recommended next executable task is `CBM-CODEX-MASTER-AI-COMMAND-CENTER-PLAN-001`
+- AI Command Center Master Plan is completed as documentation-only product planning; it defines the Command Center as the future primary AI-first workflow orchestration entrance, not a chatbot widget
+- AI Command Center UI Storyboard is completed as markdown wireframes only; it shows the future command entrance, intent detection, context retrieval, workflow recommendations, draft previews, approval boundary, and daily priority briefing without UI code or AI execution
+- AI Command Center Workflow Router Plan is completed as planning only; it defines intent categories, routing tables, module responsibilities, context priority, fallback behavior, confidence model, and future schema notes without API or schema changes
+- AI Command Center Safety Boundary is completed; AI may prepare and recommend, while sending, publishing, quoting, PI/order/payment/production/shipment, sensitive status changes, production settings, and database/schema changes remain approval-required
+- AI Command Center Roadmap is completed; the recommended next executable task is `CBM-CODEX-SPRINT-AI-COMMAND-CENTER-UI-001 - Add AI Command Center Static UI Preview`
 - Vercel Protection Smoke Resolution Plan is completed as documentation only; no Vercel settings, secrets, deploys, UI code, API code, schema, package files or business behavior were changed
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
@@ -318,7 +329,7 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-MASTER-AI-COMMAND-CENTER-PLAN-001 - Plan AI Command Center as the main system entrance
+1. CBM-CODEX-SPRINT-AI-COMMAND-CENTER-UI-001 - Add AI Command Center Static UI Preview
 2. CBM-CODEX-SPRINT-COPILOT-SHELL-001 - Add read-only unified AI Copilot shell
 3. CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-PLAN-001 - Plan inquiry decomposition and quotation-readiness intelligence
 4. CBM-CODEX-SPRINT-SOCIAL-CONTENT-PLAN-001 - Social Content / Prospecting Content Safety Plan
