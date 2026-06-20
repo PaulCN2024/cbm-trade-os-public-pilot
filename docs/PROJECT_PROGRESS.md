@@ -2,16 +2,16 @@
 
 ## 1. Current Progress Summary
 
-- Full product vision progress: 37%
+- Full product vision progress: 38%
 - Internal MVP / foundation progress: 98%
-- Current phase: Phase UI-3 - AI-first Admin UI Redesign Blueprint Completed
-- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, Authenticated Trial Access Preparation, Paul Manual Trial Feedback Template, Read-only To Controlled Write Roadmap, Admin-read Expansion Backlog, Internal Trial Success Criteria, Admin UI Visual Upgrade Round 1, Admin UI Visual Upgrade Round 1 Production Deployment, Admin UI Visual QA And Micro Polish Round 2, Admin UI Visual QA Round 2 Production Deployment, AI-first Admin UI Redesign Blueprint, AI-first UI Redesign Visual Storyboard, and AI-first UI Redesign Implementation Plan completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, or business execution
+- Current phase: Phase UI-3 - AI Prospecting Lookalike Customer Planning Completed
+- Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, Authenticated Trial Access Preparation, Paul Manual Trial Feedback Template, Read-only To Controlled Write Roadmap, Admin-read Expansion Backlog, Internal Trial Success Criteria, Admin UI Visual Upgrade Round 1, Admin UI Visual Upgrade Round 1 Production Deployment, Admin UI Visual QA And Micro Polish Round 2, Admin UI Visual QA Round 2 Production Deployment, AI-first Admin UI Redesign Blueprint, AI-first UI Redesign Visual Storyboard, AI-first UI Redesign Implementation Plan, AI Prospecting Lookalike Customer Planning, and AI Prospecting Compliance Safety Planning completed; still no write actions, external channel integration, approval execution, quotation generation, price calculation, prospecting search execution, scraping, outreach automation, or business execution
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
-- Full vision: 37% `[████░░░░░░]`
+- Full vision: 38% `[████░░░░░░]`
 - Internal MVP: 98% `[██████████]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
@@ -43,6 +43,8 @@ These percentages are planning estimates. They should move only after milestone 
 - AI-first Admin UI Redesign Blueprint: 100% `[████████████████████]`
 - AI-first UI Redesign Visual Storyboard: 100% `[████████████████████]`
 - AI-first UI Redesign Implementation Plan: 100% `[████████████████████]`
+- AI Prospecting Lookalike Customer Planning: 100% `[████████████████████]`
+- AI Prospecting Compliance Safety Planning: 100% `[████████████████████]`
 - Pre-Quotation UI Admin-read Migration: 100% `[████████████████████]`
 - File Center Admin-read Migration: 100% `[████████████████████]`
 - AI/Supplier Capability Admin-read Migration: 100% `[████████████████████]`
@@ -151,6 +153,8 @@ These percentages are planning estimates. They should move only after milestone 
 - AI-first Admin UI Redesign Blueprint
 - AI-first UI Redesign Visual Storyboard
 - AI-first UI Redesign Implementation Plan
+- AI Prospecting Lookalike Customer Planning
+- AI Prospecting Compliance Safety Planning
 
 ## 4. Current Frozen Foundations
 
@@ -163,7 +167,7 @@ These percentages are planning estimates. They should move only after milestone 
 
 ## 5. Current Active Area
 
-- Current active area: Phase UI-3 / AI-first Admin UI Redesign Planning And Internal Trial Preparation
+- Current active area: Phase UI-3 / AI-first Admin UI Redesign And Prospecting Planning
 - Admin Read Dispatcher production verification is complete
 - Dashboard Summary UI now targets `GET /api/admin-read/dashboard-summary`
 - Customer Center UI now targets `GET /api/admin-read/customers`
@@ -206,6 +210,8 @@ These percentages are planning estimates. They should move only after milestone 
 - AI-first Admin UI Redesign Blueprint is completed as planning only; no UI code, API route, schema, package, deployment, write action, or business execution was changed
 - AI-first UI Redesign Visual Storyboard is completed as markdown wireframes only; no binary design artifact or external design tool was used
 - AI-first UI Redesign Implementation Plan is completed for staged future UI rounds; first implementation should be the read-only AI Copilot layout shell
+- AI Prospecting Lookalike Customer Planning is completed as planning only; no scraping, search API, upload, OCR, UI/API/schema/package/deploy, outreach automation, prospect creation, or business execution was changed
+- AI Prospecting Compliance Safety Planning is completed; future outreach remains draft-only, source-reviewed, opt-out aware, and approval-gated before any sending
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
 
@@ -239,11 +245,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-SPRINT-UI-AI-FIRST-001 - Add AI Copilot Layout Shell
-2. CBM-CODEX-SPRINT-UI-AI-FIRST-002 - Add Dashboard Work Queues
-3. CBM-CODEX-SPRINT-UI-AI-FIRST-003 - Add Inquiry-to-Quotation Workflow Timeline
-4. CBM-CODEX-SPRINT-UI-AI-FIRST-004 - Redesign Core Section Cards
-5. CBM-CODEX-RELEASE-030 - Deploy AI-first UI Redesign Round A
+1. CBM-CODEX-SPRINT-PROSPECTING-UI-001 - Add AI Prospecting Center Static UI Preview
+2. CBM-CODEX-SPRINT-PROSPECTING-SCHEMA-PLAN-001 - Prospecting Data Model Plan
+3. CBM-CODEX-SPRINT-PROSPECTING-API-PLAN-001 - Compliant Search API Integration Plan
+4. CBM-CODEX-SPRINT-PROSPECTING-SAFETY-001 - Outreach Compliance And Opt-out Plan
+5. CBM-CODEX-SPRINT-UI-AI-FIRST-001 - Add AI Copilot Layout Shell
 
 ## 9. How To Update This File
 
