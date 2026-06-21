@@ -79,18 +79,43 @@ This checkpoint covers the SQL file pack, GET-only Admin Read Dispatcher resourc
 
 ## Known Limitations
 
-- The SQL has only been prepared as files; Paul still needs to apply it manually in Supabase Dashboard SQL Editor.
+- At the time of this checkpoint, the SQL had only been prepared as files. Manual Supabase Dashboard SQL Editor execution was completed afterward; see "Manual SQL Execution Completed" below.
 - Authenticated 200 JSON smoke is deferred until a safe admin session or bearer token is available.
 - The UI currently shows fallback DEMO data when unauthenticated.
 - Upload, OCR, AI extraction, customer creation, follow-up sending, and controlled write workflows are not implemented.
 
+## Manual SQL Execution Completed
+
+The Business Card Capture SQL was later executed successfully in Supabase Dashboard SQL Editor for project PaulCN2024's Project / `zswtekjtkyvfagbudkia`.
+
+Post-SQL verification recorded:
+
+| Table | Row count |
+| --- | ---: |
+| `card_capture_sources` | 3 |
+| `card_extraction_results` | 3 |
+| `customer_profile_drafts` | 3 |
+| `card_duplicate_checks` | 3 |
+| `card_followup_drafts` | 3 |
+
+- RLS is enabled on all 5 Business Card Capture tables.
+- All 5 tables have authenticated `SELECT` read-only policies.
+- No write policy was recorded in the verification result.
+- No Supabase CLI or psql path was used.
+- No code, deployment, package, environment, or business-action change was part of the SQL execution result.
+
+Follow-up checkpoint:
+
+- `docs/ops/business-card-capture-post-sql-verification-report.md`
+- `docs/ops/business-card-capture-post-sql-production-checkpoint.md`
+
 ## Recommended Next Tasks
 
-1. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-POST-SQL-VERIFY-001` - Verify manual SQL execution and RLS after Paul applies the SQL.
-2. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-SAFETY-001` - Plan upload storage, privacy, retention, and file safety before upload.
-3. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-OCR-PLAN-001` - Plan OCR/vision provider privacy, confidence, and review behavior.
-4. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-UI-001` - Add customer verification / buyer discovery static UI preview.
-5. `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001` - Plan draft-only follow-up assistant workflow.
+1. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-SAFETY-001` - Plan upload storage, privacy, retention, and file safety before upload.
+2. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-OCR-PLAN-001` - Plan OCR/vision provider privacy, confidence, and review behavior.
+3. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-UI-001` - Add customer verification / buyer discovery static UI preview.
+4. `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001` - Plan draft-only follow-up assistant workflow.
+5. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-AUTH-SMOKE-001` - Run authenticated 200 JSON smoke when a safe admin session/token path is approved.
 
 ## Progress Report
 
