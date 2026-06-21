@@ -86,6 +86,21 @@ Record production deployment and smoke verification for the AI Customer Verifica
 - Policy result: authenticated `SELECT` only for all five tables
 - Detailed record: `docs/ops/customer-verification-sql-execution-report.md`
 
+## SQL Execution Completed And Verified
+
+- Post-SQL verification completed against production on 2026-06-21.
+- Public/static production routes returned 200.
+- Existing protected admin-read routes remained JSON 401 when unauthenticated.
+- Customer Verification admin-read routes returned JSON 401 when unauthenticated, not 404.
+- `/api/admin-read/unknown` returned stable JSON 404.
+- `POST /api/admin-read/customer-verification-summary` returned 405 with `Allow: GET`.
+- Production `AI 客户验证` UI rendered safely.
+- Active controls inside the `AI 客户验证` area remained 0.
+- No visible `undefined` or `null` appeared.
+- No horizontal overflow was observed in browser smoke.
+- Detailed post-SQL report: `docs/ops/customer-verification-post-sql-verification-report.md`
+- Production checkpoint: `docs/ops/customer-verification-post-sql-production-checkpoint.md`
+
 ## Safety Boundary
 
 - Read-only only.
@@ -108,11 +123,11 @@ Record production deployment and smoke verification for the AI Customer Verifica
 
 ## Recommended Next Tasks
 
-1. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-POST-SQL-VERIFY-001`
-2. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-DUPLICATE-CHECK-PLAN-001`
-3. `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001`
-4. `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-UI-001`
-5. Authenticated production JSON smoke when a safe admin token is available.
+1. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-DUPLICATE-CHECK-PLAN-001`
+2. `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001`
+3. `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-UI-001`
+4. Authenticated production JSON smoke when a safe admin token is available.
+5. Customer Verification human review queue planning.
 
 ## Progress
 
