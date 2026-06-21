@@ -4,6 +4,7 @@ const navItems = [
   { id: "ai-command-center", label: "AI 指挥台" },
   { id: "dashboard", label: "工作台" },
   { id: "prospecting", label: "AI 开发客户" },
+  { id: "business-card-capture", label: "AI 名片识别" },
   { id: "knowledge-center", label: "AI 知识库" },
   { id: "inquiries", label: "询盘" },
   { id: "customers", label: "客户" },
@@ -45,6 +46,14 @@ const sections = {
     sectionHelp: "AI Prospecting 静态预览。当前不调用搜索 API、不解析文件、不创建客户、不外发消息。",
     content: renderProspecting,
     review: renderProspectingReview,
+  },
+  "business-card-capture": {
+    title: "AI 名片识别",
+    description: "上传或拍摄客户名片、展会卡片、WhatsApp 联系人图片后的字段提取与客户草稿静态预览。",
+    sectionTitle: "AI 名片识别",
+    sectionHelp: "静态只读预览。当前不上传文件、不执行 OCR、不调用 AI、不创建客户、不发送跟进消息。",
+    content: renderBusinessCardCapture,
+    review: renderBusinessCardCaptureReview,
   },
   "knowledge-center": {
     title: "AI 知识库",
@@ -1322,6 +1331,62 @@ const prospectingSafetyItems = [
   "不生成报价",
   "保留来源记录",
   "后续支持 do-not-contact / opt-out",
+];
+
+const businessCardCaptureFields = [
+  { label: "姓名", value: "Carlos Ramirez", note: "DEMO / 未验证" },
+  { label: "公司", value: "Demo Facade Solutions", note: "客户档案草稿" },
+  { label: "职位", value: "Project Manager", note: "需人工确认" },
+  { label: "邮箱", value: "carlos.ramirez@example-demo.com", note: "示例邮箱，未验证" },
+  { label: "电话", value: "+51 900 000 000", note: "示例号码，未验证" },
+  { label: "WhatsApp", value: "+51 900 000 000", note: "示例号码，未发送" },
+  { label: "网站", value: "www.demo-facade.example", note: "示例域名，待确认" },
+  { label: "国家", value: "Peru", note: "根据名片国家码推测" },
+  { label: "地址", value: "Lima, Peru", note: "示例城市，待补全" },
+  { label: "客户类型", value: "Facade contractor / importer", note: "AI 推测，需 Paul 确认" },
+  { label: "产品兴趣", value: "Aluminum windows, glass, hardware", note: "静态推测" },
+  { label: "来源渠道", value: "DEMO_TRADE_SHOW_CARD", note: "展会名片 demo" },
+  { label: "置信度", value: "Medium", note: "Review status: Needs Paul confirmation" },
+  { label: "缺失字段", value: "邮箱有效性、网站、采购需求", note: "不可直接建客" },
+  { label: "风险提示", value: "联系人和需求均未验证", note: "不可自动发送" },
+];
+
+const businessCardAnalysisRows = [
+  ["可能客户类型", "幕墙承包商 / 建材进口商"],
+  ["可能关注产品", "铝合金门窗、玻璃、五金"],
+  ["需要人工确认", "邮箱、网站、采购需求"],
+  ["推荐下一步", "生成温和跟进草稿，等待 Paul 确认"],
+];
+
+const businessCardDuplicateChecks = [
+  ["是否已有相同公司", "未执行真实查重，当前仅为静态预览"],
+  ["是否已有相同邮箱", "未连接客户数据库查重"],
+  ["是否可能是老客户", "需要人工确认公司名、邮箱和历史沟通"],
+];
+
+const businessCardReviewQueue = [
+  "待确认名片",
+  "缺邮箱",
+  "缺网站",
+  "需确认国家",
+  "可能重复客户",
+  "可生成跟进草稿",
+];
+
+const businessCardAiCanItems = [
+  "识别字段",
+  "生成客户草稿",
+  "提醒缺失信息",
+  "推荐跟进方向",
+  "生成草稿",
+];
+
+const businessCardAiCannotItems = [
+  "自动创建客户",
+  "自动发送消息",
+  "自动导入真实数据",
+  "自动群发开发信",
+  "自动判断客户绝对可信",
 ];
 
 const knowledgeOverviewCards = [
@@ -2931,6 +2996,244 @@ function renderProspectingReview() {
         <h3>禁用能力</h3>
         <div class="disabled-chip-row">
           ${renderDisabledCapabilities(["不可抓取 LinkedIn", "不可绕过登录", "不可采集私人联系方式", "不可发送开发信", "不可创建客户", "不可生成报价"])}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderBusinessCardCapture() {
+  return `
+    <div class="business-card-capture-preview" aria-label="AI 名片识别静态预览">
+      <div class="business-card-capture-hero">
+        <div>
+          <span class="state-label">AI Business Card Capture</span>
+          <h3>AI 名片识别</h3>
+          <p>上传或拍摄客户名片、展会卡片、WhatsApp 联系人图片后，AI 将提取姓名、公司、邮箱、电话、网站、国家和客户类型，生成客户档案草稿。当前为只读预览，不上传文件、不识别图片、不创建客户。</p>
+        </div>
+        <div class="business-card-badges" aria-label="AI 名片识别预览状态">
+          ${badge("只读预览", "draft")}
+          ${badge("不上传文件", "pending")}
+          ${badge("不执行 OCR", "pending")}
+          ${badge("不自动建客户", "pending")}
+          ${badge("需人工确认", "approval")}
+          ${badge("客户资料草稿", "active")}
+        </div>
+      </div>
+
+      <section class="business-card-section" aria-label="名片上传静态占位">
+        <div class="workbench-section-header">
+          <div>
+            <h3>名片图片入口</h3>
+            <p>仅用于界面验证的视觉区域。当前没有上传控件、没有拖拽监听、没有 OCR 或图片解析。</p>
+          </div>
+          <span>静态占位</span>
+        </div>
+        <div class="card-upload-preview" aria-label="静态名片拖拽预览">
+          <span class="card-upload-icon">BC</span>
+          <div>
+            <h4>拖拽名片图片到这里</h4>
+            <p>支持名片 / 展会卡片 / WhatsApp 联系人截图</p>
+            <small>当前为静态预览，未启用上传</small>
+          </div>
+        </div>
+      </section>
+
+      <div class="business-card-layout">
+        <section class="business-card-section" aria-label="名片识别字段预览">
+          <div class="workbench-section-header">
+            <div>
+              <h3>字段提取预览</h3>
+              <p>固定 demo 数据，展示未来 AI 提取结果如何进入客户档案草稿复核。</p>
+            </div>
+            <span>DEMO / draft</span>
+          </div>
+          <div class="extraction-preview-grid">
+            ${businessCardCaptureFields.map(renderBusinessCardFieldCard).join("")}
+          </div>
+        </section>
+
+        <aside class="customer-draft-profile" aria-label="客户档案草稿预览">
+          <div class="workbench-review-heading">
+            <div>
+              <h3>客户档案草稿</h3>
+              <p class="workbench-review-note">固定示例：Carlos Ramirez / Demo Facade Solutions。</p>
+            </div>
+            ${badge("未验证", "pending")}
+          </div>
+          <dl class="business-card-draft-list">
+            <dt>Review status</dt>
+            <dd>Needs Paul confirmation</dd>
+            <dt>客户类型</dt>
+            <dd>Facade contractor / importer</dd>
+            <dt>国家</dt>
+            <dd>Peru</dd>
+            <dt>来源</dt>
+            <dd>DEMO_TRADE_SHOW_CARD</dd>
+            <dt>安全状态</dt>
+            <dd>草稿 / 未导入 / 不创建客户</dd>
+          </dl>
+          <div class="disabled-chip-row">
+            ${renderDisabledCapabilities(["不可上传", "不可 OCR", "不可建客", "不可发送", "不可群发"])}
+          </div>
+        </aside>
+      </div>
+
+      <div class="business-card-two-column">
+        ${renderBusinessCardAnalysisPanel()}
+        ${renderBusinessCardDuplicatePanel()}
+      </div>
+
+      <div class="business-card-two-column">
+        ${renderBusinessCardFollowupDraft()}
+        ${renderBusinessCardReviewQueue()}
+      </div>
+
+      ${renderBusinessCardSafetyPanel()}
+    </div>
+  `;
+}
+
+function renderBusinessCardFieldCard(field) {
+  return `
+    <article class="extracted-field-card">
+      <span>${escapeHtml(field.label)}</span>
+      <strong>${escapeHtml(field.value)}</strong>
+      <small>${escapeHtml(field.note)}</small>
+    </article>
+  `;
+}
+
+function renderBusinessCardAnalysisPanel() {
+  return `
+    <section class="business-card-section ai-card-analysis-panel" aria-label="AI 名片分析预览">
+      <div class="workbench-section-header">
+        <div>
+          <h3>AI 分析预览</h3>
+          <p>分析结果只作为人工复核材料，不代表客户已确认或可直接联系。</p>
+        </div>
+        <span>AI draft only</span>
+      </div>
+      <dl class="business-card-analysis-list">
+        ${businessCardAnalysisRows.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
+      </dl>
+    </section>
+  `;
+}
+
+function renderBusinessCardDuplicatePanel() {
+  return `
+    <section class="business-card-section duplicate-check-panel" aria-label="客户查重静态预览">
+      <div class="workbench-section-header">
+        <div>
+          <h3>查重预览</h3>
+          <p>仅展示未来查重结果结构；当前未查询真实客户、邮箱或公司记录。</p>
+        </div>
+        <span>未执行真实查重</span>
+      </div>
+      <dl class="business-card-analysis-list">
+        ${businessCardDuplicateChecks.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
+      </dl>
+    </section>
+  `;
+}
+
+function renderBusinessCardFollowupDraft() {
+  return `
+    <section class="business-card-section followup-draft-preview" aria-label="跟进草稿静态预览">
+      <div class="workbench-section-header">
+        <div>
+          <h3>温和跟进草稿</h3>
+          <p>英文草稿仅供人工复核；当前没有复制、发送、审批或群发动作。</p>
+        </div>
+        <span>草稿 / 未发送</span>
+      </div>
+      <div class="business-card-draft-box">
+        <p>Hi Carlos, nice to meet you at the exhibition.</p>
+        <p>We mainly supply aluminum windows, facade systems, glass and related building materials.</p>
+        <p>May I know what kind of project or product you are currently looking for?</p>
+      </div>
+      <div class="disabled-chip-row">
+        ${renderDisabledCapabilities(["草稿", "未发送", "需人工确认", "不可复制执行", "不可群发"])}
+      </div>
+    </section>
+  `;
+}
+
+function renderBusinessCardReviewQueue() {
+  return `
+    <section class="business-card-section capture-review-queue" aria-label="名片复核队列静态预览">
+      <div class="workbench-section-header">
+        <div>
+          <h3>复核队列预览</h3>
+          <p>把名片草稿拆成可扫读的待确认项，但不创建任务或客户记录。</p>
+        </div>
+        <span>6 个静态标签</span>
+      </div>
+      <div class="business-card-queue-grid">
+        ${businessCardReviewQueue.map((item) => `<span class="business-card-queue-chip">${escapeHtml(item)}</span>`).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderBusinessCardSafetyPanel() {
+  return `
+    <section class="business-card-section capture-safety-panel" aria-label="AI 名片识别安全边界">
+      <div class="workbench-section-header">
+        <div>
+          <h3>AI 能做什么 / 不能做什么</h3>
+          <p>名片识别未来可以提高录入效率，但客户资料和开发动作必须人工确认。</p>
+        </div>
+        <span>安全边界</span>
+      </div>
+      <div class="capture-safety-grid">
+        <div>
+          <h4>AI 可以</h4>
+          <div class="business-card-chip-row">
+            ${renderChipList(businessCardAiCanItems, "business-card-safe-chip")}
+          </div>
+        </div>
+        <div>
+          <h4>AI 不能</h4>
+          <div class="disabled-chip-row">
+            ${renderDisabledCapabilities(businessCardAiCannotItems)}
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderBusinessCardCaptureReview() {
+  return `
+    <div class="review-stack">
+      <div class="review-card">
+        <h3>AI 名片识别只读边界</h3>
+        <ul class="check-list">
+          <li>静态预览，不上传文件，不执行 OCR，不解析图片，不调用 AI provider</li>
+          <li>不创建客户、不导入真实数据、不写入数据库、不创建任务</li>
+          <li>不发送 Email / WhatsApp，不群发开发信，不自动判断客户可信度</li>
+          <li>不生成报价、PI、订单，不触发付款 / 生产 / 发货</li>
+        </ul>
+      </div>
+      <div class="review-card">
+        <h3>固定样本</h3>
+        <dl>
+          <dt>样本联系人</dt>
+          <dd>Carlos Ramirez / Demo Facade Solutions</dd>
+          <dt>样本来源</dt>
+          <dd>DEMO_TRADE_SHOW_CARD</dd>
+          <dt>客户类型</dt>
+          <dd>Facade contractor / importer（AI 推测，需 Paul 确认）</dd>
+          <dt>复核状态</dt>
+          <dd>Needs Paul confirmation</dd>
+        </dl>
+      </div>
+      <div class="review-card">
+        <h3>禁用能力</h3>
+        <div class="disabled-chip-row">
+          ${renderDisabledCapabilities(["不可上传文件", "不可执行 OCR", "不可创建客户", "不可导入数据", "不可发送消息", "不可群发开发信", "不可生成报价"])}
         </div>
       </div>
     </div>

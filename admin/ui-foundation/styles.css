@@ -1359,6 +1359,224 @@ tr:last-child td {
   line-height: 1.5;
 }
 
+.business-card-capture-preview {
+  display: grid;
+  gap: 18px;
+}
+
+.business-card-capture-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(191, 219, 254, 0.86);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, 0.94), rgba(255, 255, 255, 0.98) 54%, rgba(236, 253, 245, 0.5)),
+    var(--surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.business-card-capture-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e, #f59e0b);
+}
+
+.business-card-capture-hero h3 {
+  margin: 6px 0 8px;
+  font-size: 23px;
+}
+
+.business-card-capture-hero p {
+  max-width: 800px;
+  margin: 3px 0;
+}
+
+.business-card-badges,
+.business-card-chip-row,
+.business-card-queue-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.business-card-section {
+  display: grid;
+  gap: 12px;
+}
+
+.card-upload-preview,
+.extracted-field-card,
+.customer-draft-profile,
+.ai-card-analysis-panel,
+.duplicate-check-panel,
+.followup-draft-preview,
+.capture-review-queue,
+.capture-safety-panel {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, #ffffff, #fbfdff),
+    var(--surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.card-upload-preview {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 132px;
+  border-style: dashed;
+  border-color: #93c5fd;
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, 0.88), rgba(240, 253, 244, 0.72)),
+    var(--surface);
+}
+
+.card-upload-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 44px;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: var(--blue-dark);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.card-upload-preview h4,
+.capture-safety-panel h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.card-upload-preview p,
+.card-upload-preview small {
+  display: block;
+  margin: 0;
+  color: var(--muted-strong);
+}
+
+.business-card-layout,
+.business-card-two-column,
+.capture-safety-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(320px, 0.82fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.extraction-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.extracted-field-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--blue), #22c55e);
+  opacity: 0.82;
+}
+
+.extracted-field-card span,
+.business-card-analysis-list dt,
+.business-card-draft-list dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.extracted-field-card strong {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.extracted-field-card small {
+  color: var(--muted-strong);
+  line-height: 1.4;
+}
+
+.business-card-draft-list,
+.business-card-analysis-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.business-card-draft-list dd,
+.business-card-analysis-list dd {
+  margin: 0;
+  color: var(--muted-strong);
+  line-height: 1.5;
+}
+
+.business-card-draft-box {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, #f8fbff, #ffffff),
+    var(--surface);
+}
+
+.business-card-draft-box p {
+  margin: 0;
+  color: var(--muted-strong);
+  line-height: 1.58;
+}
+
+.business-card-queue-chip,
+.business-card-safe-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #f8fbff;
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.business-card-safe-chip {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.capture-safety-panel {
+  border-color: #fed7aa;
+  background:
+    linear-gradient(135deg, rgba(255, 247, 237, 0.9), rgba(255, 255, 255, 0.98)),
+    var(--surface);
+}
+
 .ai-knowledge-preview {
   display: grid;
   gap: 18px;
@@ -4780,6 +4998,9 @@ tbody tr:hover {
   .workbench-layout,
   .ai-command-layout,
   .prospecting-layout,
+  .business-card-layout,
+  .business-card-two-column,
+  .capture-safety-grid,
   .ai-knowledge-layout {
     grid-template-columns: 1fr;
   }
@@ -4794,6 +5015,7 @@ tbody tr:hover {
   .draft-preview-grid,
   .daily-briefing-grid,
   .prospecting-grid,
+  .extraction-preview-grid,
   .workflow-stepper,
   .knowledge-grid,
   .knowledge-verification-grid,
@@ -4844,6 +5066,10 @@ tbody tr:hover {
     .daily-briefing-grid,
     .ai-command-layout,
     .prospecting-grid,
+    .extraction-preview-grid,
+    .business-card-layout,
+    .business-card-two-column,
+    .capture-safety-grid,
     .workflow-stepper,
     .knowledge-grid,
     .knowledge-verification-grid,
@@ -4887,6 +5113,8 @@ tbody tr:hover {
   .workbench-header,
   .command-center-hero,
   .prospecting-header,
+  .business-card-capture-hero,
+  .card-upload-preview,
   .ai-knowledge-header,
   .ai-review-preview-header,
   .file-center-header,
