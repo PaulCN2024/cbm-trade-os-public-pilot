@@ -65,9 +65,26 @@ Record production deployment and smoke verification for the AI Customer Verifica
 
 ## SQL Operation Status
 
-- SQL files are ready for Paul review and manual SQL Editor execution.
-- SQL was not executed by Codex.
-- Tables may not exist yet until Paul executes the manual SQL pack.
+- SQL files were reviewed and executed after Paul's explicit `APPROVED` confirmation.
+- SQL execution used Supabase Dashboard SQL Editor.
+- The five `customer_verification_*` tables now exist with first-stage DEMO data.
+- RLS is enabled on all five tables.
+- Authenticated SELECT-only policies are verified on all five tables.
+
+## Manual/Approved SQL Execution Completed
+
+- Approval phrase received: `APPROVED`
+- Execution time: 2026-06-21 23:33 CST / 2026-06-21 15:33 UTC
+- Execution channel: Supabase Dashboard SQL Editor
+- SQL file executed: `docs/ops/customer-verification-manual-sql-combined.sql`
+- `customer_verification_requests`: 3 rows
+- `customer_verification_evidence`: 13 rows
+- `customer_verification_scores`: 3 rows
+- `customer_verification_duplicate_matches`: 1 row
+- `customer_verification_reviews`: 3 rows
+- RLS result: `true` for all five tables
+- Policy result: authenticated `SELECT` only for all five tables
+- Detailed record: `docs/ops/customer-verification-sql-execution-report.md`
 
 ## Safety Boundary
 
@@ -87,15 +104,15 @@ Record production deployment and smoke verification for the AI Customer Verifica
 - No real duplicate check against live customer data unless a future task adds it.
 - No approved customer status update.
 - Authenticated JSON smoke is deferred without a safe admin token.
-- Customer verification SQL remains manual and unapplied until Paul executes it in Supabase SQL Editor.
+- Post-SQL production JSON smoke remains deferred until a safe admin token is available.
 
 ## Recommended Next Tasks
 
-1. Paul manually executes customer verification SQL pack.
-2. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-POST-SQL-VERIFY-001`
-3. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-DUPLICATE-CHECK-PLAN-001`
-4. `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001`
-5. `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-UI-001`
+1. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-POST-SQL-VERIFY-001`
+2. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-DUPLICATE-CHECK-PLAN-001`
+3. `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001`
+4. `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-UI-001`
+5. Authenticated production JSON smoke when a safe admin token is available.
 
 ## Progress
 
