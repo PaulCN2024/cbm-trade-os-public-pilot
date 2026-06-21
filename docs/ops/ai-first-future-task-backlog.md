@@ -16,11 +16,11 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 - Business Card Capture storage plan
 - Business Card Capture storage SQL/manual pack
 - Business Card Capture storage post-SQL verification
-- Business Card Capture upload API plan
-- Business Card Capture upload read-only preview
-- Business Card Capture signed preview URL plan
+- Business Card Capture upload API plan (deferred)
+- Business Card Capture upload read-only preview (deferred)
+- Business Card Capture signed preview URL plan (deferred)
 - Business Card Capture retention flow
-- Business Card Capture OCR provider plan
+- Business Card Capture OCR provider plan (deferred)
 - Business Card Capture read-only data foundation
 - Business Card Capture human review UI
 - Business Card Capture human review queue
@@ -72,11 +72,11 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 | `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-STORAGE-PLAN-001` | Business Card Capture | Plan private storage bucket and access behavior | prepare storage policy requirements | no bucket creation, no storage mutation | docs only | Medium | 7 |
 | `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-STORAGE-SQL-PACK-001` | Business Card Capture | Prepare manual setup pack for private bucket and storage policies | translate approved storage plan into reviewable setup instructions | no SQL execution, no bucket mutation by Codex | docs/ops only | Medium | 8 |
 | `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-STORAGE-POST-VERIFY-001` | Business Card Capture | Verify manual private bucket and storage policy execution result | confirm storage is private and future upload remains blocked | no SQL execution by Codex without approval, no upload | docs/ops only | Medium | 9 |
-| `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-API-PLAN-001` | Business Card Capture | Plan protected upload API validation and metadata linkage | define safe upload-to-review handoff | no API implementation, no upload | docs only | Medium | 10 |
-| `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-READONLY-PREVIEW-001` | Business Card Capture | Plan or preview read-only upload status after storage verification | show bucket/policy readiness without enabling upload | no file input, no upload, no storage call | docs/UI only if separately approved | Medium-low | 11 |
-| `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-PREVIEW-SIGNED-URL-PLAN-001` | Business Card Capture | Plan short-lived preview URLs or server-mediated preview | define private image preview behavior | no signed URL implementation, no public links | docs only | Medium | 12 |
+| `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-API-PLAN-001` | Business Card Capture | Deferred: plan protected upload API validation and metadata linkage | define safe upload-to-review handoff later | no API implementation, no upload | docs only | Medium | 10 |
+| `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-READONLY-PREVIEW-001` | Business Card Capture | Deferred: plan or preview read-only upload status after storage verification | show bucket/policy readiness later without enabling upload | no file input, no upload, no storage call | docs/UI only if separately approved | Medium-low | 11 |
+| `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-PREVIEW-SIGNED-URL-PLAN-001` | Business Card Capture | Deferred: plan short-lived preview URLs or server-mediated preview | define private image preview behavior later | no signed URL implementation, no public links | docs only | Medium | 12 |
 | `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-RETENTION-FLOW-001` | Business Card Capture | Plan archive/delete workflow for stored card images | protect privacy and audit decisions | no deletion implementation, no storage mutation | docs only | Medium | 13 |
-| `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-OCR-PROVIDER-PLAN-001` | Business Card Capture | Plan OCR/vision provider privacy and confidence model | extract fields with source/confidence metadata later | no provider keys or live OCR calls | docs only | Medium | 14 |
+| `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-OCR-PROVIDER-PLAN-001` | Business Card Capture | Deferred: plan OCR/vision provider privacy and confidence model | extract fields with source/confidence metadata later | no provider keys or live OCR calls | docs only | Medium | 14 |
 | `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-HUMAN-REVIEW-UI-001` | Business Card Capture | Plan or preview human review UI for card extraction results | show missing fields, duplicates, and draft follow-up | no approve/create/send execution | docs/UI only if separately approved | Medium-low | 15 |
 | `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-REVIEW-QUEUE-001` | Business Card Capture | Plan human review queue for card extraction results | show missing fields, duplicates, and draft follow-up | no approve/create/send execution | docs/UI only if separately approved | Medium-low | 16 |
 | `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-PLAN-001` | Customer Verification | Plan buyer/company verification and buyer discovery | summarize evidence, confidence, mismatch, and follow-up value | no final trust decision, no scraping, no outreach | docs only | Low | 17 |
@@ -106,9 +106,35 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 Recommended next task:
 
 ```text
-CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-STORAGE-POST-VERIFY-001
+CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-UI-001
 ```
 
 Reason:
 
-Business Card Capture now has a static production preview, read-only data foundation, post-SQL verification, upload safety plan, upload UI preview, private storage planning, and a manual SQL pack for the future private bucket and policies. The safest next executable step is to verify the approved Supabase Storage SQL result after execution, still without real upload, OCR, customer creation, sending, or business execution.
+Business Card Capture now has enough foundation for the current low-frequency business-card use case. The safer near-term value is a static AI Customer Verification Center that helps Paul judge customer credibility, role, duplication risk, missing information, and follow-up value before any external outreach or formal quotation.
+
+## Business Card Capture Real Upload/OCR Pause
+
+Business Card Capture real upload/OCR is paused and deferred.
+
+Reason:
+
+- Current business-card usage frequency is low.
+- The module already has static UI, read-only data foundation, DEMO data, RLS, private storage bucket, storage policy, upload UI preview, and production verification.
+- Real upload/OCR should resume later when exhibition or batch-card intake becomes a frequent workflow.
+
+Paused/deferred tasks:
+
+- Business Card Capture Upload API Plan
+- Business Card Capture Metadata Migration Plan
+- Business Card Capture OCR Provider Implementation
+- Business Card Capture Real Upload Implementation
+- Business Card Capture Signed Preview URL Implementation
+
+Resume condition:
+
+- Paul starts attending exhibitions more often.
+- Batch business-card capture becomes a real daily workflow.
+- Card OCR becomes higher priority than customer verification, follow-up, or inquiry intelligence.
+
+These tasks are deferred, not deleted.

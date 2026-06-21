@@ -2,9 +2,9 @@
 
 ## 1. Current Progress Summary
 
-- Full product vision progress: 53%
+- Full product vision progress: 54%
 - Internal MVP / foundation progress: 100%
-- Current phase: Phase UI-3 - Business Card Capture Private Storage Verified; next stage is protected upload API planning
+- Current phase: Phase UI-3 - AI Customer Verification Center UI Preview; next stage is customer verification data planning
 - Current status: first read-only Admin UI data wiring batch, read-only API coverage audit, dashboard aggregate read-only API, Admin Read Dispatcher production verification, Dashboard/Customer/Inquiry UI migration, AI/Supplier Capability admin-read resource expansion, AI/Supplier Capability UI migration, File Metadata admin-read resource, File Center admin-read UI migration, Pre-Quotation Review admin-read resource, Pre-Quotation UI admin-read migration, Pre-Quotation Admin-read production deployment, Admin UI disabled action remediation, Admin UI disabled action production deployment, Disabled Action Registry Planning, Approval Audit Schema Planning, Internal Trial Operator Guide, Internal Trial UI Wording Polish production deployment, First Internal Trial Feedback Pass, Internal Trial Usability Polish Round 1 completed, Internal Trial Usability Polish Round 1 production deployment verified, Internal Trial Demo Data Realism Polish production deployment verified, Quotation Metadata Admin-read Safe Projection Planning, Approval Audit Migration Draft Planning, Static Disabled Action Registry Module Planning, Admin-read Quotation Metadata Resource, Quotation Metadata UI Admin-read Migration, Quotation Metadata Admin-read Production Deployment, Internal Trial Readiness Update, Authenticated Trial Access Preparation, Paul Manual Trial Feedback Template, Read-only To Controlled Write Roadmap, Admin-read Expansion Backlog, Internal Trial Success Criteria, Admin UI Visual Upgrade Round 1, Admin UI Visual Upgrade Round 1 Production Deployment, Admin UI Visual QA And Micro Polish Round 2, Admin UI Visual QA Round 2 Production Deployment, AI-first Admin UI Redesign Blueprint, AI-first UI Redesign Visual Storyboard, AI-first UI Redesign Implementation Plan, AI Prospecting Lookalike Customer Planning, AI Prospecting Compliance Safety Planning, AI Prospecting Center Static UI Preview, Vercel Protection Smoke Resolution Plan, AI Prospecting Center Static UI Preview Production Checkpoint, Products Section Active Inputs Disabled, Companies Section Active Controls Disabled, Phase UI-2 Internal MVP Completion Report, AI Knowledge Center Planning, AI Knowledge Center UI Storyboard, Knowledge RAG Roadmap, AI Knowledge Center Static UI Preview, AI Knowledge Center Static UI Preview Production Deployment, Knowledge Base Functional Foundation Plan, Knowledge Base Data Model Plan, Knowledge Admin-read API Plan, Knowledge Demo Seed Data Plan, Knowledge Human Verification Workflow, Knowledge UI Data-binding Plan, Knowledge Safety And Privacy Plan, Knowledge Implementation Roadmap, Knowledge Base Read-only Data Foundation, Knowledge Base Admin-read Routes, Knowledge Base UI Data Binding, Knowledge Base SQL Application Report, Knowledge Base Read-only Production Checkpoint, Knowledge Base Manual SQL Execution Pack Prepared, Knowledge Base SQL Applied And Verified, Knowledge Base Real Data Verification, Knowledge Base RLS Policy Pack Prepared, Knowledge Base RLS Applied And Verified, AI Command Center Master Plan, AI Command Center UI Storyboard, AI Command Center Workflow Router Plan, AI Command Center Safety Boundary, AI Command Center Roadmap, AI Command Center Static UI Preview, AI Command Center Static UI Preview Production Deployment, AI Daily Workbench Homepage Preview, AI Daily Workbench Homepage Production Deployment, AI Business Card Capture Static UI Preview, AI Business Card Capture Production Deployment, Business Card Capture Data Planning, Business Card Capture Read-only Data Foundation, Business Card Capture Admin-read Routes, Business Card Capture UI Data Binding, Business Card Capture Manual SQL Pack Prepared, and Business Card Capture Read-only Production Checkpoint completed; Supabase CLI remains unavailable, but the approved Dashboard SQL Editor execution succeeded for prior knowledge SQL, row counts and first-stage RLS were verified, production knowledge admin-read routes are deployed/auth-gated, and AI 知识库 renders safely with fallback; still no external channel integration, approval execution, quotation generation, price calculation, RAG, embeddings, vector database, file upload, file parsing, OCR, prospecting search execution, scraping, outreach automation, customer creation, uncontrolled SQL execution, or business execution
 - Current reference-feature planning status: Reference Feature Integration Planning, AI-first Admin UI Visual Design System V2, AI Daily Workbench Planning, AI Business Card Capture Planning, AI Market Intelligence Planning, AI Customer Verification And Buyer Discovery Planning, AI Development Letter And Content Planning, AI Conversion Analytics And Task Board Planning, and AI Quote Intelligence SKU Price Rules Planning completed as documentation-only direction; no third-party product copy, UI code, API route, schema, package, SQL, deploy, AI provider call, external channel integration, write action, or business execution was added
 - Current AI Daily Workbench status: AI Daily Workbench Homepage Preview completed as static/read-only Admin UI homepage preview; it adds daily briefing, priority task cards, operations metrics, workflow bottlenecks, AI recommendations, conversion funnel preview, country distribution preview, and safety note without AI provider calls, real AI prioritization, new API routes, schema changes, SQL, upload/OCR/RAG, write actions, or business execution
@@ -16,12 +16,14 @@
 - Current Business Card Capture private storage planning status: private bucket architecture, access-control rules, preview boundary, deletion/retention workflow, and implementation roadmap are completed as documentation-only planning; no bucket was created, no storage policy was applied, no SQL was run, no API/UI/schema code changed, and real upload remains blocked
 - Current Business Card Capture storage SQL pack status: manual private bucket/policy SQL, execution guide, verification checklist, and safety scan report are prepared; no API/UI/schema/package code changed, real upload remains blocked, and database execution requires Paul's explicit approval
 - Current Business Card Capture private storage verification status: after Paul's explicit approval, the `business-card-captures` private bucket was created and verified in Supabase Storage with public access disabled, 5 MB size limit, JPEG/PNG/WEBP MIME allowlist, authenticated read/upload policies, and unsafe policy count 0; real upload, OCR, signed URLs, customer creation, sending, and business execution remain blocked
+- Current Business Card Capture real upload/OCR status: paused/deferred because current business-card usage frequency is low and the existing foundation is enough for now; resume when exhibition volume, batch card input, or OCR workflow priority increases
+- Current AI Customer Verification status: static read-only Admin UI preview added for customer credibility, company/contact completeness, duplicate risk, customer type inference, risk signals, and suggested follow-up wording; it does not search, scrape, call AI providers, create or mutate customers, send messages, or generate quotes/orders
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
 ## 2. Progress Bars
 
-- Full vision: 53% `[█████░░░░░]`
+- Full vision: 54% `[█████░░░░░]`
 - Internal MVP: 100% `[██████████]`
 - Localized Admin UI: 90% `[██████████████████░░]`
 - Phase 0A utilities: 100% `[████████████████████]`
@@ -123,6 +125,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Business Card Capture Storage Roadmap: 100% `[████████████████████]`
 - Business Card Capture Storage SQL Pack Prepared: 100% `[████████████████████]`
 - Business Card Capture Private Storage Verified: 100% `[████████████████████]`
+- AI Customer Verification Center UI Preview: 100% `[████████████████████]`
 
 ## 3. Completed Major Milestones
 
@@ -292,6 +295,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Business Card Capture Storage Roadmap
 - Business Card Capture Storage SQL Pack Prepared
 - Business Card Capture Private Storage Verified
+- AI Customer Verification Center UI Preview
 
 ## 4. Current Frozen Foundations
 
@@ -304,7 +308,7 @@ These percentages are planning estimates. They should move only after milestone 
 
 ## 5. Current Active Area
 
-- Current active area: Phase UI-3 / Business Card Capture protected upload API planning after private storage verification
+- Current active area: Phase UI-3 / AI Customer Verification Center preview and future data planning
 - Admin Read Dispatcher production verification is complete
 - Dashboard Summary UI now targets `GET /api/admin-read/dashboard-summary`
 - Customer Center UI now targets `GET /api/admin-read/customers`
@@ -413,6 +417,8 @@ These percentages are planning estimates. They should move only after milestone 
 - Business Card Capture Storage Roadmap is completed as documentation-only planning; the recommended next executable task is `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-STORAGE-SQL-PACK-001`, and real upload remains blocked until bucket/policy/API/preview boundaries are reviewed
 - Business Card Capture Storage SQL Pack Prepared is completed as setup planning; it adds private bucket/policy SQL, execution guide, verification checklist, and safety scan for the future `business-card-captures` bucket while real upload, OCR, customer creation, sending, and business execution remain blocked
 - Business Card Capture Private Storage Verified is completed; after Paul's explicit approval, Supabase Dashboard SQL Editor execution succeeded, the private `business-card-captures` bucket was verified with public access disabled, 5 MB size limit, JPEG/PNG/WEBP MIME allowlist, authenticated read/upload policies, unsafe policy count 0, production routes remained auth-gated/read-only, and AI 名片识别 remained safe with no real upload, file input, OCR, customer creation, sending, or business execution
+- Business Card Capture Real Upload/OCR is paused and deferred; the current foundation remains available, but upload API, metadata migration, OCR provider implementation, real upload, and signed preview URL work should wait until exhibition or batch card intake becomes a frequent workflow
+- AI Customer Verification Center UI Preview is completed as a static/read-only Admin UI module; it adds customer credibility summary cards, demo profile, AI checklist, type inference, duplicate risk, risk signals, recommended next action draft, disabled decision options, and safety boundary without real search, scraping, external API, AI provider calls, customer creation, customer mutation, sending, quotation, PI, order, payment, production, or shipment execution
 - Vercel Protection Smoke Resolution Plan is completed as documentation only; no Vercel settings, secrets, deploys, UI code, API code, schema, package files or business behavior were changed
 - Phase UI-2 first read-only data wiring batch is temporarily frozen after checkpoint
 - Phase UI-1 static Admin UI main workflow remains frozen except for bug fixes and approved pattern consolidation
@@ -447,11 +453,11 @@ All business-risk actions remain human-reviewed and separately approved.
 
 ## 8. Recommended Next 5 Tasks
 
-1. CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-API-PLAN-001 - Plan protected upload API validation and metadata linkage
-2. CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-OCR-PROVIDER-PLAN-001 - Plan OCR/vision provider privacy, confidence, and review behavior
-3. CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-PREVIEW-SIGNED-URL-PLAN-001 - Plan short-lived private preview access
-4. CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-READONLY-PREVIEW-001 - Plan or preview read-only storage readiness state without enabling upload
-5. CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-UI-001 - Plan customer verification UI after upload and OCR boundaries are approved
+1. CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-DATA-PLAN-001 - Plan safe customer verification data sources, fields, confidence, and privacy boundaries
+2. CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001 - Plan human-approved follow-up assistant behavior without sending
+3. CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-UI-001 - Add read-only inquiry intelligence preview
+4. CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-UI-001 - Add read-only supplier intelligence preview
+5. CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-API-PLAN-001 - Deferred until business-card volume increases
 
 ## 9. How To Update This File
 

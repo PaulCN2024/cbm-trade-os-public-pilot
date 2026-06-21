@@ -4,6 +4,7 @@ const navItems = [
   { id: "ai-command-center", label: "AI 指挥台" },
   { id: "dashboard", label: "工作台" },
   { id: "prospecting", label: "AI 开发客户" },
+  { id: "customer-verification", label: "AI 客户验证" },
   { id: "business-card-capture", label: "AI 名片识别" },
   { id: "knowledge-center", label: "AI 知识库" },
   { id: "inquiries", label: "询盘" },
@@ -46,6 +47,14 @@ const sections = {
     sectionHelp: "AI Prospecting 静态预览。当前不调用搜索 API、不解析文件、不创建客户、不外发消息。",
     content: renderProspecting,
     review: renderProspectingReview,
+  },
+  "customer-verification": {
+    title: "AI 客户验证中心",
+    description: "正式跟进前的客户身份、公司资料、联系信息、重复风险和跟进价值静态复核预览。",
+    sectionTitle: "AI 客户验证",
+    sectionHelp: "只读预览。当前不联网、不自动查询、不调用 AI、不创建客户、不修改客户资料、不发送消息。",
+    content: renderCustomerVerification,
+    review: renderCustomerVerificationReview,
   },
   "business-card-capture": {
     title: "AI 名片识别",
@@ -1339,6 +1348,80 @@ const prospectingSafetyItems = [
   "不生成报价",
   "保留来源记录",
   "后续支持 do-not-contact / opt-out",
+];
+
+const customerVerificationSummaryCards = [
+  { label: "待验证客户", value: "12", subtitle: "公司、邮箱或角色仍需人工确认", tone: "info" },
+  { label: "高可信客户", value: "5", subtitle: "资料较完整，仍未自动确认", tone: "active" },
+  { label: "需补充信息", value: "7", subtitle: "缺网站、项目、数量或买家角色", tone: "warning" },
+  { label: "疑似重复", value: "2", subtitle: "公司名或联系人可能已存在", tone: "warning" },
+  { label: "高风险线索", value: "1", subtitle: "身份或需求存在明显矛盾", tone: "danger" },
+  { label: "建议跟进", value: "6", subtitle: "可人工索取公司和项目资料", tone: "active" },
+];
+
+const customerVerificationChecklist = [
+  { item: "公司名称是否完整", status: "通过", detail: "DEMO Facade Solutions 已提供公司名称。" },
+  { item: "邮箱域名是否合理", status: "需确认", detail: "示例邮箱需要人工核实，不能自动发送。" },
+  { item: "网站是否存在", status: "未查询", detail: "当前不联网，不检查网站真实性。" },
+  { item: "国家与询盘是否匹配", status: "通过", detail: "名片和询盘均指向 Peru / Latin America 方向。" },
+  { item: "产品需求是否清晰", status: "需确认", detail: "门窗和幕墙方向清楚，但规格、数量和项目位置缺失。" },
+  { item: "是否可能为同行", status: "需确认", detail: "公司名不像明显同行，但未做真实背景调查。" },
+  { item: "是否可能为中间商", status: "需确认", detail: "可能是承包商或建材进口商，需要确认采购角色。" },
+  { item: "是否已有重复客户", status: "未查询", detail: "当前不查真实客户库，仅展示查重字段结构。" },
+  { item: "是否需要补充公司资料", status: "缺失", detail: "缺网站、注册信息、项目位置、采购角色。" },
+  { item: "是否建议继续跟进", status: "需确认", detail: "建议温和索取信息，不发送正式报价。" },
+];
+
+const customerVerificationTypeOptions = [
+  { label: "Developer / 开发商", status: "可能性低" },
+  { label: "Contractor / 承包商", status: "主要推测" },
+  { label: "Importer / 进口商", status: "次要可能" },
+  { label: "Distributor / 经销商", status: "待确认" },
+  { label: "Fabricator / 加工厂", status: "待确认" },
+  { label: "Trading company / 贸易商", status: "待确认" },
+  { label: "Competitor / 同行风险", status: "需排除" },
+  { label: "Unknown / 待确认", status: "兜底" },
+];
+
+const customerVerificationDuplicateRows = [
+  ["Same email", "not found / not checked"],
+  ["Same company", "possible similar name"],
+  ["Same phone", "not available"],
+  ["Same website", "not checked"],
+  ["Existing customer match", "needs review"],
+];
+
+const customerVerificationLowRiskSignals = ["company name provided", "product interest clear", "country provided"];
+const customerVerificationNeedConfirmSignals = [
+  "website not verified",
+  "company registration not checked",
+  "email domain not verified",
+  "project details missing",
+  "purchase role unclear",
+];
+const customerVerificationHighRiskSignals = [
+  "personal email only",
+  "refuses company information",
+  "asks for sensitive pricing without project context",
+  "suspected competitor",
+  "inconsistent country/contact data",
+];
+
+const customerVerificationDisabledDecisions = [
+  "禁用：标记为验证通过客户",
+  "禁用：请求更多信息",
+  "禁用：标记可能重复",
+  "禁用：标记低优先级",
+  "禁用：风险 / 暂停跟进",
+];
+
+const customerVerificationSafetyItems = [
+  "不联网自动查询",
+  "不自动创建客户",
+  "不自动修改客户资料",
+  "不自动发送 Email / WhatsApp",
+  "不生成正式报价",
+  "所有结论需要 Paul 人工确认",
 ];
 
 const businessCardCaptureFields = [
@@ -3055,6 +3138,273 @@ function renderProspectingReview() {
   `;
 }
 
+function renderCustomerVerification() {
+  return `
+    <div class="customer-verification-preview" aria-label="AI 客户验证中心只读预览">
+      <div class="customer-verification-hero">
+        <div>
+          <span class="state-label">AI Customer Verification Center</span>
+          <h3>AI 客户验证中心</h3>
+          <p>用于在正式跟进前，对客户身份、公司信息、联系方式、询盘可信度、重复风险和跟进价值进行 AI 辅助判断。当前为只读预览，不联网、不自动查询、不自动创建客户、不自动发送。</p>
+        </div>
+        <div class="verification-badge-row" aria-label="AI 客户验证预览状态">
+          ${badge("只读预览", "draft")}
+          ${badge("不自动查询", "pending")}
+          ${badge("不自动创建客户", "pending")}
+          ${badge("不自动发送", "pending")}
+          ${badge("需人工确认", "approval")}
+          ${badge("AI 建议", "active")}
+        </div>
+      </div>
+
+      <section class="verification-section" aria-label="客户验证概览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>验证概览</h3>
+            <p>DEMO 统计，仅用于预览未来客户验证队列，不代表实时客户状态。</p>
+          </div>
+          <span>静态预览</span>
+        </div>
+        <div class="verification-summary-grid">
+          ${customerVerificationSummaryCards.map(renderCustomerVerificationSummaryCard).join("")}
+        </div>
+      </section>
+
+      <div class="verification-layout">
+        <section class="verification-profile-card" aria-label="客户验证档案示例">
+          <div class="workbench-section-header">
+            <div>
+              <h3>Demo 客户验证档案</h3>
+              <p>DEMO / Preview only / not verified automatically。所有字段只用于界面验证。</p>
+            </div>
+            <span>Needs review</span>
+          </div>
+          <dl class="verification-profile-list">
+            <dt>Customer</dt>
+            <dd>Carlos Ramirez</dd>
+            <dt>Company</dt>
+            <dd>DEMO Facade Solutions</dd>
+            <dt>Country</dt>
+            <dd>Peru</dd>
+            <dt>Email</dt>
+            <dd>carlos.ramirez@example.com</dd>
+            <dt>Website</dt>
+            <dd>demo-facade.example.com</dd>
+            <dt>Source</dt>
+            <dd>Trade show / WhatsApp / Inquiry</dd>
+            <dt>Interest</dt>
+            <dd>Aluminum windows / facade systems</dd>
+            <dt>Status</dt>
+            <dd>Needs review</dd>
+            <dt>Confidence</dt>
+            <dd>Medium</dd>
+            <dt>Risk</dt>
+            <dd>Low-medium</dd>
+          </dl>
+          <div class="disabled-chip-row">
+            ${renderDisabledCapabilities(["不可自动创建客户", "不可修改客户", "不可发送", "不可报价"])}
+          </div>
+        </section>
+
+        <aside class="verification-type-panel" aria-label="客户类型推测">
+          <div class="workbench-review-heading">
+            <div>
+              <h3>客户类型推测</h3>
+              <p class="workbench-review-note">AI 建议仅作为人工复核材料，不是最终身份判断。</p>
+            </div>
+            ${badge("Confidence: Medium", "draft")}
+          </div>
+          <div class="verification-type-highlight">
+            <span>Primary guess</span>
+            <strong>Facade contractor</strong>
+            <small>Secondary possibility: Construction material importer</small>
+          </div>
+          <p class="verification-reason">Reason: Company name and product interest suggest facade/window project activity.</p>
+          <div class="verification-type-grid">
+            ${customerVerificationTypeOptions.map(renderCustomerVerificationTypeOption).join("")}
+          </div>
+        </aside>
+      </div>
+
+      <section class="verification-section" aria-label="AI 验证清单">
+        <div class="workbench-section-header">
+          <div>
+            <h3>AI 验证清单</h3>
+            <p>状态 chip 是静态预览：未查询表示当前没有联网或真实数据库查重。</p>
+          </div>
+          <span>只读 checklist</span>
+        </div>
+        <div class="verification-checklist-grid">
+          ${customerVerificationChecklist.map(renderCustomerVerificationChecklistItem).join("")}
+        </div>
+      </section>
+
+      <div class="verification-two-column">
+        <section class="verification-duplicate-panel" aria-label="重复风险预览">
+          <div class="workbench-section-header">
+            <div>
+              <h3>重复风险</h3>
+              <p>静态查重结构预览。当前不查询真实客户库、不合并客户、不写入数据。</p>
+            </div>
+            <span>not checked</span>
+          </div>
+          <dl class="verification-mini-list">
+            ${customerVerificationDuplicateRows.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
+          </dl>
+        </section>
+
+        <section class="verification-risk-panel" aria-label="风险信号预览">
+          <div class="workbench-section-header">
+            <div>
+              <h3>风险信号</h3>
+              <p>用于提醒 Paul 复核，不自动拦截、不自动放行、不创建任务。</p>
+            </div>
+            <span>人工判断</span>
+          </div>
+          ${renderCustomerVerificationSignalGroup("Low-risk signals", customerVerificationLowRiskSignals, "safe")}
+          ${renderCustomerVerificationSignalGroup("Need-confirmation signals", customerVerificationNeedConfirmSignals, "warning")}
+          ${renderCustomerVerificationSignalGroup("High-risk signals", customerVerificationHighRiskSignals, "danger")}
+        </section>
+      </div>
+
+      <div class="verification-two-column">
+        <section class="verification-action-panel" aria-label="建议下一步">
+          <div class="workbench-section-header">
+            <div>
+              <h3>推荐人工动作</h3>
+              <p>先补充公司和项目资料，再决定是否进入跟进或报价准备。</p>
+            </div>
+            <span>AI 建议</span>
+          </div>
+          <p class="verification-recommendation">Suggested next step: Request company website, project location, product specifications, expected quantity, and buyer role before formal quotation.</p>
+          <div class="verification-draft-box">
+            <span>English draft preview</span>
+            <p>Thank you for your inquiry. Before preparing a suitable proposal, could you please share your company website, project location, required specifications, and estimated quantity?</p>
+          </div>
+          <div class="disabled-chip-row">
+            ${renderDisabledCapabilities(["Draft only", "Not sent", "Human approval required"])}
+          </div>
+        </section>
+
+        <section class="verification-action-panel" aria-label="禁用决策选项">
+          <div class="workbench-section-header">
+            <div>
+              <h3>验证决策预览</h3>
+              <p>这些是未来审批后的人工决策方向；当前全部禁用、不可点击、不会写入。</p>
+            </div>
+            <span>禁用</span>
+          </div>
+          <div class="verification-decision-grid">
+            ${customerVerificationDisabledDecisions.map((item) => `<span class="verification-decision-chip">${escapeHtml(item)}</span>`).join("")}
+          </div>
+        </section>
+      </div>
+
+      <section class="verification-safety-panel" aria-label="客户验证安全边界">
+        <div class="workbench-section-header">
+          <div>
+            <h3>安全边界</h3>
+            <p>客户验证只能帮助判断下一步复核方向，不能代替 Paul 的商业判断。</p>
+          </div>
+          <span>Human approval</span>
+        </div>
+        <div class="verification-safety-grid">
+          ${customerVerificationSafetyItems.map((item) => `<span class="verification-safety-chip">${escapeHtml(item)}</span>`).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderCustomerVerificationSummaryCard(card) {
+  return `
+    <article class="verification-summary-card verification-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderCustomerVerificationChecklistItem(item) {
+  return `
+    <article class="verification-check-item">
+      <div>
+        <h4>${escapeHtml(item.item)}</h4>
+        <p>${escapeHtml(item.detail)}</p>
+      </div>
+      ${verificationStatusChip(item.status)}
+    </article>
+  `;
+}
+
+function renderCustomerVerificationTypeOption(option) {
+  return `
+    <div class="verification-type-option">
+      <span>${escapeHtml(option.label)}</span>
+      <small>${escapeHtml(option.status)}</small>
+    </div>
+  `;
+}
+
+function renderCustomerVerificationSignalGroup(title, items, tone) {
+  return `
+    <div class="verification-signal-group verification-signal-${escapeHtml(tone)}">
+      <h4>${escapeHtml(title)}</h4>
+      <div class="verification-chip-row">
+        ${items.map((item) => `<span class="verification-signal-chip">${escapeHtml(item)}</span>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function verificationStatusChip(status) {
+  const toneMap = {
+    通过: "pass",
+    需确认: "confirm",
+    缺失: "missing",
+    风险: "risk",
+    未查询: "unknown",
+  };
+  const tone = toneMap[status] || "unknown";
+  return `<span class="verification-status-chip verification-status-${tone}">${escapeHtml(status)}</span>`;
+}
+
+function renderCustomerVerificationReview() {
+  return `
+    <div class="review-stack">
+      <div class="review-card">
+        <h3>AI 客户验证只读边界</h3>
+        <ul class="check-list">
+          <li>静态预览，不联网查询，不搜索，不抓取网页，不调用 AI provider</li>
+          <li>不创建客户、不修改客户资料、不写入数据库、不创建任务</li>
+          <li>不发送 Email / WhatsApp，不群发开发信，不自动判断客户可信度</li>
+          <li>不生成正式报价、PI、订单，不触发付款 / 生产 / 发货</li>
+        </ul>
+      </div>
+      <div class="review-card">
+        <h3>固定样本</h3>
+        <dl>
+          <dt>联系人</dt>
+          <dd>Carlos Ramirez</dd>
+          <dt>公司</dt>
+          <dd>DEMO Facade Solutions</dd>
+          <dt>推测类型</dt>
+          <dd>Facade contractor / Construction material importer</dd>
+          <dt>建议动作</dt>
+          <dd>先索取公司网站、项目位置、规格、数量和买家角色，再由 Paul 决定是否跟进。</dd>
+        </dl>
+      </div>
+      <div class="review-card">
+        <h3>禁用能力</h3>
+        <div class="disabled-chip-row">
+          ${renderDisabledCapabilities(["不可自动查询", "不可自动创建客户", "不可修改客户", "不可发送消息", "不可生成报价", "不可确认订单"])}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function getBusinessCardCaptureViewModel() {
   const fallback = fallbackBusinessCardApiData();
   const isLive = businessCardApiState.status === "loaded" && businessCardApiState.source === "api";
@@ -3123,7 +3473,7 @@ function businessCardFieldRows(model) {
     { label: "产品兴趣", value: extraction.extracted_product_interest || draft.proposed_product_interest, note: "用于复核，不报价" },
     { label: "来源渠道", value: source.source_label || draft.source_channel, note: "只读来源记录" },
     { label: "置信度", value: extraction.confidence_level || draft.confidence_level, note: `Review status: ${displayValue(draft.review_status)}` },
-    { label: "查重状态", value: draft.duplicate_status, note: "不能自动建客" },
+    { label: "查重状态", value: draft.duplicate_status, note: "不能自动创建客户" },
     { label: "风险提示", value: draft.risk_level, note: "不可自动发送" },
   ].map((field) => ({
     label: field.label,
