@@ -28,7 +28,9 @@ Expected scope:
 
 ### BC4 upload safety plan
 
-Future task: design upload rules before any file upload exists.
+Status: completed as documentation planning.
+
+This stage designs upload rules before any file upload exists.
 
 Must cover:
 
@@ -41,9 +43,18 @@ Must cover:
 - no public file URLs
 - no raw file exposure in Admin UI
 
+Follow-up documents:
+
+- `docs/architecture/business-card-capture-upload-safety-architecture.md`
+- `docs/ops/business-card-capture-file-handling-policy.md`
+- `docs/ops/business-card-capture-retention-and-deletion-policy.md`
+- `docs/ops/business-card-capture-upload-implementation-roadmap.md`
+
 ### BC5 OCR/vision provider plan
 
-Future task: evaluate OCR/vision providers and privacy implications.
+Status: planned as the next provider-boundary line.
+
+Evaluate OCR/vision providers and privacy implications.
 
 Must cover:
 
@@ -54,6 +65,38 @@ Must cover:
 - manual retry behavior
 - no provider key exposure
 - no automatic customer creation
+
+Follow-up document:
+
+- `docs/ops/business-card-capture-ocr-provider-boundary-plan.md`
+
+### BC5A storage bucket plan
+
+Future task: design the private storage bucket and access policy before any upload implementation.
+
+Must cover:
+
+- private bucket name/path convention
+- authenticated internal access
+- no public read
+- signed URL behavior
+- storage object metadata
+- deletion/archive behavior
+- audit expectations
+- no client service-role exposure
+
+### BC5B disabled upload UI preview
+
+Future task: add a static/disabled upload UI preview to validate operator wording and workflow.
+
+Must remain:
+
+- no real file input
+- no drag/drop listener
+- no network upload
+- no OCR call
+- no customer creation
+- no sending
 
 ### BC6 extraction preview
 
@@ -120,10 +163,10 @@ Must cover:
 
 ## Recommended Next Executable Tasks
 
-1. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-DATA-READONLY-001`
-2. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-SAFETY-001`
-3. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-OCR-PLAN-001`
-4. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-UI-001`
+1. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-UI-PREVIEW-001`
+2. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-STORAGE-PLAN-001`
+3. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-OCR-PROVIDER-PLAN-001`
+4. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-HUMAN-REVIEW-UI-001`
 5. `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001`
 
 ## Progress Impact
