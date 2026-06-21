@@ -26,13 +26,21 @@ Defines private bucket model, file path strategy, access-control boundary, previ
 
 ### S1 bucket creation SQL/manual guide
 
-Status: prepared by the storage SQL pack.
+Status: executed and verified after Paul's explicit approval.
 
-Prepare a manual Supabase setup pack for the `business-card-captures` private bucket and first-stage policies.
+The manual Supabase setup pack for the `business-card-captures` private bucket and first-stage policies has been executed through Supabase Dashboard SQL Editor.
 
-This should be reviewed before any SQL or dashboard action is performed.
+Verified result:
 
-Manual execution is still pending. Codex must not execute this SQL or touch Supabase Storage until Paul approves the exact database action.
+- bucket exists
+- bucket is private
+- file size limit is 5 MB
+- allowed MIME types are JPEG, PNG, and WEBP
+- authenticated read policy exists
+- authenticated upload policy exists
+- unsafe policy count is 0
+
+Real upload is still not enabled. Codex must not upload files, create signed URLs, add upload APIs, or touch storage objects until a separate upload API plan is approved.
 
 ### S2 storage policy plan
 
@@ -107,16 +115,47 @@ Implement archive/delete request and approval handling only after storage object
 Recommended:
 
 ```text
-CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-STORAGE-POST-VERIFY-001
+CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-API-PLAN-001
 ```
 
 Goal:
 
-Verify Paul's approved Supabase Storage SQL execution result for the private bucket and first-stage policies.
+Plan the protected upload API boundary, validation rules, metadata linkage, and approval-safe storage behavior before enabling any real upload.
 
 Warning:
 
 Do not enable real upload until bucket/policy execution is verified and upload API, storage preview, retention, and OCR boundaries are separately reviewed.
+
+## Storage SQL Executed And Verified
+
+Paul explicitly approved the storage SQL execution, and the private bucket/policy setup was verified after the Supabase Dashboard SQL Editor run.
+
+Verified storage baseline:
+
+- Supabase project: PaulCN2024's Project / `zswtekjtkyvfagbudkia`
+- Bucket: `business-card-captures`
+- Public access: `false`
+- File size limit: `5242880`
+- Allowed MIME types: `image/jpeg`, `image/png`, `image/webp`
+- Authenticated read policy: `business_card_captures_authenticated_read`
+- Authenticated upload policy: `business_card_captures_authenticated_upload`
+- Unsafe policy count: `0`
+
+Remaining boundary:
+
+- no real upload API
+- no file input enabled in Admin UI
+- no OCR/vision provider call
+- no storage object upload/download/delete
+- no signed URL generation
+- no customer creation
+- no sending or business execution
+
+Recommended next executable task:
+
+```text
+CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-API-PLAN-001
+```
 
 ## Safety Gates Before Real Upload
 

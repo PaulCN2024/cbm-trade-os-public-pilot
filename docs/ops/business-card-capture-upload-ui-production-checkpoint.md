@@ -102,6 +102,24 @@ Result:
 3. CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-UI-001
 4. CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001
 
+## Private Storage Prepared
+
+The private Supabase Storage baseline for Business Card Capture has now been executed and verified after Paul's explicit approval.
+
+Verified baseline:
+
+- Bucket: `business-card-captures`
+- Public access: disabled
+- File size limit: 5 MB
+- Allowed MIME types: JPG / PNG / WEBP
+- Authenticated internal read policy: verified
+- Authenticated upload policy: verified
+- Unsafe policy count: 0
+
+This does not change the production UI behavior. The upload UI remains a disabled/static preview with no file input, no upload request, no OCR, no storage object mutation, no customer creation, and no sending.
+
+The next safe step is planning a protected upload API before any real upload is enabled.
+
 ## Progress
 
 - Full product vision: 51% -> 52%
