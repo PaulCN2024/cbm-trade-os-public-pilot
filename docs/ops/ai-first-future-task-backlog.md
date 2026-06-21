@@ -25,6 +25,11 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 - Business Card Capture human review UI
 - Business Card Capture human review queue
 - Customer Verification Plan
+- Customer Verification read-only data foundation
+- Customer Verification duplicate check plan
+- Customer Verification external lookup plan
+- Customer Verification AI reasoning plan
+- Customer Verification human review queue
 - Social Content Studio Plan
 - Task Board Plan
 - Unified AI Copilot Shell
@@ -80,6 +85,11 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 | `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-HUMAN-REVIEW-UI-001` | Business Card Capture | Plan or preview human review UI for card extraction results | show missing fields, duplicates, and draft follow-up | no approve/create/send execution | docs/UI only if separately approved | Medium-low | 15 |
 | `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-REVIEW-QUEUE-001` | Business Card Capture | Plan human review queue for card extraction results | show missing fields, duplicates, and draft follow-up | no approve/create/send execution | docs/UI only if separately approved | Medium-low | 16 |
 | `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-PLAN-001` | Customer Verification | Plan buyer/company verification and buyer discovery | summarize evidence, confidence, mismatch, and follow-up value | no final trust decision, no scraping, no outreach | docs only | Low | 17 |
+| `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-DATA-READONLY-001` | Customer Verification | Create the read-only customer verification data foundation plan/pack | organize requests, evidence, scores, duplicate matches, and reviews | read-only first, no customer mutation, no external lookup | docs/API/schema only if separately approved | Medium | 17.1 |
+| `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-DUPLICATE-CHECK-PLAN-001` | Customer Verification | Plan duplicate candidate rules against existing customer/contact data | explain match candidates and confidence | no auto-merge, no archive/reject, no customer mutation | docs only | Low | 17.2 |
+| `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-EXTERNAL-LOOKUP-PLAN-001` | Customer Verification | Plan future external lookup boundaries and source rules | summarize allowed sources, citation, freshness, and privacy | no lookup execution, no scraping, no protected-platform bypass | docs only | Medium | 17.3 |
+| `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-AI-REASONING-PLAN-001` | Customer Verification | Plan future AI reasoning over verified evidence | explain confidence, risk, and next-step recommendations | no provider keys, no live AI calls, no final trust decision | docs only | Medium | 17.4 |
+| `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-HUMAN-REVIEW-QUEUE-001` | Customer Verification | Plan or preview human review queue for verification cases | show evidence, duplicates, risk, and disabled decisions | no approve/create/send execution until approval workflow exists | docs/UI only if separately approved | Medium-low | 17.5 |
 | `CBM-CODEX-SPRINT-SOCIAL-CONTENT-PLAN-001` | AI Social Content Studio | Plan marketing drafts from product/market knowledge | draft posts and scripts | manual publishing only, no platform posting | docs only | Low | 18 |
 | `CBM-CODEX-SPRINT-TASK-BOARD-PLAN-001` | AI Task Board | Plan AI-generated internal work queue | convert findings into suggested tasks and blocked actions | no auto-assignment, no external execution | docs only | Low | 19 |
 | `CBM-CODEX-SPRINT-COPILOT-SHELL-001` | Unified AI Copilot Shell | Add read-only AI Copilot surface | explain context, risk, missing info, disabled actions | static/read-only first, no helper execution | `admin/ui-foundation/app.js`, `styles.css` if approved | Medium-low | 20 |
@@ -106,12 +116,12 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 Recommended next task:
 
 ```text
-CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-UI-001
+CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-DATA-READONLY-001
 ```
 
 Reason:
 
-Business Card Capture now has enough foundation for the current low-frequency business-card use case. The safer near-term value is a static AI Customer Verification Center that helps Paul judge customer credibility, role, duplication risk, missing information, and follow-up value before any external outreach or formal quotation.
+AI Customer Verification now has static UI, production smoke verification, data model planning, evidence rules, confidence/risk rules, human review workflow, and roadmap planning. The next safe step is a read-only data foundation with DEMO records and protected admin-read projection, not external lookup, AI reasoning, customer mutation, or sending.
 
 ## Business Card Capture Real Upload/OCR Pause
 
