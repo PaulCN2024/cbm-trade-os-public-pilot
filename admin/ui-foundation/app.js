@@ -1390,11 +1390,53 @@ const businessCardAiCanItems = [
 ];
 
 const businessCardAiCannotItems = [
-  "自动创建客户",
-  "自动发送消息",
-  "自动导入真实数据",
-  "自动群发开发信",
-  "自动判断客户绝对可信",
+  "不自动创建客户",
+  "不自动发送消息",
+  "不自动导入真实数据",
+  "不自动群发开发信",
+  "不自动判断客户绝对可信",
+];
+
+const businessCardUploadFileRules = [
+  "支持格式：JPG / PNG / WEBP",
+  "PDF：后续阶段再评估",
+  "单张图片建议不超过 5MB",
+  "不支持压缩包、脚本、视频、未知二进制文件",
+];
+
+const businessCardUploadPrivacyNotes = [
+  "名片可能包含电话、邮箱、WhatsApp、职位、地址",
+  "文件未来将存入私有存储",
+  "不公开访问",
+  "不自动创建客户",
+  "不自动发送消息",
+  "AI 识别结果必须人工确认",
+];
+
+const businessCardUploadPipelineSteps = [
+  "图片上传",
+  "私有存储",
+  "OCR/视觉识别",
+  "提取字段",
+  "置信度评分",
+  "查重",
+  "客户草稿",
+  "Paul 审核",
+];
+
+const businessCardUploadErrorStates = [
+  "文件类型不支持",
+  "文件过大",
+  "图片不清晰",
+  "识别置信度低",
+  "可能重复客户",
+  "需要人工复核",
+];
+
+const businessCardUploadRetentionNotes = [
+  "错误/重复/无关名片可归档或删除",
+  "保留必要业务联系人信息",
+  "不保存无关私人信息",
 ];
 
 const knowledgeOverviewCards = [
@@ -3125,6 +3167,84 @@ function renderBusinessCardSummaryCard(card) {
   `;
 }
 
+function renderBusinessCardUploadPreview() {
+  return `
+    <section class="business-card-section card-upload-zone-preview" aria-label="名片上传静态预览">
+      <div class="workbench-section-header">
+        <div>
+          <h3>上传名片图片</h3>
+          <p>拖拽或选择客户名片、展会卡片、WhatsApp 联系人截图。当前为静态预览，未启用真实上传。</p>
+        </div>
+        <span>静态预览 / 未启用上传</span>
+      </div>
+
+      <div class="card-upload-preview" aria-label="静态上传区域预览">
+        <span class="card-upload-icon">IMG</span>
+        <div>
+          <h4>后续阶段的上传入口</h4>
+          <p>这里未来会连接私有存储和人工复核流程；当前没有文件选择控件、没有拖拽监听、没有上传请求。</p>
+          <small>只读展示，不会保存图片或创建客户。</small>
+        </div>
+      </div>
+
+      <div class="upload-preview-layout">
+        <div class="upload-preview-panel upload-file-rules-grid" aria-label="名片文件规则">
+          <h4>文件规则</h4>
+          <div class="business-card-chip-row">
+            ${renderChipList(businessCardUploadFileRules, "business-card-safe-chip")}
+          </div>
+        </div>
+
+        <div class="upload-preview-panel upload-privacy-panel" aria-label="名片隐私说明">
+          <h4>隐私与人工确认</h4>
+          <ul class="upload-preview-list">
+            ${businessCardUploadPrivacyNotes.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+
+      <div class="upload-preview-panel ocr-pipeline-preview" aria-label="后续 OCR 流程预览">
+        <div class="upload-preview-panel-heading">
+          <div>
+            <h4>OCR/视觉识别流程</h4>
+            <p>后续阶段才会启用；当前未启用 OCR，不解析图片、不提取真实字段。</p>
+          </div>
+          <div class="business-card-badges">
+            ${badge("后续阶段", "draft")}
+            ${badge("当前未启用 OCR", "pending")}
+          </div>
+        </div>
+        <div class="upload-pipeline-row">
+          ${businessCardUploadPipelineSteps
+            .map((step, index) => `
+              <span class="upload-pipeline-step">
+                <strong>${escapeHtml(String(index + 1).padStart(2, "0"))}</strong>
+                ${escapeHtml(step)}
+              </span>
+            `)
+            .join("")}
+        </div>
+      </div>
+
+      <div class="upload-preview-layout">
+        <div class="upload-preview-panel upload-error-preview" aria-label="上传错误状态预览">
+          <h4>错误状态预览</h4>
+          <div class="upload-error-chip-row">
+            ${renderChipList(businessCardUploadErrorStates, "upload-error-chip")}
+          </div>
+        </div>
+
+        <div class="upload-preview-panel upload-retention-note" aria-label="名片数据留存说明">
+          <h4>留存与删除原则</h4>
+          <ul class="upload-preview-list">
+            ${businessCardUploadRetentionNotes.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
 function renderBusinessCardCapture() {
   const model = getBusinessCardCaptureViewModel();
   const statusNotice =
@@ -3171,23 +3291,7 @@ function renderBusinessCardCapture() {
         </div>
       </section>
 
-      <section class="business-card-section" aria-label="名片上传静态占位">
-        <div class="workbench-section-header">
-          <div>
-            <h3>名片图片入口</h3>
-            <p>仅用于界面验证的视觉区域。当前没有上传控件、没有拖拽监听、没有 OCR 或图片解析。</p>
-          </div>
-          <span>静态占位</span>
-        </div>
-        <div class="card-upload-preview" aria-label="静态名片拖拽预览">
-          <span class="card-upload-icon">BC</span>
-          <div>
-            <h4>拖拽名片图片到这里</h4>
-            <p>支持名片 / 展会卡片 / WhatsApp 联系人截图</p>
-            <small>当前为静态预览，未启用上传</small>
-          </div>
-        </div>
-      </section>
+      ${renderBusinessCardUploadPreview()}
 
       <div class="business-card-layout">
         <section class="business-card-section" aria-label="名片识别字段预览">
