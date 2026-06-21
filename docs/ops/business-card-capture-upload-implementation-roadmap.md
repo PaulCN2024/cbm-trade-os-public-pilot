@@ -5,12 +5,15 @@
 Business Card Capture currently has:
 
 - static UI preview
+- upload UI preview
 - data model plan
 - read-only data foundation
 - DEMO data
 - RLS
 - admin-read routes
 - production verification
+- upload safety plan
+- private storage planning
 
 The current system remains read-only. It has no real upload, OCR, image parsing, customer creation, message sending, or business execution.
 
@@ -24,9 +27,24 @@ Defines upload risks, file restrictions, private storage expectations, access co
 
 ### U2 storage bucket plan
 
+Status: completed at planning level.
+
 Plan the exact private storage bucket, path convention, access policy, signed URL behavior, and audit expectations before any upload implementation.
 
+Current planning result:
+
+- proposed private bucket: `business-card-captures`
+- no public URL
+- no anonymous access
+- authenticated access only
+- safe path shape: `business-card-captures/{year}/{month}/{capture_source_id}/{safe_filename}`
+- no raw email, phone, WhatsApp, or private contact data in object paths
+- short-lived preview access only after review
+- real upload remains blocked until bucket setup, policy, API, and preview boundaries are approved
+
 ### U3 upload static UI with disabled controls
+
+Status: completed and production-smoke verified.
 
 Add a disabled or mock-only upload preview if useful for operator review.
 
@@ -94,13 +112,13 @@ Sending remains a separate approval-gated workflow.
 
 Recommended:
 
-`CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-UPLOAD-UI-PREVIEW-001`
+`CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-STORAGE-SQL-PACK-001`
 
-This should be a disabled/static UI preview only, useful for validating wording and operator flow.
+This should prepare a manual SQL/storage setup pack for the future private `business-card-captures` bucket and storage policies.
 
 Warning:
 
-Do not enable real upload until storage/access policy is approved.
+Do not enable real upload until bucket setup, storage policy, upload API, preview boundary, retention/deletion workflow, and human review behavior are all reviewed.
 
 ## Safety Gates Before Real Upload
 
