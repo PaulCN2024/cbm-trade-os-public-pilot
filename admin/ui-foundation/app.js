@@ -31,10 +31,10 @@ const sections = {
     review: renderAiCommandCenterReview,
   },
   dashboard: {
-    title: "CBM 工作台",
-    description: "内部只读试用版：用于查看、复核和记录问题，不执行发送、审批、报价或下单动作。",
-    sectionTitle: "工作台",
-    sectionHelp: "今日待处理概览和复核优先级预览；数据可能来自实时只读路径或静态预览（安全示例）。",
+    title: "AI 今日工作台",
+    description: "AI-first 今日工作台静态预览：帮助判断今天最值得处理的外贸任务，但不自动执行任何动作。",
+    sectionTitle: "AI 今日工作台",
+    sectionHelp: "只读首页预览。AI 只提供优先级、风险和下一步建议；发送、报价、创建客户和业务执行均需人工确认。",
     content: renderDashboard,
     review: renderDashboardReview,
   },
@@ -1008,6 +1008,112 @@ const workbenchQueueItems = [
     recommendedAction: "人工核实辊压设备、厚度范围、包装和供应商反馈",
     disabledCapabilities: ["不可确认生产", "不可确认交期", "不可发货"],
   },
+];
+
+const dailyBriefingStats = [
+  { label: "今日重点", value: "3 件" },
+  { label: "高风险", value: "1 条" },
+  { label: "待跟进", value: "2 个客户" },
+  { label: "待验证知识", value: "4 条" },
+];
+
+const dailyPriorityCards = [
+  {
+    title: "待处理询盘",
+    count: "3",
+    reason: "缺少规格、图纸或目标数量，暂不能进入报价判断。",
+    suggestion: "AI 建议：先整理缺失信息清单，再由 Paul 决定是否向客户澄清。",
+    source: "询盘 / 文件",
+    confidence: "中",
+    risk: "缺失信息",
+  },
+  {
+    title: "待报价客户",
+    count: "2",
+    reason: "客户意向较明确，但供应商价格、包装和交期仍未核实。",
+    suggestion: "AI 建议：先准备报价前复核，不生成正式报价。",
+    source: "报价前复核",
+    confidence: "中",
+    risk: "价格敏感",
+  },
+  {
+    title: "待供应商回复",
+    count: "4",
+    reason: "供应商报价有效期、币种、最小起订量和交期需要人工确认。",
+    suggestion: "AI 建议：整理供应商问题清单，等待人工发送。",
+    source: "供应商 / 制造能力",
+    confidence: "中",
+    risk: "供应承诺",
+  },
+  {
+    title: "待跟进客户",
+    count: "2",
+    reason: "2 个客户超过 7 天未回复，可能需要温和跟进。",
+    suggestion: "AI 建议：生成温和跟进草稿，等待 Paul 确认。",
+    source: "客户 / 沟通",
+    confidence: "高",
+    risk: "低",
+  },
+  {
+    title: "待验证知识",
+    count: "4",
+    reason: "报价规则和产品说明仍需人工确认后才能作为 AI 引用依据。",
+    suggestion: "AI 建议：优先验证轻钢龙骨报价规则和包装说明。",
+    source: "AI 知识库",
+    confidence: "中",
+    risk: "知识未验证",
+  },
+  {
+    title: "内容草稿待审核",
+    count: "3",
+    reason: "LinkedIn / 产品介绍内容仍是草稿，不能自动发布。",
+    suggestion: "AI 建议：先审核产品事实和目标市场措辞。",
+    source: "AI 开发客户 / 内容",
+    confidence: "中",
+    risk: "公开内容",
+  },
+];
+
+const dailyOperationsMetrics = [
+  { label: "客户总数", value: "128", note: "数据预览 / fallback demo", tone: "info" },
+  { label: "本周新增客户", value: "6", note: "静态示例，待后续 BI 聚合", tone: "neutral" },
+  { label: "本周询盘数", value: "12", note: "仅用于首页信息层级验证", tone: "info" },
+  { label: "报价草稿数", value: "3", note: "草稿待审，不生成正式报价", tone: "warning" },
+  { label: "报价转化率", value: "预览", note: "不展示伪造最终指标", tone: "neutral" },
+  { label: "知识库待验证数", value: "4", note: "需人工确认后才能被 AI 引用", tone: "warning" },
+  { label: "AI 开发客户线索", value: "5", note: "静态线索，不自动创建客户", tone: "info" },
+  { label: "内容营销待审核", value: "3", note: "草稿待审，不自动发布", tone: "warning" },
+];
+
+const dailyBottlenecks = [
+  { label: "询盘缺少规格", detail: "图纸、厚度、表面处理或目标数量未确认。", severity: "P1" },
+  { label: "报价缺供应商价格", detail: "供应商币种、有效期和交期仍需人工核实。", severity: "P1" },
+  { label: "知识库缺产品说明", detail: "轻钢龙骨和吊顶产品说明仍有未验证条目。", severity: "P2" },
+  { label: "客户超过 7 天未回复", detail: "建议先准备温和跟进草稿，不自动发送。", severity: "P2" },
+  { label: "内容草稿待人工审核", detail: "公开内容需要确认事实、语气和目标市场。", severity: "P2" },
+];
+
+const dailyRecommendations = [
+  "处理缺规格询盘",
+  "跟进 7 天未回复客户",
+  "验证轻钢龙骨报价规则知识",
+  "准备一条 LinkedIn 产品内容草稿",
+];
+
+const dailyFunnelSteps = [
+  { label: "开发线索", value: "5", note: "静态预览" },
+  { label: "有效客户", value: "3", note: "待验证" },
+  { label: "询盘", value: "2", note: "待复核" },
+  { label: "报价", value: "1", note: "草稿" },
+  { label: "成交", value: "预览", note: "不造假" },
+];
+
+const dailyCountryDistribution = [
+  { country: "USA", value: 78, label: "美国" },
+  { country: "Peru", value: 62, label: "秘鲁" },
+  { country: "Panama", value: 56, label: "巴拿马" },
+  { country: "Indonesia", value: 46, label: "印尼" },
+  { country: "Caribbean", value: 40, label: "加勒比" },
 ];
 
 const aiCommandExamples = [
@@ -2127,47 +2233,77 @@ function renderDashboard() {
       : "";
 
   return `
-    <div class="workbench-preview" aria-label="工作台只读预览">
+    <div class="workbench-preview daily-workbench-preview" aria-label="AI 今日工作台只读预览">
       ${statusNotice}
-      <div class="workbench-header">
+      <div class="workbench-header daily-workbench-hero">
         <div>
-          <span class="state-label">工作台</span>
-          <h3>CBM 工作台 / 今日待处理</h3>
+          <span class="state-label">AI Daily Workbench</span>
+          <h3>今天该做什么，保罗？</h3>
           <p>${escapeHtml(model.headerCopy)}</p>
+          <div class="daily-briefing-stats" aria-label="今日简报静态摘要">
+            ${dailyBriefingStats
+              .map(
+                (item) => `
+                  <span>
+                    <strong>${escapeHtml(item.value)}</strong>
+                    ${escapeHtml(item.label)}
+                  </span>
+                `,
+              )
+              .join("")}
+          </div>
         </div>
         <div class="workbench-badges" aria-label="工作台预览状态">
-          ${badge(model.sourceLabel, model.isLive ? "active" : "draft")}
-          ${badge("只读", "active")}
-          ${badge("不执行动作", "pending")}
+          ${badge("AI 今日简报", "active")}
+          ${badge("只读预览", "draft")}
+          ${badge("不自动执行", "pending")}
+          ${badge("需人工确认", "approval")}
+          ${badge("风险优先", "risk")}
         </div>
       </div>
 
-      <section class="workbench-section" aria-label="今日概览">
+      <section class="workbench-section daily-priority-section" aria-label="今日优先任务">
         <div class="workbench-section-header">
           <div>
-            <h3>今日概览</h3>
-            <p>把需要注意的询盘、草稿、缺失信息和风险先压缩成可扫读数字。</p>
+            <h3>今日优先处理</h3>
+            <p>把客户、询盘、报价、供应商、知识库和内容工作压缩成可扫读的优先级卡片。</p>
           </div>
-          <span>${escapeHtml(model.summaryLabel)}</span>
+          <span>${escapeHtml(model.sourceLabel)}</span>
         </div>
-        <div class="workbench-summary-grid">
-          ${renderSummaryCards(model.summaryCards, renderWorkbenchCard)}
+        <div class="daily-priority-grid">
+          ${dailyPriorityCards.map(renderDailyPriorityCard).join("")}
         </div>
       </section>
 
-      <div class="workbench-layout">
-        <section class="workbench-queue" aria-label="静态待处理队列">
+      <section class="workbench-section" aria-label="运营指标预览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>运营指标预览</h3>
+            <p>静态/fallback 指标用于验证 AI-first 首页层级；不代表最终 BI 聚合结果。</p>
+          </div>
+          <span>数据预览</span>
+        </div>
+        <div class="operations-metric-grid">
+          ${dailyOperationsMetrics.map(renderOperationsMetricCard).join("")}
+        </div>
+      </section>
+
+      <div class="workbench-layout daily-workbench-layout">
+        <section class="workbench-queue" aria-label="工作流瓶颈和 AI 建议">
           <div class="workbench-section-header">
             <div>
-              <h3>待处理队列</h3>
-              <p>按人工复核优先级排列，队列项仅展示建议，不触发任何业务动作。</p>
+              <h3>工作流瓶颈</h3>
+              <p>显示今天最容易卡住业务推进的只读问题，不创建任务、不执行流程。</p>
             </div>
-            <span>${escapeHtml(model.queueCountLabel)}</span>
+            <span>5 个瓶颈</span>
           </div>
-          ${model.queueItems.map(renderWorkbenchQueueItem).join("")}
+          ${renderBottleneckPanel()}
+          ${renderAiRecommendationPanel()}
+          ${renderConversionFunnelPreview()}
         </section>
-        <aside class="workbench-review-panel" aria-label="只读复核预览">
-          ${renderWorkbenchStaticReview(model)}
+        <aside class="workbench-review-panel daily-insight-panel" aria-label="AI 今日工作台只读洞察">
+          ${renderCountryDistributionPreview()}
+          ${renderWorkbenchSafetyNote()}
         </aside>
       </div>
     </div>
@@ -2179,15 +2315,15 @@ function renderDashboardReview() {
   return `
     <div class="review-stack">
       <div class="review-card">
-        <h3>工作台只读边界</h3>
+        <h3>AI 今日工作台只读边界</h3>
         <ul class="check-list">
-          <li>不调用 API，不执行助手，不写入数据库</li>
-          <li>不发送、不审批、不创建任务</li>
-          <li>不生成报价、PI、订单，不触发付款 / 生产 / 发货</li>
+          <li>不调用 AI Provider，不执行助手，不写入数据库</li>
+          <li>不发送、不审批、不创建客户、不创建任务</li>
+          <li>不自动报价、不生成 PI、不创建订单，不触发付款 / 生产 / 发货</li>
         </ul>
       </div>
       <div class="review-card">
-        <h3>工作台汇总状态</h3>
+        <h3>首页预览状态</h3>
         <dl>
           <dt>API 路由</dt>
           <dd>GET ${DASHBOARD_SUMMARY_ENDPOINT}</dd>
@@ -2201,7 +2337,7 @@ function renderDashboardReview() {
       </div>
       <div class="review-card">
         <h3>预览目标</h3>
-        <p>${model.isLive ? "展示只读汇总数据，但仍不执行发送、审批、报价、PI、订单、付款、生产或发货。" : "先验证工作台、今日待处理、复核队列和只读详情面板的产品方向，再进入任何真实数据或业务流程。"}</p>
+        <p>验证 AI 今日工作台是否能回答“今天最值得处理的是哪几件事”。当前只展示静态建议和只读状态，不执行发送、审批、报价、PI、订单、付款、生产或发货。</p>
       </div>
     </div>
   `;
@@ -2242,7 +2378,7 @@ function getDashboardWorkbenchViewModel() {
           : "静态预览（安全示例）",
       summaryLabel: "静态数据",
       queueCountLabel: "5 条静态示例",
-      headerCopy: "内部只读试用数据，仅用于验证工作台信息层级；不调用 API、不执行助手、不写入数据。",
+      headerCopy: "AI 会根据客户、询盘、报价、供应商、知识库和跟进状态，整理今天最值得处理的外贸任务。当前为只读预览，不自动执行。",
       summaryCards: workbenchOverviewCards,
       queueItems: workbenchQueueItems,
       selectedItem: workbenchQueueItems[0],
@@ -2256,7 +2392,7 @@ function getDashboardWorkbenchViewModel() {
     sourceLabel: "实时只读数据",
     summaryLabel: "实时只读汇总",
     queueCountLabel: `${summary.queueItems.length} 条只读汇总记录`,
-    headerCopy: "实时只读汇总数据，仅用于内部试用展示；不执行助手、不写入数据、不触发业务动作。",
+    headerCopy: "AI 今日工作台可结合只读汇总数据呈现优先级方向；当前仍不执行助手、不写入数据、不触发业务动作。",
     summaryCards: summary.summaryCards,
     queueItems: summary.queueItems,
     selectedItem: summary.queueItems[0] || workbenchQueueItems[0],
@@ -2409,6 +2545,137 @@ function renderWorkbenchQueueItem(item) {
       <p><strong>推荐人工动作：</strong>${escapeHtml(item.recommendedAction)}</p>
       <div class="disabled-chip-row" aria-label="禁用能力">${disabledHtml}</div>
     </article>
+  `;
+}
+
+function renderDailyPriorityCard(item) {
+  return `
+    <article class="daily-priority-card">
+      <div class="daily-priority-topline">
+        <span class="workbench-category">${escapeHtml(item.title)}</span>
+        <strong>${escapeHtml(item.count)}</strong>
+      </div>
+      <p>${escapeHtml(item.reason)}</p>
+      <small>${escapeHtml(item.suggestion)}</small>
+      <div class="daily-evidence-row" aria-label="来源置信度风险">
+        ${badge(`来源：${item.source}`, "draft")}
+        ${badge(`置信度：${item.confidence}`, "active")}
+        ${badge(`风险：${item.risk}`, item.risk === "低" ? "approval" : "risk")}
+      </div>
+    </article>
+  `;
+}
+
+function renderOperationsMetricCard(item) {
+  return `
+    <article class="operations-metric-card operations-metric-card-${escapeHtml(item.tone || "neutral")}">
+      <span>${escapeHtml(item.label)}</span>
+      <strong>${escapeHtml(item.value)}</strong>
+      <small>${escapeHtml(item.note)}</small>
+    </article>
+  `;
+}
+
+function renderBottleneckPanel() {
+  return `
+    <div class="bottleneck-panel">
+      ${dailyBottlenecks
+        .map(
+          (item) => `
+            <article class="bottleneck-item">
+              <span>${escapeHtml(item.severity)}</span>
+              <div>
+                <strong>${escapeHtml(item.label)}</strong>
+                <p>${escapeHtml(item.detail)}</p>
+              </div>
+            </article>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderAiRecommendationPanel() {
+  return `
+    <section class="ai-recommendation-panel" aria-label="AI 今日建议">
+      <div class="workbench-section-header">
+        <div>
+          <h3>AI 建议今天先做</h3>
+          <p>只展示建议顺序，不自动生成任务、不发送消息、不调用 AI。</p>
+        </div>
+        <span>需人工确认</span>
+      </div>
+      <ol>
+        ${dailyRecommendations.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ol>
+    </section>
+  `;
+}
+
+function renderConversionFunnelPreview() {
+  return `
+    <section class="conversion-funnel-preview" aria-label="转化漏斗静态预览">
+      <div class="workbench-section-header">
+        <div>
+          <h3>转化漏斗预览</h3>
+          <p>开发线索到成交的静态结构预览，不展示伪造最终成交指标。</p>
+        </div>
+        <span>preview / demo</span>
+      </div>
+      <div class="funnel-step-row">
+        ${dailyFunnelSteps
+          .map(
+            (step) => `
+              <article class="funnel-step">
+                <span>${escapeHtml(step.label)}</span>
+                <strong>${escapeHtml(step.value)}</strong>
+                <small>${escapeHtml(step.note)}</small>
+              </article>
+            `,
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderCountryDistributionPreview() {
+  return `
+    <section class="country-distribution-preview" aria-label="客户国家分布静态预览">
+      <div class="workbench-review-heading">
+        <div>
+          <h3>客户国家分布预览</h3>
+          <p class="workbench-review-note">静态示例，不代表实时市场占比。</p>
+        </div>
+        ${badge("数据预览", "draft")}
+      </div>
+      <div class="country-bar-list">
+        ${dailyCountryDistribution
+          .map(
+            (item) => `
+              <div class="country-bar-row">
+                <span>${escapeHtml(item.country)}</span>
+                <i style="--country-width: ${Math.max(12, Math.min(100, item.value))}%"></i>
+                <small>${escapeHtml(item.label)}</small>
+              </div>
+            `,
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderWorkbenchSafetyNote() {
+  return `
+    <section class="workbench-safety-note" aria-label="AI 今日工作台安全边界">
+      <h3>安全边界</h3>
+      <p>AI 今日工作台只提供建议和草稿，不自动发送、不自动报价、不自动创建客户、不自动修改业务数据。所有外部动作需要 Paul 确认。</p>
+      <div class="disabled-chip-row">
+        ${renderDisabledCapabilities(["不可发送", "不可报价", "不可创建客户", "不可自动发布", "不可下单", "不可触发付款 / 生产 / 发货"])}
+      </div>
+    </section>
   `;
 }
 
