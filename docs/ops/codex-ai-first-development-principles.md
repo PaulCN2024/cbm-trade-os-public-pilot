@@ -60,6 +60,21 @@ What should Paul review next?
 What is blocked until approval?
 ```
 
+### Visual Direction Guidance
+
+Future Admin UI work should follow `docs/architecture/ai-first-admin-ui-visual-design-system-v2.md`.
+
+The target direction is a premium AI operations console for foreign trade work, not a plain CRUD admin page.
+
+Codex should:
+
+- make daily priorities and AI recommendations easier to scan
+- separate business records from safety/debug details
+- keep source, confidence, risk, freshness, and approval state visible
+- keep disabled actions informational, not clickable
+- avoid copying third-party UI, brand, text, icons, or proprietary flows
+- avoid adding active controls before the approval workflow exists
+
 ## Read-only First Principle
 
 For every risky business area:

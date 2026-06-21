@@ -198,6 +198,25 @@ Capabilities:
 - content performance
 - daily priority briefing
 
+## Reference Feature Families To Absorb
+
+These feature families are planning inputs, not direct product copies. They must be reinterpreted through CBM Trade OS's existing AI-first, read-only-first, human-approved architecture.
+
+| Feature family | Role in CBM Trade OS | Priority | Safety boundary |
+| --- | --- | --- | --- |
+| AI Daily Workbench | Turn the homepage into a daily priority board for inquiries, customers, quotes, knowledge gaps, and follow-ups | Near term | No auto-send, no auto-quote, no task execution |
+| AI Business Card Capture | Convert photos/cards into reviewed customer profile drafts | Near term | No automatic customer creation or contact |
+| AI Customer Verification | Help verify whether a customer looks real, relevant, and worth follow-up | Near term | No unsupported credit judgment or final trust decision |
+| AI Market Intelligence / Customs Data | Convert market/customs signals into readable country, buyer, and product insights | Mid term | No scraping protected sources or unlicensed data use |
+| AI Buyer Discovery | Generate reviewed target-buyer candidates and source evidence | Mid term | No auto-prospect creation or outreach sending |
+| AI Development Letter Drafting | Draft outreach and follow-up letters from verified product/customer context | Near term | Draft-only, manual send later |
+| AI Social Content Studio | Create product posts, short-video scripts, and campaign drafts | Near term | Manual publishing only |
+| AI Task Board | Convert AI findings into internal work queue suggestions | Near term | No automatic assignment or external execution |
+| AI Conversion Analytics | Show funnel movement from research to lead, inquiry, quote, order, and repeat follow-up | Mid term | Read-only analytics first |
+| AI Quote Intelligence / SKU / Price Rules | Prepare quotation-readiness and SKU/price rule checks | Mid term | No official quote, PI, price, or delivery commitment |
+| AI Image & File Intelligence | Summarize approved file/image/drawing metadata and later extract requirements | Mid term | No upload/OCR/parsing until separately approved |
+| AI Settings / Provider Configuration | Plan provider, model, language, prompt, and safety configuration | Later | No secret exposure or production setting changes without approval |
+
 ## Module Connection Map
 
 ```text
@@ -272,11 +291,13 @@ Make every risky action reviewable, auditable, and measurable.
 
 ## Recommended Next Tasks
 
-1. `CBM-CODEX-MASTER-AI-COMMAND-CENTER-PLAN-001`
-2. `CBM-CODEX-SPRINT-COPILOT-SHELL-001`
-3. `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-PLAN-001`
+1. `CBM-CODEX-SPRINT-AI-DAILY-WORKBENCH-PLAN-001`
+2. `CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-PLAN-001`
+3. `CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-PLAN-001`
 4. `CBM-CODEX-SPRINT-SOCIAL-CONTENT-PLAN-001`
-5. `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001`
-6. `CBM-CODEX-SPRINT-AFTERSALES-ASSISTANT-PLAN-001`
-7. `CBM-CODEX-SPRINT-RISK-CENTER-PLAN-001`
-8. `CBM-CODEX-SPRINT-BI-PLAN-001`
+5. `CBM-CODEX-SPRINT-TASK-BOARD-PLAN-001`
+6. `CBM-CODEX-SPRINT-MARKET-INTELLIGENCE-PLAN-001`
+7. `CBM-CODEX-SPRINT-CUSTOMS-DATA-PLAN-001`
+8. `CBM-CODEX-SPRINT-CONVERSION-ANALYTICS-PLAN-001`
+9. `CBM-CODEX-SPRINT-QUOTE-INTELLIGENCE-PLAN-001`
+10. `CBM-CODEX-SPRINT-IMAGE-AI-PLAN-001`
