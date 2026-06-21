@@ -21,6 +21,7 @@
 - Current AI Customer Verification production status: static read-only preview deployed to production and smoke verified; `AI 客户验证` renders safely with 0 active controls, protected admin-read routes remain auth-gated/read-only, and no search, scrape, AI provider call, customer creation, mutation, sending, quotation, order, payment, production, or shipment action was introduced
 - Current Customer Verification data planning status: data model, evidence rules, confidence/risk rules, human review workflow, and implementation roadmap completed as documentation only; no schema, SQL, API, UI, external lookup, AI provider call, customer mutation, sending, or business execution was introduced
 - Current Customer Verification read-only data foundation status: SQL migration file, DEMO seed SQL, manual SQL pack, admin-read customer-verification routes, and AI 客户验证 UI data binding are prepared; SQL has not been executed by Codex, and no external lookup, AI provider call, customer creation, customer mutation, sending, quotation, order, payment, production, or shipment action was introduced
+- Current Customer Verification read-only production status: production deployment and smoke verification completed; new admin-read customer-verification routes are deployed and auth-gated, AI 客户验证 renders with fallback and 0 active controls, and SQL remains prepared but not executed by Codex
 
 These percentages are planning estimates. They should move only after milestone review, not simply because commit count increases.
 
@@ -135,6 +136,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Customer Verification Admin-read Routes: 100% `[████████████████████]`
 - Customer Verification UI Data Binding: 100% `[████████████████████]`
 - Customer Verification Manual SQL Pack Prepared: 100% `[████████████████████]`
+- Customer Verification Read-only Production Checkpoint: 100% `[████████████████████]`
 
 ## 3. Completed Major Milestones
 
@@ -315,6 +317,7 @@ These percentages are planning estimates. They should move only after milestone 
 - Customer Verification Admin-read Routes
 - Customer Verification UI Data Binding
 - Customer Verification Manual SQL Pack Prepared
+- Customer Verification Read-only Production Checkpoint
 
 ## 4. Current Frozen Foundations
 
