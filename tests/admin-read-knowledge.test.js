@@ -80,6 +80,25 @@ test("business card admin-read routes remain protected without auth", async () =
   }
 });
 
+test("customer verification admin-read routes remain protected without auth", async () => {
+  const routes = [
+    "/api/admin-read/customer-verification-summary",
+    "/api/admin-read/customer-verification-requests",
+    "/api/admin-read/customer-verification-evidence",
+    "/api/admin-read/customer-verification-scores",
+    "/api/admin-read/customer-verification-duplicate-matches",
+    "/api/admin-read/customer-verification-review-queue",
+    "/api/admin-read/customer-verification-reviews",
+  ];
+
+  for (const route of routes) {
+    const result = await invoke(route);
+    assert.equal(result.statusCode, 401);
+    assert.match(result.body.error, /Bearer token/);
+    assert.match(result.body.safety_boundary, /No automatic customer messages/);
+  }
+});
+
 test("unknown admin-read resource still returns stable JSON 404", async () => {
   const result = await invoke("/api/admin-read/not-a-real-resource");
   assert.equal(result.statusCode, 404);
@@ -97,6 +116,13 @@ test("knowledge admin-read routes remain GET only", async () => {
 
 test("business card admin-read routes remain GET only", async () => {
   const result = await invoke("/api/admin-read/customer-profile-drafts", "POST");
+  assert.equal(result.statusCode, 405);
+  assert.equal(result.headers.allow, "GET");
+  assert.equal(result.body.error, "Method not allowed");
+});
+
+test("customer verification admin-read routes remain GET only", async () => {
+  const result = await invoke("/api/admin-read/customer-verification-summary", "POST");
   assert.equal(result.statusCode, 405);
   assert.equal(result.headers.allow, "GET");
   assert.equal(result.body.error, "Method not allowed");

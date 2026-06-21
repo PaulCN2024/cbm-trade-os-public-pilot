@@ -1,0 +1,381 @@
+insert into public.customer_verification_requests (
+  id,
+  source_type,
+  customer_name,
+  company_name,
+  contact_name,
+  email,
+  phone,
+  whatsapp,
+  website,
+  country,
+  requested_by,
+  requested_at,
+  verification_status,
+  created_at,
+  updated_at
+) values
+(
+  '10000000-0000-4000-8000-000000000001',
+  'inquiry',
+  'Carlos Ramirez',
+  'DEMO Facade Solutions',
+  'Carlos Ramirez',
+  'carlos.ramirez@example.com',
+  '+51 000 000 001',
+  '+51 000 000 001',
+  'https://example.com/demo-facade',
+  'Peru',
+  'demo_operator',
+  '2026-06-21 09:00:00+00',
+  'needs_more_info',
+  '2026-06-21 09:00:00+00',
+  '2026-06-21 09:00:00+00'
+),
+(
+  '10000000-0000-4000-8000-000000000002',
+  'whatsapp_contact',
+  'Maria Gonzalez',
+  'DEMO Construction Importers',
+  'Maria Gonzalez',
+  'maria.gonzalez@example.com',
+  '+507 000 000 002',
+  '+507 000 000 002',
+  'https://example.com/demo-construction',
+  'Panama',
+  'demo_operator',
+  '2026-06-21 09:15:00+00',
+  'possible_duplicate',
+  '2026-06-21 09:15:00+00',
+  '2026-06-21 09:15:00+00'
+),
+(
+  '10000000-0000-4000-8000-000000000003',
+  'prospecting_lead',
+  'Daniel Wong',
+  'DEMO Building Materials Asia',
+  'Daniel Wong',
+  'daniel.wong@example.com',
+  '+62 000 000 003',
+  '+62 000 000 003',
+  'https://example.com/demo-building-materials',
+  'Indonesia',
+  'demo_operator',
+  '2026-06-21 09:30:00+00',
+  'pending',
+  '2026-06-21 09:30:00+00',
+  '2026-06-21 09:30:00+00'
+)
+on conflict (id) do nothing;
+
+insert into public.customer_verification_evidence (
+  id,
+  verification_request_id,
+  evidence_type,
+  evidence_label,
+  evidence_value,
+  evidence_source,
+  evidence_status,
+  confidence_level,
+  risk_level,
+  notes,
+  created_at
+) values
+(
+  '11000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  'company_name',
+  'Company name',
+  'DEMO Facade Solutions',
+  'demo_seed',
+  'likely',
+  'medium',
+  'medium',
+  'Company name is present but still requires manual review.',
+  '2026-06-21 09:00:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000002',
+  '10000000-0000-4000-8000-000000000001',
+  'email_domain',
+  'Email domain',
+  'example.com',
+  'demo_seed',
+  'not_checked',
+  'medium',
+  'medium',
+  'Demo domain is not a real verification signal.',
+  '2026-06-21 09:01:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000003',
+  '10000000-0000-4000-8000-000000000001',
+  'company_website',
+  'Company website',
+  'https://example.com/demo-facade',
+  'demo_seed',
+  'not_checked',
+  'medium',
+  'medium',
+  'Website is provided for demo display only.',
+  '2026-06-21 09:02:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000004',
+  '10000000-0000-4000-8000-000000000001',
+  'product_interest',
+  'Product interest',
+  'Aluminum windows / facade systems',
+  'demo_seed',
+  'confirmed',
+  'medium',
+  'medium',
+  'Product interest is clear, but drawings and quantity are still needed.',
+  '2026-06-21 09:03:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000005',
+  '10000000-0000-4000-8000-000000000001',
+  'duplicate_match',
+  'Duplicate match',
+  'Not checked',
+  'demo_seed',
+  'not_checked',
+  'medium',
+  'medium',
+  'No live duplicate check is performed by this seed.',
+  '2026-06-21 09:04:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000006',
+  '10000000-0000-4000-8000-000000000002',
+  'duplicate_match',
+  'Similar company',
+  'DEMO Construction Importer',
+  'demo_seed',
+  'needs_review',
+  'medium',
+  'medium',
+  'Similar company name requires human review before customer action.',
+  '2026-06-21 09:15:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000007',
+  '10000000-0000-4000-8000-000000000002',
+  'email_domain',
+  'Same email',
+  'missing',
+  'demo_seed',
+  'missing',
+  'medium',
+  'medium',
+  'Email evidence is missing for this demo duplicate review.',
+  '2026-06-21 09:16:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000008',
+  '10000000-0000-4000-8000-000000000002',
+  'whatsapp_identity',
+  'WhatsApp identity',
+  '+507 000 000 002',
+  'demo_seed',
+  'needs_review',
+  'medium',
+  'medium',
+  'WhatsApp identity must be reviewed by Paul before follow-up.',
+  '2026-06-21 09:17:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000009',
+  '10000000-0000-4000-8000-000000000002',
+  'product_interest',
+  'Product interest',
+  'Glass / aluminum accessories',
+  'demo_seed',
+  'likely',
+  'medium',
+  'medium',
+  'Product interest is useful but not enough for identity confirmation.',
+  '2026-06-21 09:18:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000010',
+  '10000000-0000-4000-8000-000000000003',
+  'company_website',
+  'Website',
+  'missing',
+  'demo_seed',
+  'missing',
+  'low',
+  'medium',
+  'Website is missing for this prospecting lead.',
+  '2026-06-21 09:30:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000011',
+  '10000000-0000-4000-8000-000000000003',
+  'email_domain',
+  'Email domain',
+  'example.com',
+  'demo_seed',
+  'missing',
+  'low',
+  'medium',
+  'Demo domain is not enough for identity verification.',
+  '2026-06-21 09:31:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000012',
+  '10000000-0000-4000-8000-000000000003',
+  'country_match',
+  'Country match',
+  'Indonesia',
+  'demo_seed',
+  'needs_review',
+  'low',
+  'medium',
+  'Country and market context should be reviewed manually.',
+  '2026-06-21 09:32:00+00'
+),
+(
+  '11000000-0000-4000-8000-000000000013',
+  '10000000-0000-4000-8000-000000000003',
+  'product_interest',
+  'Product interest',
+  'Ceiling system / light steel keel',
+  'demo_seed',
+  'likely',
+  'low',
+  'medium',
+  'Lead is early-stage and should remain read-only until identity evidence improves.',
+  '2026-06-21 09:33:00+00'
+)
+on conflict (id) do nothing;
+
+insert into public.customer_verification_scores (
+  id,
+  verification_request_id,
+  credibility_score,
+  relevance_score,
+  risk_score,
+  duplicate_score,
+  followup_priority_score,
+  confidence_level,
+  risk_level,
+  score_explanation,
+  created_at
+) values
+(
+  '12000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  65,
+  80,
+  45,
+  20,
+  75,
+  'medium',
+  'medium',
+  'Inquiry is relevant but missing drawings, specifications, and target quantity.',
+  '2026-06-21 09:05:00+00'
+),
+(
+  '12000000-0000-4000-8000-000000000002',
+  '10000000-0000-4000-8000-000000000002',
+  55,
+  70,
+  55,
+  72,
+  50,
+  'medium',
+  'medium',
+  'Possible duplicate risk should be reviewed before follow-up.',
+  '2026-06-21 09:19:00+00'
+),
+(
+  '12000000-0000-4000-8000-000000000003',
+  '10000000-0000-4000-8000-000000000003',
+  45,
+  68,
+  60,
+  30,
+  55,
+  'low',
+  'medium',
+  'Prospecting lead has limited identity evidence and needs more source context.',
+  '2026-06-21 09:34:00+00'
+)
+on conflict (id) do nothing;
+
+insert into public.customer_verification_duplicate_matches (
+  id,
+  verification_request_id,
+  matched_entity_type,
+  matched_entity_id,
+  match_type,
+  matched_label,
+  match_confidence,
+  match_reason,
+  created_at
+) values
+(
+  '13000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000002',
+  'customer',
+  null,
+  'similar_company_name',
+  'DEMO Construction Importer',
+  'medium',
+  'Similar company name and Panama country signal.',
+  '2026-06-21 09:20:00+00'
+)
+on conflict (id) do nothing;
+
+insert into public.customer_verification_reviews (
+  id,
+  verification_request_id,
+  review_status,
+  reviewer,
+  reviewer_notes,
+  decision,
+  decision_reason,
+  next_action,
+  reviewed_at,
+  created_at
+) values
+(
+  '14000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  'pending',
+  null,
+  null,
+  'request_more_info',
+  'Drawings, specifications, and target quantity are still missing.',
+  'Ask for drawings, product specifications, and target quantity before quotation review.',
+  null,
+  '2026-06-21 09:06:00+00'
+),
+(
+  '14000000-0000-4000-8000-000000000002',
+  '10000000-0000-4000-8000-000000000002',
+  'pending',
+  null,
+  null,
+  'hold',
+  'Possible duplicate needs manual review.',
+  'Compare existing customer records before creating or merging any customer profile.',
+  null,
+  '2026-06-21 09:21:00+00'
+),
+(
+  '14000000-0000-4000-8000-000000000003',
+  '10000000-0000-4000-8000-000000000003',
+  'pending',
+  null,
+  null,
+  'request_more_info',
+  'Prospecting lead has limited identity evidence.',
+  'Collect more source evidence before sales follow-up.',
+  null,
+  '2026-06-21 09:35:00+00'
+)
+on conflict (id) do nothing;

@@ -90,6 +90,24 @@ const BUSINESS_CARD_DISABLED_ACTIONS = Object.freeze([
   "trigger_shipment",
 ]);
 
+const CUSTOMER_VERIFICATION_DISABLED_ACTIONS = Object.freeze([
+  "external_lookup",
+  "web_search",
+  "scrape_website",
+  "call_ai_provider",
+  "create_customer",
+  "update_customer",
+  "merge_customer",
+  "send_email",
+  "send_whatsapp",
+  "create_quote",
+  "generate_pi",
+  "confirm_order",
+  "confirm_payment",
+  "trigger_production",
+  "trigger_shipment",
+]);
+
 const DASHBOARD_HIGH_RISK_TERMS = Object.freeze([
   "price",
   "payment",
@@ -228,7 +246,14 @@ function isSupportedResource(resource) {
     resource === "customer-profile-drafts" ||
     resource === "business-card-review-queue" ||
     resource === "business-card-duplicate-checks" ||
-    resource === "business-card-followup-drafts"
+    resource === "business-card-followup-drafts" ||
+    resource === "customer-verification-summary" ||
+    resource === "customer-verification-requests" ||
+    resource === "customer-verification-evidence" ||
+    resource === "customer-verification-scores" ||
+    resource === "customer-verification-duplicate-matches" ||
+    resource === "customer-verification-review-queue" ||
+    resource === "customer-verification-reviews"
   );
 }
 
@@ -1283,6 +1308,586 @@ async function readBusinessCardSources(supabase, warnings) {
   };
 }
 
+const CUSTOMER_VERIFICATION_FALLBACK_REQUESTS = Object.freeze([
+  {
+    id: "DEMO_CUSTOMER_VERIFY_PERU",
+    source_type: "inquiry",
+    customer_name: "Carlos Ramirez",
+    company_name: "DEMO Facade Solutions",
+    contact_name: "Carlos Ramirez",
+    email: "carlos.ramirez@example.com",
+    phone: "+51 000 000 001",
+    whatsapp: "+51 000 000 001",
+    website: "https://example.com/demo-facade",
+    country: "Peru",
+    requested_by: "demo_operator",
+    requested_at: "2026-06-21T09:00:00+08:00",
+    verification_status: "needs_more_info",
+    created_at: "2026-06-21T09:00:00+08:00",
+    updated_at: "2026-06-21T09:00:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+    source_type: "whatsapp_contact",
+    customer_name: "Maria Gonzalez",
+    company_name: "DEMO Construction Importers",
+    contact_name: "Maria Gonzalez",
+    email: "maria.gonzalez@example.com",
+    phone: "+507 000 000 002",
+    whatsapp: "+507 000 000 002",
+    website: "https://example.com/demo-construction",
+    country: "Panama",
+    requested_by: "demo_operator",
+    requested_at: "2026-06-21T09:15:00+08:00",
+    verification_status: "possible_duplicate",
+    created_at: "2026-06-21T09:15:00+08:00",
+    updated_at: "2026-06-21T09:15:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_INDONESIA",
+    source_type: "prospecting_lead",
+    customer_name: "Daniel Wong",
+    company_name: "DEMO Building Materials Asia",
+    contact_name: "Daniel Wong",
+    email: "daniel.wong@example.com",
+    phone: "+62 000 000 003",
+    whatsapp: "+62 000 000 003",
+    website: "https://example.com/demo-building-materials",
+    country: "Indonesia",
+    requested_by: "demo_operator",
+    requested_at: "2026-06-21T09:30:00+08:00",
+    verification_status: "pending",
+    created_at: "2026-06-21T09:30:00+08:00",
+    updated_at: "2026-06-21T09:30:00+08:00",
+  },
+]);
+
+const CUSTOMER_VERIFICATION_FALLBACK_EVIDENCE = Object.freeze([
+  {
+    id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_PERU_PRODUCT",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_PERU",
+    evidence_type: "inquiry_content",
+    evidence_label: "Product interest",
+    evidence_value: "Aluminum windows / facade systems",
+    evidence_source: "demo_seed",
+    evidence_status: "needs_review",
+    confidence_level: "medium",
+    risk_level: "medium",
+    notes: "Needs drawings, specifications, and target quantity before commercial judgment.",
+    created_at: "2026-06-21T09:00:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_PERU_WEBSITE",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_PERU",
+    evidence_type: "company_website",
+    evidence_label: "Website",
+    evidence_value: "example.com/demo-facade",
+    evidence_source: "demo_seed",
+    evidence_status: "likely",
+    confidence_level: "medium",
+    risk_level: "medium",
+    notes: "Website looks plausible but is demo-only and must be checked manually.",
+    created_at: "2026-06-21T09:01:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_PANAMA_DUPLICATE",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+    evidence_type: "duplicate_match",
+    evidence_label: "Similar company name",
+    evidence_value: "DEMO Construction Importer",
+    evidence_source: "demo_seed",
+    evidence_status: "needs_review",
+    confidence_level: "medium",
+    risk_level: "medium",
+    notes: "Possible duplicate should be reviewed before creating or merging customer records.",
+    created_at: "2026-06-21T09:15:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_PANAMA_PRODUCT",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+    evidence_type: "product_interest",
+    evidence_label: "Product interest",
+    evidence_value: "Glass / aluminum accessories",
+    evidence_source: "demo_seed",
+    evidence_status: "likely",
+    confidence_level: "medium",
+    risk_level: "medium",
+    notes: "Interest is useful for follow-up but not enough for customer identity confirmation.",
+    created_at: "2026-06-21T09:16:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_INDONESIA_PRODUCT",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_INDONESIA",
+    evidence_type: "product_interest",
+    evidence_label: "Product interest",
+    evidence_value: "Ceiling system / light steel keel",
+    evidence_source: "demo_seed",
+    evidence_status: "likely",
+    confidence_level: "medium",
+    risk_level: "low",
+    notes: "Prospecting lead needs more source evidence before commercial follow-up.",
+    created_at: "2026-06-21T09:30:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_INDONESIA_EMAIL",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_INDONESIA",
+    evidence_type: "email_domain",
+    evidence_label: "Email domain",
+    evidence_value: "example.com",
+    evidence_source: "demo_seed",
+    evidence_status: "not_checked",
+    confidence_level: "low",
+    risk_level: "medium",
+    notes: "Demo domain is not a real verification signal.",
+    created_at: "2026-06-21T09:31:00+08:00",
+  },
+]);
+
+const CUSTOMER_VERIFICATION_FALLBACK_SCORES = Object.freeze([
+  {
+    id: "DEMO_CUSTOMER_VERIFY_SCORE_PERU",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_PERU",
+    credibility_score: 65,
+    relevance_score: 80,
+    risk_score: 45,
+    duplicate_score: 20,
+    followup_priority_score: 75,
+    confidence_level: "medium",
+    risk_level: "medium",
+    score_explanation: "Inquiry is relevant but missing drawings, specifications, and target quantity.",
+    created_at: "2026-06-21T09:02:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_SCORE_PANAMA",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+    credibility_score: 55,
+    relevance_score: 70,
+    risk_score: 55,
+    duplicate_score: 72,
+    followup_priority_score: 50,
+    confidence_level: "medium",
+    risk_level: "medium",
+    score_explanation: "Possible duplicate risk should be reviewed before follow-up.",
+    created_at: "2026-06-21T09:17:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_SCORE_INDONESIA",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_INDONESIA",
+    credibility_score: 45,
+    relevance_score: 68,
+    risk_score: 60,
+    duplicate_score: 30,
+    followup_priority_score: 55,
+    confidence_level: "low",
+    risk_level: "medium",
+    score_explanation: "Lead is early-stage and should remain read-only until identity evidence improves.",
+    created_at: "2026-06-21T09:32:00+08:00",
+  },
+]);
+
+const CUSTOMER_VERIFICATION_FALLBACK_DUPLICATES = Object.freeze([
+  {
+    id: "DEMO_CUSTOMER_VERIFY_DUPLICATE_PANAMA",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+    matched_entity_type: "customer",
+    matched_entity_id: "",
+    match_type: "similar_company_name",
+    matched_label: "DEMO Construction Importer",
+    match_confidence: "medium",
+    match_reason: "Similar company name and Panama country signal.",
+    created_at: "2026-06-21T09:18:00+08:00",
+  },
+]);
+
+const CUSTOMER_VERIFICATION_FALLBACK_REVIEWS = Object.freeze([
+  {
+    id: "DEMO_CUSTOMER_VERIFY_REVIEW_PERU",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_PERU",
+    review_status: "pending",
+    reviewer: "",
+    reviewer_notes: "",
+    decision: "request_more_info",
+    decision_reason: "Drawings, specifications, and target quantity are still missing.",
+    next_action: "Ask for drawings, product specifications, and target quantity before quotation review.",
+    reviewed_at: "",
+    created_at: "2026-06-21T09:03:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_REVIEW_PANAMA",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+    review_status: "pending",
+    reviewer: "",
+    reviewer_notes: "",
+    decision: "hold",
+    decision_reason: "Possible duplicate needs manual review.",
+    next_action: "Compare existing customer records before creating or merging any customer profile.",
+    reviewed_at: "",
+    created_at: "2026-06-21T09:19:00+08:00",
+  },
+  {
+    id: "DEMO_CUSTOMER_VERIFY_REVIEW_INDONESIA",
+    verification_request_id: "DEMO_CUSTOMER_VERIFY_INDONESIA",
+    review_status: "pending",
+    reviewer: "",
+    reviewer_notes: "",
+    decision: "request_more_info",
+    decision_reason: "Prospecting lead has limited identity evidence.",
+    next_action: "Collect more source evidence before sales follow-up.",
+    reviewed_at: "",
+    created_at: "2026-06-21T09:33:00+08:00",
+  },
+]);
+
+function customerVerificationSafetyPayload() {
+  return {
+    mode: "read_only_preview",
+    human_review_required: true,
+    disabled_actions: [...CUSTOMER_VERIFICATION_DISABLED_ACTIONS],
+  };
+}
+
+function customerVerificationFallbackWarnings(warnings) {
+  return warnings.length ? warnings : ["customer_verification_source_unavailable"];
+}
+
+function customerVerificationMeta(resource, warnings, source = "admin_read") {
+  return {
+    generated_at: new Date().toISOString(),
+    source,
+    resource,
+    is_fallback: source === "fallback_demo",
+    safety: source === "fallback_demo" ? "read_only_preview" : "auth_gated_read_only",
+    warnings,
+  };
+}
+
+function customerVerificationRequestRecord(row) {
+  return {
+    id: row.id || "",
+    source_type: row.source_type || "",
+    source_entity_id: row.source_entity_id || "",
+    customer_name: row.customer_name || "",
+    company_name: row.company_name || "",
+    contact_name: row.contact_name || "",
+    email: row.email || "",
+    phone: row.phone || "",
+    whatsapp: row.whatsapp || "",
+    website: row.website || "",
+    country: row.country || "",
+    inquiry_id: row.inquiry_id || "",
+    requested_by: row.requested_by || "",
+    requested_at: row.requested_at || "",
+    verification_status: row.verification_status || "",
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function customerVerificationEvidenceRecord(row) {
+  return {
+    id: row.id || "",
+    verification_request_id: row.verification_request_id || "",
+    evidence_type: row.evidence_type || "",
+    evidence_label: row.evidence_label || "",
+    evidence_value: row.evidence_value || "",
+    evidence_source: row.evidence_source || "",
+    evidence_status: row.evidence_status || "",
+    confidence_level: row.confidence_level || "",
+    risk_level: row.risk_level || "",
+    notes: row.notes || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function customerVerificationScoreRecord(row) {
+  return {
+    id: row.id || "",
+    verification_request_id: row.verification_request_id || "",
+    credibility_score: row.credibility_score ?? 50,
+    relevance_score: row.relevance_score ?? 50,
+    risk_score: row.risk_score ?? 50,
+    duplicate_score: row.duplicate_score ?? 50,
+    followup_priority_score: row.followup_priority_score ?? 50,
+    confidence_level: row.confidence_level || "",
+    risk_level: row.risk_level || "",
+    score_explanation: row.score_explanation || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function customerVerificationDuplicateRecord(row) {
+  return {
+    id: row.id || "",
+    verification_request_id: row.verification_request_id || "",
+    matched_entity_type: row.matched_entity_type || "",
+    matched_entity_id: row.matched_entity_id || "",
+    match_type: row.match_type || "",
+    matched_label: row.matched_label || "",
+    match_confidence: row.match_confidence || "",
+    match_reason: row.match_reason || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function customerVerificationReviewRecord(row) {
+  return {
+    id: row.id || "",
+    verification_request_id: row.verification_request_id || "",
+    review_status: row.review_status || "",
+    reviewer: row.reviewer || "",
+    reviewer_notes: row.reviewer_notes || "",
+    decision: row.decision || "",
+    decision_reason: row.decision_reason || "",
+    next_action: row.next_action || "",
+    reviewed_at: row.reviewed_at || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function fallbackCustomerVerificationData() {
+  return {
+    requests: CUSTOMER_VERIFICATION_FALLBACK_REQUESTS.map(customerVerificationRequestRecord),
+    evidence: CUSTOMER_VERIFICATION_FALLBACK_EVIDENCE.map(customerVerificationEvidenceRecord),
+    scores: CUSTOMER_VERIFICATION_FALLBACK_SCORES.map(customerVerificationScoreRecord),
+    duplicateMatches: CUSTOMER_VERIFICATION_FALLBACK_DUPLICATES.map(customerVerificationDuplicateRecord),
+    reviews: CUSTOMER_VERIFICATION_FALLBACK_REVIEWS.map(customerVerificationReviewRecord),
+  };
+}
+
+function customerVerificationSummary(data) {
+  const requests = data.requests || [];
+  const scores = data.scores || [];
+  const duplicates = data.duplicateMatches || [];
+  return {
+    total_requests: requests.length,
+    pending_requests: requests.filter((record) => ["draft", "pending", "in_review", "needs_more_info"].includes(record.verification_status)).length,
+    verified_requests: requests.filter((record) => record.verification_status === "verified").length,
+    needs_more_info: requests.filter((record) => record.verification_status === "needs_more_info").length,
+    possible_duplicates:
+      requests.filter((record) => record.verification_status === "possible_duplicate").length +
+      duplicates.filter((record) => ["medium", "high"].includes(record.match_confidence)).length,
+    risky_requests:
+      requests.filter((record) => record.verification_status === "risky").length +
+      scores.filter((record) => record.risk_level === "high" || Number(record.risk_score) >= 70).length,
+    high_priority_followups: scores.filter((record) => Number(record.followup_priority_score) >= 70).length,
+  };
+}
+
+function customerVerificationReviewQueueFromRequests({ requests, scores, reviews }) {
+  const scoreMap = new Map((scores || []).map((record) => [record.verification_request_id, record]));
+  const reviewMap = new Map((reviews || []).map((record) => [record.verification_request_id, record]));
+  return (requests || [])
+    .filter((record) => record.verification_status !== "verified" && record.verification_status !== "archived")
+    .map((record) => {
+      const score = scoreMap.get(record.id) || {};
+      const review = reviewMap.get(record.id) || {};
+      return {
+        id: record.id,
+        customer_name: record.customer_name,
+        company_name: record.company_name,
+        country: record.country,
+        verification_status: record.verification_status,
+        confidence_level: score.confidence_level || "medium",
+        risk_level: score.risk_level || "medium",
+        followup_priority_score: score.followup_priority_score ?? 50,
+        reason: review.decision_reason || score.score_explanation || "Customer verification requires human review.",
+        next_action: review.next_action || "Review customer identity evidence before any commercial action.",
+        created_at: record.created_at,
+      };
+    })
+    .slice(0, 50);
+}
+
+async function readCustomerVerificationSources(supabase, warnings) {
+  const [requests, evidence, scores, duplicateMatches, reviews] = await Promise.all([
+    readSource({
+      supabase,
+      table: "customer_verification_requests",
+      select:
+        "id,source_type,source_entity_id,customer_name,company_name,contact_name,email,phone,whatsapp,website,country,inquiry_id,requested_by,requested_at,verification_status,created_at,updated_at",
+      warning: "customer_verification_requests_unavailable",
+      warnings,
+      order: "requested_at",
+    }),
+    readSource({
+      supabase,
+      table: "customer_verification_evidence",
+      select:
+        "id,verification_request_id,evidence_type,evidence_label,evidence_value,evidence_source,evidence_status,confidence_level,risk_level,notes,created_at",
+      warning: "customer_verification_evidence_unavailable",
+      warnings,
+    }),
+    readSource({
+      supabase,
+      table: "customer_verification_scores",
+      select:
+        "id,verification_request_id,credibility_score,relevance_score,risk_score,duplicate_score,followup_priority_score,confidence_level,risk_level,score_explanation,created_at",
+      warning: "customer_verification_scores_unavailable",
+      warnings,
+    }),
+    readSource({
+      supabase,
+      table: "customer_verification_duplicate_matches",
+      select: "id,verification_request_id,matched_entity_type,matched_entity_id,match_type,matched_label,match_confidence,match_reason,created_at",
+      warning: "customer_verification_duplicate_matches_unavailable",
+      warnings,
+    }),
+    readSource({
+      supabase,
+      table: "customer_verification_reviews",
+      select:
+        "id,verification_request_id,review_status,reviewer,reviewer_notes,decision,decision_reason,next_action,reviewed_at,created_at",
+      warning: "customer_verification_reviews_unavailable",
+      warnings,
+    }),
+  ]);
+
+  return {
+    requests: requests.map(customerVerificationRequestRecord),
+    evidence: evidence.map(customerVerificationEvidenceRecord),
+    scores: scores.map(customerVerificationScoreRecord),
+    duplicateMatches: duplicateMatches.map(customerVerificationDuplicateRecord),
+    reviews: reviews.map(customerVerificationReviewRecord),
+  };
+}
+
+function sendCustomerVerificationPayload(response, resource, records, summary, warnings, source = "admin_read") {
+  sendJson(response, 200, {
+    meta: customerVerificationMeta(resource, warnings, source),
+    records,
+    summary,
+    safety: customerVerificationSafetyPayload(),
+    warnings,
+  });
+}
+
+function sendCustomerVerificationFallback(response, resource, records, summary, warnings) {
+  const fallbackWarnings = customerVerificationFallbackWarnings(warnings);
+  sendCustomerVerificationPayload(response, resource, records, summary, fallbackWarnings, "fallback_demo");
+}
+
+async function readCustomerVerificationSummary(response, supabase) {
+  const warnings = [];
+  const data = await readCustomerVerificationSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackCustomerVerificationData();
+    sendCustomerVerificationFallback(response, "customer-verification-summary", [], customerVerificationSummary(fallback), warnings);
+    return;
+  }
+
+  sendCustomerVerificationPayload(response, "customer-verification-summary", [], customerVerificationSummary(data), warnings);
+}
+
+async function readCustomerVerificationRequests(response, supabase) {
+  const warnings = [];
+  const data = await readCustomerVerificationSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackCustomerVerificationData();
+    sendCustomerVerificationFallback(
+      response,
+      "customer-verification-requests",
+      fallback.requests,
+      customerVerificationSummary(fallback),
+      warnings
+    );
+    return;
+  }
+
+  sendCustomerVerificationPayload(response, "customer-verification-requests", data.requests, customerVerificationSummary(data), warnings);
+}
+
+async function readCustomerVerificationEvidence(response, supabase) {
+  const warnings = [];
+  const data = await readCustomerVerificationSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackCustomerVerificationData();
+    sendCustomerVerificationFallback(
+      response,
+      "customer-verification-evidence",
+      fallback.evidence,
+      { total_records: fallback.evidence.length },
+      warnings
+    );
+    return;
+  }
+
+  sendCustomerVerificationPayload(response, "customer-verification-evidence", data.evidence, { total_records: data.evidence.length }, warnings);
+}
+
+async function readCustomerVerificationScores(response, supabase) {
+  const warnings = [];
+  const data = await readCustomerVerificationSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackCustomerVerificationData();
+    sendCustomerVerificationFallback(
+      response,
+      "customer-verification-scores",
+      fallback.scores,
+      { total_records: fallback.scores.length },
+      warnings
+    );
+    return;
+  }
+
+  sendCustomerVerificationPayload(response, "customer-verification-scores", data.scores, { total_records: data.scores.length }, warnings);
+}
+
+async function readCustomerVerificationDuplicateMatches(response, supabase) {
+  const warnings = [];
+  const data = await readCustomerVerificationSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackCustomerVerificationData();
+    sendCustomerVerificationFallback(
+      response,
+      "customer-verification-duplicate-matches",
+      fallback.duplicateMatches,
+      { total_records: fallback.duplicateMatches.length },
+      warnings
+    );
+    return;
+  }
+
+  sendCustomerVerificationPayload(
+    response,
+    "customer-verification-duplicate-matches",
+    data.duplicateMatches,
+    { total_records: data.duplicateMatches.length },
+    warnings
+  );
+}
+
+async function readCustomerVerificationReviewQueue(response, supabase) {
+  const warnings = [];
+  const data = await readCustomerVerificationSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackCustomerVerificationData();
+    const records = customerVerificationReviewQueueFromRequests(fallback);
+    sendCustomerVerificationFallback(response, "customer-verification-review-queue", records, { total_records: records.length }, warnings);
+    return;
+  }
+
+  const records = customerVerificationReviewQueueFromRequests(data);
+  sendCustomerVerificationPayload(response, "customer-verification-review-queue", records, { total_records: records.length }, warnings);
+}
+
+async function readCustomerVerificationReviews(response, supabase) {
+  const warnings = [];
+  const data = await readCustomerVerificationSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackCustomerVerificationData();
+    sendCustomerVerificationFallback(
+      response,
+      "customer-verification-reviews",
+      fallback.reviews,
+      { total_records: fallback.reviews.length },
+      warnings
+    );
+    return;
+  }
+
+  sendCustomerVerificationPayload(response, "customer-verification-reviews", data.reviews, { total_records: data.reviews.length }, warnings);
+}
+
 function dashboardSummaryCards({ inquiries, customers, aiAnalyses, followUps }, now = new Date()) {
   const newInquiries = inquiries.filter((record) => isToday(record.created_at, now)).length;
   const missingInquiryCount = inquiries.filter((record) => hasMissingInfo(record, "missing_info")).length;
@@ -2111,6 +2716,48 @@ module.exports = async function handler(request, response) {
     if (resource === "business-card-followup-drafts") {
       const supabase = getSupabaseClient(request);
       await readBusinessCardFollowupDrafts(response, supabase);
+      return;
+    }
+
+    if (resource === "customer-verification-summary") {
+      const supabase = getSupabaseClient(request);
+      await readCustomerVerificationSummary(response, supabase);
+      return;
+    }
+
+    if (resource === "customer-verification-requests") {
+      const supabase = getSupabaseClient(request);
+      await readCustomerVerificationRequests(response, supabase);
+      return;
+    }
+
+    if (resource === "customer-verification-evidence") {
+      const supabase = getSupabaseClient(request);
+      await readCustomerVerificationEvidence(response, supabase);
+      return;
+    }
+
+    if (resource === "customer-verification-scores") {
+      const supabase = getSupabaseClient(request);
+      await readCustomerVerificationScores(response, supabase);
+      return;
+    }
+
+    if (resource === "customer-verification-duplicate-matches") {
+      const supabase = getSupabaseClient(request);
+      await readCustomerVerificationDuplicateMatches(response, supabase);
+      return;
+    }
+
+    if (resource === "customer-verification-review-queue") {
+      const supabase = getSupabaseClient(request);
+      await readCustomerVerificationReviewQueue(response, supabase);
+      return;
+    }
+
+    if (resource === "customer-verification-reviews") {
+      const supabase = getSupabaseClient(request);
+      await readCustomerVerificationReviews(response, supabase);
       return;
     }
   } catch (error) {

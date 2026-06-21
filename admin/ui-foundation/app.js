@@ -229,10 +229,18 @@ const CUSTOMER_PROFILE_DRAFTS_ENDPOINT = "/api/admin-read/customer-profile-draft
 const BUSINESS_CARD_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/business-card-review-queue";
 const BUSINESS_CARD_DUPLICATE_CHECKS_ENDPOINT = "/api/admin-read/business-card-duplicate-checks";
 const BUSINESS_CARD_FOLLOWUP_DRAFTS_ENDPOINT = "/api/admin-read/business-card-followup-drafts";
+const CUSTOMER_VERIFICATION_SUMMARY_ENDPOINT = "/api/admin-read/customer-verification-summary";
+const CUSTOMER_VERIFICATION_REQUESTS_ENDPOINT = "/api/admin-read/customer-verification-requests";
+const CUSTOMER_VERIFICATION_EVIDENCE_ENDPOINT = "/api/admin-read/customer-verification-evidence";
+const CUSTOMER_VERIFICATION_SCORES_ENDPOINT = "/api/admin-read/customer-verification-scores";
+const CUSTOMER_VERIFICATION_DUPLICATE_MATCHES_ENDPOINT = "/api/admin-read/customer-verification-duplicate-matches";
+const CUSTOMER_VERIFICATION_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/customer-verification-review-queue";
+const CUSTOMER_VERIFICATION_REVIEWS_ENDPOINT = "/api/admin-read/customer-verification-reviews";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
 const knowledgeApiState = createKnowledgeState();
 const businessCardApiState = createBusinessCardCaptureState();
+const customerVerificationApiState = createCustomerVerificationState();
 
 const companyPreviewFallback = [
   {
@@ -2191,6 +2199,9 @@ function setSection(sectionId) {
   if (sectionId === "business-card-capture") {
     loadBusinessCardCaptureReadOnly();
   }
+  if (sectionId === "customer-verification") {
+    loadCustomerVerificationReadOnly();
+  }
   if (sectionId === "files") {
     loadDocumentsReadOnly();
   }
@@ -3138,35 +3149,195 @@ function renderProspectingReview() {
   `;
 }
 
+function customerVerificationStatusLabel() {
+  if (customerVerificationApiState.status === "loading") return "正在加载只读数据";
+  if (customerVerificationApiState.status === "loaded") return "实时只读数据";
+  if (customerVerificationApiState.status === "empty") return "暂无实时记录，显示静态预览";
+  if (customerVerificationApiState.status === "error") return "API 暂不可用，显示静态预览";
+  return fallbackLabel;
+}
+
+function getCustomerVerificationViewModel() {
+  const fallback = fallbackCustomerVerificationApiData();
+  const isLive = customerVerificationApiState.status === "loaded" && customerVerificationApiState.source === "api";
+  const summary = customerVerificationApiState.summary || fallback.summary;
+  const requests = customerVerificationApiState.requests.length ? customerVerificationApiState.requests : fallback.requests;
+  const evidence = customerVerificationApiState.evidence.length ? customerVerificationApiState.evidence : fallback.evidence;
+  const scores = customerVerificationApiState.scores.length ? customerVerificationApiState.scores : fallback.scores;
+  const duplicateMatches = customerVerificationApiState.duplicateMatches.length
+    ? customerVerificationApiState.duplicateMatches
+    : fallback.duplicateMatches;
+  const reviewQueue = customerVerificationApiState.reviewQueue.length ? customerVerificationApiState.reviewQueue : fallback.reviewQueue;
+  const reviews = customerVerificationApiState.reviews.length ? customerVerificationApiState.reviews : fallback.reviews;
+  const selectedQueueItem = reviewQueue[0] || {};
+  const selectedRequest = requests.find((record) => record.id === selectedQueueItem.id) || requests[0] || {};
+  const selectedScore = scores.find((record) => record.verification_request_id === selectedRequest.id) || {};
+  const selectedReview = reviews.find((record) => record.verification_request_id === selectedRequest.id) || {};
+  const selectedEvidence = evidence.filter((record) => record.verification_request_id === selectedRequest.id);
+  const selectedDuplicates = duplicateMatches.filter((record) => record.verification_request_id === selectedRequest.id);
+
+  return {
+    isLive,
+    statusLabel: customerVerificationStatusLabel(),
+    summary,
+    requests,
+    evidence,
+    scores,
+    duplicateMatches,
+    reviewQueue,
+    reviews,
+    selectedRequest,
+    selectedScore,
+    selectedReview,
+    selectedEvidence,
+    selectedDuplicates,
+  };
+}
+
+function customerVerificationSummaryCardsFromModel(model) {
+  const summary = model.summary || {};
+  const highConfidence = model.scores.filter(
+    (record) => record.confidence_level === "high" || Number(record.credibility_score) >= 70
+  ).length;
+  return [
+    {
+      label: "待验证客户",
+      value: String(summary.pending_requests ?? summary.total_requests ?? model.requests.length),
+      subtitle: "公司、邮箱或角色仍需人工确认",
+      tone: "info",
+    },
+    {
+      label: "高可信客户",
+      value: String(summary.verified_requests ?? highConfidence),
+      subtitle: "资料较完整，仍需人工确认",
+      tone: "active",
+    },
+    {
+      label: "需补充信息",
+      value: String(summary.needs_more_info ?? 0),
+      subtitle: "缺网站、项目、数量或买家角色",
+      tone: "warning",
+    },
+    {
+      label: "疑似重复",
+      value: String(summary.possible_duplicates ?? model.duplicateMatches.length),
+      subtitle: "公司名或联系人可能已存在",
+      tone: "warning",
+    },
+    {
+      label: "高风险线索",
+      value: String(summary.risky_requests ?? 0),
+      subtitle: "身份或需求存在明显矛盾",
+      tone: "danger",
+    },
+    {
+      label: "建议跟进",
+      value: String(summary.high_priority_followups ?? 0),
+      subtitle: "可人工索取公司和项目资料",
+      tone: "active",
+    },
+  ];
+}
+
+function customerVerificationStatusText(status) {
+  const statusMap = {
+    confirmed: "通过",
+    likely: "需确认",
+    needs_review: "需确认",
+    missing: "缺失",
+    conflict: "风险",
+    not_checked: "未查询",
+  };
+  return statusMap[status] || "需确认";
+}
+
+function customerVerificationChecklistFromModel(model) {
+  const evidenceItems = model.selectedEvidence.map((record) => ({
+    item: safeDashboardText(record.evidence_label || record.evidence_type, "验证证据"),
+    status: customerVerificationStatusText(record.evidence_status),
+    detail: safeDashboardText(
+      [record.evidence_value, record.notes].filter(Boolean).join("。"),
+      "需要人工复核该证据，不自动判断客户身份。"
+    ),
+  }));
+  return evidenceItems.length ? evidenceItems : customerVerificationChecklist;
+}
+
+function customerVerificationDuplicateRowsFromModel(model) {
+  if (!model.selectedDuplicates.length) {
+    return [
+      ["Same email", "not found / not checked"],
+      ["Same company", model.selectedRequest.company_name ? "not checked" : "company missing"],
+      ["Same phone", model.selectedRequest.phone ? "not checked" : "not available"],
+      ["Same website", model.selectedRequest.website ? "not checked" : "not available"],
+      ["Existing customer match", "needs review"],
+    ];
+  }
+  return model.selectedDuplicates.map((record) => [
+    safeDashboardText(record.match_type || record.matched_entity_type, "matched entity"),
+    `${safeDashboardText(record.matched_label, "需要人工确认")} / confidence ${safeDashboardText(record.match_confidence, "—")}`,
+  ]);
+}
+
+function customerVerificationRiskSignalsFromModel(model, level) {
+  const records = model.selectedEvidence.filter((record) => record.risk_level === level);
+  return records.length
+    ? records.map((record) => safeDashboardText(record.evidence_label || record.evidence_type || record.notes, "验证信号"))
+    : level === "low"
+    ? customerVerificationLowRiskSignals
+    : level === "high"
+    ? customerVerificationHighRiskSignals
+    : customerVerificationNeedConfirmSignals;
+}
+
 function renderCustomerVerification() {
+  const model = getCustomerVerificationViewModel();
+  const selectedRequest = model.selectedRequest;
+  const selectedScore = model.selectedScore;
+  const selectedReview = model.selectedReview;
+  const sourceNote = model.isLive
+    ? "已连接 admin-read 只读数据。所有判断仍需人工确认。"
+    : "显示静态预览 fallback；可能是尚未登录、接口未部署或数据表未执行。";
+  const statusNotice =
+    customerVerificationApiState.status === "loading"
+      ? renderDataStatus("loading", "AI 客户验证数据加载中", "正在请求 admin-read 只读数据。")
+      : customerVerificationApiState.status === "error"
+      ? renderDataStatus("error", "AI 客户验证 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。系统提示：${customerVerificationApiState.error}`)
+      : customerVerificationApiState.status === "empty"
+      ? renderDataStatus("empty", "暂无 AI 客户验证实时记录", "显示静态预览 fallback，避免空白页面。")
+      : customerVerificationApiState.status === "loaded"
+      ? renderDataStatus("success", "AI 客户验证已连接只读数据", "当前数据来自 /api/admin-read/customer-verification-*，仍然不执行任何动作。")
+      : "";
+
   return `
     <div class="customer-verification-preview" aria-label="AI 客户验证中心只读预览">
       <div class="customer-verification-hero">
         <div>
           <span class="state-label">AI Customer Verification Center</span>
           <h3>AI 客户验证中心</h3>
-          <p>用于在正式跟进前，对客户身份、公司信息、联系方式、询盘可信度、重复风险和跟进价值进行 AI 辅助判断。当前为只读预览，不联网、不自动查询、不自动创建客户、不自动发送。</p>
+          <p>用于在正式跟进前，对客户身份、公司信息、联系方式、询盘可信度、重复风险和跟进价值进行 AI 辅助判断。当前为只读数据预览，不联网、不自动查询、不自动创建客户、不自动发送。</p>
         </div>
         <div class="verification-badge-row" aria-label="AI 客户验证预览状态">
-          ${badge("只读预览", "draft")}
+          ${badge(model.statusLabel, model.isLive ? "active" : "draft")}
+          ${badge("只读", "draft")}
           ${badge("不自动查询", "pending")}
           ${badge("不自动创建客户", "pending")}
           ${badge("不自动发送", "pending")}
           ${badge("需人工确认", "approval")}
-          ${badge("AI 建议", "active")}
         </div>
       </div>
+      ${statusNotice}
 
       <section class="verification-section" aria-label="客户验证概览">
         <div class="workbench-section-header">
           <div>
             <h3>验证概览</h3>
-            <p>DEMO 统计，仅用于预览未来客户验证队列，不代表实时客户状态。</p>
+            <p>${escapeHtml(sourceNote)}</p>
           </div>
-          <span>静态预览</span>
+          <span>${escapeHtml(model.statusLabel)}</span>
         </div>
         <div class="verification-summary-grid">
-          ${customerVerificationSummaryCards.map(renderCustomerVerificationSummaryCard).join("")}
+          ${customerVerificationSummaryCardsFromModel(model).map(renderCustomerVerificationSummaryCard).join("")}
         </div>
       </section>
 
@@ -3174,32 +3345,32 @@ function renderCustomerVerification() {
         <section class="verification-profile-card" aria-label="客户验证档案示例">
           <div class="workbench-section-header">
             <div>
-              <h3>Demo 客户验证档案</h3>
-              <p>DEMO / Preview only / not verified automatically。所有字段只用于界面验证。</p>
+              <h3>${escapeHtml(safeDashboardText(selectedRequest.customer_name, "客户验证档案"))}</h3>
+              <p>${escapeHtml(safeDashboardText(selectedReview.decision_reason || selectedScore.score_explanation, "所有字段只用于只读复核，不自动确认客户。"))}</p>
             </div>
-            <span>Needs review</span>
+            <span>${escapeHtml(safeDashboardText(selectedRequest.verification_status, "needs_review"))}</span>
           </div>
           <dl class="verification-profile-list">
             <dt>Customer</dt>
-            <dd>Carlos Ramirez</dd>
+            <dd>${escapeHtml(safeDashboardText(selectedRequest.customer_name, "需要人工确认"))}</dd>
             <dt>Company</dt>
-            <dd>DEMO Facade Solutions</dd>
+            <dd>${escapeHtml(safeDashboardText(selectedRequest.company_name, "需要人工确认"))}</dd>
             <dt>Country</dt>
-            <dd>Peru</dd>
+            <dd>${escapeHtml(safeDashboardText(selectedRequest.country, "需要人工确认"))}</dd>
             <dt>Email</dt>
-            <dd>carlos.ramirez@example.com</dd>
+            <dd>${escapeHtml(safeDashboardText(selectedRequest.email, "—"))}</dd>
             <dt>Website</dt>
-            <dd>demo-facade.example.com</dd>
+            <dd>${escapeHtml(safeDashboardText(selectedRequest.website, "—"))}</dd>
             <dt>Source</dt>
-            <dd>Trade show / WhatsApp / Inquiry</dd>
+            <dd>${escapeHtml(safeDashboardText(selectedRequest.source_type, "manual_entry"))}</dd>
             <dt>Interest</dt>
-            <dd>Aluminum windows / facade systems</dd>
+            <dd>${escapeHtml(safeDashboardText(model.selectedEvidence.find((record) => record.evidence_type === "product_interest" || record.evidence_type === "inquiry_content")?.evidence_value, "需要人工确认"))}</dd>
             <dt>Status</dt>
-            <dd>Needs review</dd>
+            <dd>${escapeHtml(safeDashboardText(selectedRequest.verification_status, "needs_review"))}</dd>
             <dt>Confidence</dt>
-            <dd>Medium</dd>
+            <dd>${escapeHtml(safeDashboardText(selectedScore.confidence_level, "medium"))}</dd>
             <dt>Risk</dt>
-            <dd>Low-medium</dd>
+            <dd>${escapeHtml(safeDashboardText(selectedScore.risk_level, "medium"))}</dd>
           </dl>
           <div class="disabled-chip-row">
             ${renderDisabledCapabilities(["不可自动创建客户", "不可修改客户", "不可发送", "不可报价"])}
@@ -3212,14 +3383,14 @@ function renderCustomerVerification() {
               <h3>客户类型推测</h3>
               <p class="workbench-review-note">AI 建议仅作为人工复核材料，不是最终身份判断。</p>
             </div>
-            ${badge("Confidence: Medium", "draft")}
+            ${badge(`Confidence: ${safeDashboardText(selectedScore.confidence_level, "medium")}`, "draft")}
           </div>
           <div class="verification-type-highlight">
             <span>Primary guess</span>
-            <strong>Facade contractor</strong>
-            <small>Secondary possibility: Construction material importer</small>
+            <strong>${escapeHtml(safeDashboardText(selectedRequest.source_type, "manual_entry"))}</strong>
+            <small>${escapeHtml(safeDashboardText(selectedRequest.company_name, "Secondary possibility needs review"))}</small>
           </div>
-          <p class="verification-reason">Reason: Company name and product interest suggest facade/window project activity.</p>
+          <p class="verification-reason">Reason: ${escapeHtml(safeDashboardText(selectedScore.score_explanation, "Company identity and product interest require manual evidence review."))}</p>
           <div class="verification-type-grid">
             ${customerVerificationTypeOptions.map(renderCustomerVerificationTypeOption).join("")}
           </div>
@@ -3230,12 +3401,12 @@ function renderCustomerVerification() {
         <div class="workbench-section-header">
           <div>
             <h3>AI 验证清单</h3>
-            <p>状态 chip 是静态预览：未查询表示当前没有联网或真实数据库查重。</p>
+            <p>状态 chip 来自只读证据或 fallback；未查询表示当前没有联网或真实查重结论。</p>
           </div>
-          <span>只读 checklist</span>
+          <span>只读 evidence</span>
         </div>
         <div class="verification-checklist-grid">
-          ${customerVerificationChecklist.map(renderCustomerVerificationChecklistItem).join("")}
+          ${customerVerificationChecklistFromModel(model).map(renderCustomerVerificationChecklistItem).join("")}
         </div>
       </section>
 
@@ -3244,26 +3415,26 @@ function renderCustomerVerification() {
           <div class="workbench-section-header">
             <div>
               <h3>重复风险</h3>
-              <p>静态查重结构预览。当前不查询真实客户库、不合并客户、不写入数据。</p>
+              <p>只读查重结构预览。当前不合并客户、不写入数据。</p>
             </div>
-            <span>not checked</span>
+            <span>${escapeHtml(model.selectedDuplicates.length ? "needs review" : "not checked")}</span>
           </div>
           <dl class="verification-mini-list">
-            ${customerVerificationDuplicateRows.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
+            ${customerVerificationDuplicateRowsFromModel(model).map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
           </dl>
         </section>
 
         <section class="verification-risk-panel" aria-label="风险信号预览">
           <div class="workbench-section-header">
             <div>
-              <h3>风险信号</h3>
-              <p>用于提醒 Paul 复核，不自动拦截、不自动放行、不创建任务。</p>
-            </div>
-            <span>人工判断</span>
+            <h3>风险信号</h3>
+            <p>用于提醒 Paul 复核，不自动拦截、不自动放行、不创建任务。</p>
           </div>
-          ${renderCustomerVerificationSignalGroup("Low-risk signals", customerVerificationLowRiskSignals, "safe")}
-          ${renderCustomerVerificationSignalGroup("Need-confirmation signals", customerVerificationNeedConfirmSignals, "warning")}
-          ${renderCustomerVerificationSignalGroup("High-risk signals", customerVerificationHighRiskSignals, "danger")}
+          <span>人工判断</span>
+        </div>
+          ${renderCustomerVerificationSignalGroup("Low-risk signals", customerVerificationRiskSignalsFromModel(model, "low"), "safe")}
+          ${renderCustomerVerificationSignalGroup("Need-confirmation signals", customerVerificationRiskSignalsFromModel(model, "medium"), "warning")}
+          ${renderCustomerVerificationSignalGroup("High-risk signals", customerVerificationRiskSignalsFromModel(model, "high"), "danger")}
         </section>
       </div>
 
@@ -3272,11 +3443,11 @@ function renderCustomerVerification() {
           <div class="workbench-section-header">
             <div>
               <h3>推荐人工动作</h3>
-              <p>先补充公司和项目资料，再决定是否进入跟进或报价准备。</p>
+          <p>${escapeHtml(safeDashboardText(selectedReview.decision_reason, "先补充公司和项目资料，再决定是否进入跟进或报价准备。"))}</p>
             </div>
-            <span>AI 建议</span>
+            <span>${escapeHtml(safeDashboardText(selectedReview.review_status, "pending"))}</span>
           </div>
-          <p class="verification-recommendation">Suggested next step: Request company website, project location, product specifications, expected quantity, and buyer role before formal quotation.</p>
+          <p class="verification-recommendation">Suggested next step: ${escapeHtml(safeDashboardText(selectedReview.next_action, "Request company website, project location, product specifications, expected quantity, and buyer role before formal quotation."))}</p>
           <div class="verification-draft-box">
             <span>English draft preview</span>
             <p>Thank you for your inquiry. Before preparing a suitable proposal, could you please share your company website, project location, required specifications, and estimated quantity?</p>
@@ -3371,6 +3542,10 @@ function verificationStatusChip(status) {
 }
 
 function renderCustomerVerificationReview() {
+  const model = getCustomerVerificationViewModel();
+  const selectedRequest = model.selectedRequest;
+  const selectedScore = model.selectedScore;
+  const selectedReview = model.selectedReview;
   return `
     <div class="review-stack">
       <div class="review-card">
@@ -3383,16 +3558,18 @@ function renderCustomerVerificationReview() {
         </ul>
       </div>
       <div class="review-card">
-        <h3>固定样本</h3>
+        <h3>当前复核样本</h3>
         <dl>
           <dt>联系人</dt>
-          <dd>Carlos Ramirez</dd>
+          <dd>${escapeHtml(safeDashboardText(selectedRequest.customer_name, "需要人工确认"))}</dd>
           <dt>公司</dt>
-          <dd>DEMO Facade Solutions</dd>
+          <dd>${escapeHtml(safeDashboardText(selectedRequest.company_name, "需要人工确认"))}</dd>
           <dt>推测类型</dt>
-          <dd>Facade contractor / Construction material importer</dd>
+          <dd>${escapeHtml(safeDashboardText(selectedRequest.source_type, "manual_entry"))}</dd>
+          <dt>评分</dt>
+          <dd>credibility ${escapeHtml(safeDashboardText(selectedScore.credibility_score, "—"))} / duplicate ${escapeHtml(safeDashboardText(selectedScore.duplicate_score, "—"))}</dd>
           <dt>建议动作</dt>
-          <dd>先索取公司网站、项目位置、规格、数量和买家角色，再由 Paul 决定是否跟进。</dd>
+          <dd>${escapeHtml(safeDashboardText(selectedReview.next_action, "先索取公司网站、项目位置、规格、数量和买家角色，再由 Paul 决定是否跟进。"))}</dd>
         </dl>
       </div>
       <div class="review-card">
@@ -4499,6 +4676,367 @@ function refreshBusinessCardCaptureView() {
   if (activeSectionId !== "business-card-capture") return;
   mainContent.innerHTML = renderBusinessCardCapture();
   reviewPanel.innerHTML = renderBusinessCardCaptureReview();
+}
+
+async function fetchCustomerVerificationResource(endpoint) {
+  const token = getAdminAccessToken();
+  const response = await fetch(endpoint, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || `${endpoint} failed with ${response.status}`);
+  }
+  return payload;
+}
+
+function fetchCustomerVerificationSummary() {
+  return fetchCustomerVerificationResource(CUSTOMER_VERIFICATION_SUMMARY_ENDPOINT);
+}
+
+function fetchCustomerVerificationRequests() {
+  return fetchCustomerVerificationResource(CUSTOMER_VERIFICATION_REQUESTS_ENDPOINT);
+}
+
+function fetchCustomerVerificationEvidence() {
+  return fetchCustomerVerificationResource(CUSTOMER_VERIFICATION_EVIDENCE_ENDPOINT);
+}
+
+function fetchCustomerVerificationScores() {
+  return fetchCustomerVerificationResource(CUSTOMER_VERIFICATION_SCORES_ENDPOINT);
+}
+
+function fetchCustomerVerificationDuplicateMatches() {
+  return fetchCustomerVerificationResource(CUSTOMER_VERIFICATION_DUPLICATE_MATCHES_ENDPOINT);
+}
+
+function fetchCustomerVerificationReviewQueue() {
+  return fetchCustomerVerificationResource(CUSTOMER_VERIFICATION_REVIEW_QUEUE_ENDPOINT);
+}
+
+function fetchCustomerVerificationReviews() {
+  return fetchCustomerVerificationResource(CUSTOMER_VERIFICATION_REVIEWS_ENDPOINT);
+}
+
+function customerVerificationRecords(payload) {
+  return Array.isArray(payload?.records) ? payload.records : [];
+}
+
+function customerVerificationIsFallbackPayload(...payloads) {
+  return payloads.some((payload) => payload?.meta?.source === "fallback_demo" || payload?.meta?.is_fallback === true);
+}
+
+function fallbackCustomerVerificationApiData() {
+  const requests = [
+    {
+      id: "DEMO_CUSTOMER_VERIFY_PERU",
+      source_type: "inquiry",
+      customer_name: "Carlos Ramirez",
+      company_name: "DEMO Facade Solutions",
+      contact_name: "Carlos Ramirez",
+      email: "carlos.ramirez@example.com",
+      phone: "+51 000 000 001",
+      whatsapp: "+51 000 000 001",
+      website: "https://example.com/demo-facade",
+      country: "Peru",
+      requested_by: "demo_operator",
+      requested_at: "2026-06-21 demo",
+      verification_status: "needs_more_info",
+      created_at: "2026-06-21 demo",
+      updated_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+      source_type: "whatsapp_contact",
+      customer_name: "Maria Gonzalez",
+      company_name: "DEMO Construction Importers",
+      contact_name: "Maria Gonzalez",
+      email: "maria.gonzalez@example.com",
+      phone: "+507 000 000 002",
+      whatsapp: "+507 000 000 002",
+      website: "https://example.com/demo-construction",
+      country: "Panama",
+      requested_by: "demo_operator",
+      requested_at: "2026-06-21 demo",
+      verification_status: "possible_duplicate",
+      created_at: "2026-06-21 demo",
+      updated_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_INDONESIA",
+      source_type: "prospecting_lead",
+      customer_name: "Daniel Wong",
+      company_name: "DEMO Building Materials Asia",
+      contact_name: "Daniel Wong",
+      email: "daniel.wong@example.com",
+      phone: "+62 000 000 003",
+      whatsapp: "+62 000 000 003",
+      website: "https://example.com/demo-building-materials",
+      country: "Indonesia",
+      requested_by: "demo_operator",
+      requested_at: "2026-06-21 demo",
+      verification_status: "pending",
+      created_at: "2026-06-21 demo",
+      updated_at: "2026-06-21 demo",
+    },
+  ];
+  const evidence = [
+    {
+      id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_PERU_PRODUCT",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_PERU",
+      evidence_type: "inquiry_content",
+      evidence_label: "Product interest",
+      evidence_value: "Aluminum windows / facade systems",
+      evidence_source: "demo_seed",
+      evidence_status: "needs_review",
+      confidence_level: "medium",
+      risk_level: "medium",
+      notes: "Needs drawings, specifications, and target quantity before commercial judgment.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_PERU_WEBSITE",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_PERU",
+      evidence_type: "company_website",
+      evidence_label: "Website",
+      evidence_value: "example.com/demo-facade",
+      evidence_source: "demo_seed",
+      evidence_status: "likely",
+      confidence_level: "medium",
+      risk_level: "medium",
+      notes: "Website looks plausible but is demo-only and must be checked manually.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_PANAMA_DUPLICATE",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+      evidence_type: "duplicate_match",
+      evidence_label: "Similar company name",
+      evidence_value: "DEMO Construction Importer",
+      evidence_source: "demo_seed",
+      evidence_status: "needs_review",
+      confidence_level: "medium",
+      risk_level: "medium",
+      notes: "Possible duplicate should be reviewed before creating or merging customer records.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_PANAMA_PRODUCT",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+      evidence_type: "product_interest",
+      evidence_label: "Product interest",
+      evidence_value: "Glass / aluminum accessories",
+      evidence_source: "demo_seed",
+      evidence_status: "likely",
+      confidence_level: "medium",
+      risk_level: "medium",
+      notes: "Interest is useful for follow-up but not enough for customer identity confirmation.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_INDONESIA_PRODUCT",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_INDONESIA",
+      evidence_type: "product_interest",
+      evidence_label: "Product interest",
+      evidence_value: "Ceiling system / light steel keel",
+      evidence_source: "demo_seed",
+      evidence_status: "likely",
+      confidence_level: "medium",
+      risk_level: "low",
+      notes: "Prospecting lead needs more source evidence before commercial follow-up.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_EVIDENCE_INDONESIA_EMAIL",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_INDONESIA",
+      evidence_type: "email_domain",
+      evidence_label: "Email domain",
+      evidence_value: "example.com",
+      evidence_source: "demo_seed",
+      evidence_status: "not_checked",
+      confidence_level: "low",
+      risk_level: "medium",
+      notes: "Demo domain is not a real verification signal.",
+      created_at: "2026-06-21 demo",
+    },
+  ];
+  const scores = [
+    {
+      id: "DEMO_CUSTOMER_VERIFY_SCORE_PERU",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_PERU",
+      credibility_score: 65,
+      relevance_score: 80,
+      risk_score: 45,
+      duplicate_score: 20,
+      followup_priority_score: 75,
+      confidence_level: "medium",
+      risk_level: "medium",
+      score_explanation: "Inquiry is relevant but missing drawings, specifications, and target quantity.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_SCORE_PANAMA",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+      credibility_score: 55,
+      relevance_score: 70,
+      risk_score: 55,
+      duplicate_score: 72,
+      followup_priority_score: 50,
+      confidence_level: "medium",
+      risk_level: "medium",
+      score_explanation: "Possible duplicate risk should be reviewed before follow-up.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_SCORE_INDONESIA",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_INDONESIA",
+      credibility_score: 45,
+      relevance_score: 68,
+      risk_score: 60,
+      duplicate_score: 30,
+      followup_priority_score: 55,
+      confidence_level: "low",
+      risk_level: "medium",
+      score_explanation: "Lead is early-stage and should remain read-only until identity evidence improves.",
+      created_at: "2026-06-21 demo",
+    },
+  ];
+  const duplicateMatches = [
+    {
+      id: "DEMO_CUSTOMER_VERIFY_DUPLICATE_PANAMA",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+      matched_entity_type: "customer",
+      matched_label: "DEMO Construction Importer",
+      match_type: "similar_company_name",
+      match_confidence: "medium",
+      match_reason: "Similar company name and Panama country signal.",
+      created_at: "2026-06-21 demo",
+    },
+  ];
+  const reviews = [
+    {
+      id: "DEMO_CUSTOMER_VERIFY_REVIEW_PERU",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_PERU",
+      review_status: "pending",
+      decision: "request_more_info",
+      decision_reason: "Drawings, specifications, and target quantity are still missing.",
+      next_action: "Ask for drawings, product specifications, and target quantity before quotation review.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_REVIEW_PANAMA",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_PANAMA",
+      review_status: "pending",
+      decision: "hold",
+      decision_reason: "Possible duplicate needs manual review.",
+      next_action: "Compare existing customer records before creating or merging any customer profile.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CUSTOMER_VERIFY_REVIEW_INDONESIA",
+      verification_request_id: "DEMO_CUSTOMER_VERIFY_INDONESIA",
+      review_status: "pending",
+      decision: "request_more_info",
+      decision_reason: "Prospecting lead has limited identity evidence.",
+      next_action: "Collect more source evidence before sales follow-up.",
+      created_at: "2026-06-21 demo",
+    },
+  ];
+  const summary = {
+    total_requests: requests.length,
+    pending_requests: 2,
+    verified_requests: 0,
+    needs_more_info: 1,
+    possible_duplicates: 2,
+    risky_requests: 0,
+    high_priority_followups: 1,
+  };
+  const reviewQueue = requests
+    .filter((record) => record.verification_status !== "verified")
+    .map((request) => {
+      const score = scores.find((record) => record.verification_request_id === request.id) || {};
+      const review = reviews.find((record) => record.verification_request_id === request.id) || {};
+      return {
+        id: request.id,
+        customer_name: request.customer_name,
+        company_name: request.company_name,
+        country: request.country,
+        verification_status: request.verification_status,
+        confidence_level: score.confidence_level || "medium",
+        risk_level: score.risk_level || "medium",
+        followup_priority_score: score.followup_priority_score || 50,
+        reason: review.decision_reason || score.score_explanation || "Customer verification requires human review.",
+        next_action: review.next_action || "Review evidence before any customer action.",
+        created_at: request.created_at,
+      };
+    });
+
+  return { summary, requests, evidence, scores, duplicateMatches, reviewQueue, reviews };
+}
+
+async function loadCustomerVerificationReadOnly() {
+  customerVerificationApiState.status = "loading";
+  customerVerificationApiState.error = "";
+  customerVerificationApiState.source = "api";
+  refreshCustomerVerificationView();
+
+  try {
+    const [summaryPayload, requestsPayload, evidencePayload, scoresPayload, duplicatePayload, queuePayload, reviewsPayload] = await Promise.all([
+      fetchCustomerVerificationSummary(),
+      fetchCustomerVerificationRequests(),
+      fetchCustomerVerificationEvidence(),
+      fetchCustomerVerificationScores(),
+      fetchCustomerVerificationDuplicateMatches(),
+      fetchCustomerVerificationReviewQueue(),
+      fetchCustomerVerificationReviews(),
+    ]);
+
+    customerVerificationApiState.summary = summaryPayload.summary || null;
+    customerVerificationApiState.requests = customerVerificationRecords(requestsPayload);
+    customerVerificationApiState.evidence = customerVerificationRecords(evidencePayload);
+    customerVerificationApiState.scores = customerVerificationRecords(scoresPayload);
+    customerVerificationApiState.duplicateMatches = customerVerificationRecords(duplicatePayload);
+    customerVerificationApiState.reviewQueue = customerVerificationRecords(queuePayload);
+    customerVerificationApiState.reviews = customerVerificationRecords(reviewsPayload);
+
+    const recordCount =
+      customerVerificationApiState.requests.length +
+      customerVerificationApiState.evidence.length +
+      customerVerificationApiState.scores.length +
+      customerVerificationApiState.duplicateMatches.length +
+      customerVerificationApiState.reviewQueue.length +
+      customerVerificationApiState.reviews.length;
+
+    if (customerVerificationIsFallbackPayload(summaryPayload, requestsPayload, evidencePayload, scoresPayload, duplicatePayload, queuePayload, reviewsPayload)) {
+      const fallback = fallbackCustomerVerificationApiData();
+      Object.assign(customerVerificationApiState, fallback);
+      customerVerificationApiState.status = "error";
+      customerVerificationApiState.error = "customer-verification admin-read source unavailable; showing fallback demo";
+      customerVerificationApiState.source = fallbackLabel;
+    } else if (recordCount === 0) {
+      const fallback = fallbackCustomerVerificationApiData();
+      Object.assign(customerVerificationApiState, fallback);
+      customerVerificationApiState.status = "empty";
+      customerVerificationApiState.source = fallbackLabel;
+    } else {
+      customerVerificationApiState.status = "loaded";
+      customerVerificationApiState.source = "api";
+    }
+  } catch (error) {
+    const fallback = fallbackCustomerVerificationApiData();
+    Object.assign(customerVerificationApiState, fallback);
+    customerVerificationApiState.status = "error";
+    customerVerificationApiState.error = error.message || "Unknown API error";
+    customerVerificationApiState.source = fallbackLabel;
+  }
+
+  refreshCustomerVerificationView();
+}
+
+function refreshCustomerVerificationView() {
+  if (activeSectionId !== "customer-verification") return;
+  mainContent.innerHTML = renderCustomerVerification();
+  reviewPanel.innerHTML = renderCustomerVerificationReview();
 }
 
 async function loadDashboardSummaryReadOnly() {
@@ -5714,6 +6252,21 @@ function createBusinessCardCaptureState() {
     reviewQueue: [],
     duplicateChecks: [],
     followupDrafts: [],
+    error: "",
+    source: "not loaded",
+  };
+}
+
+function createCustomerVerificationState() {
+  return {
+    status: "idle",
+    summary: null,
+    requests: [],
+    evidence: [],
+    scores: [],
+    duplicateMatches: [],
+    reviewQueue: [],
+    reviews: [],
     error: "",
     source: "not loaded",
   };
