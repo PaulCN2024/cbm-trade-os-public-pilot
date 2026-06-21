@@ -26,9 +26,13 @@ Defines private bucket model, file path strategy, access-control boundary, previ
 
 ### S1 bucket creation SQL/manual guide
 
+Status: prepared by the storage SQL pack.
+
 Prepare a manual Supabase setup pack for the `business-card-captures` private bucket and first-stage policies.
 
 This should be reviewed before any SQL or dashboard action is performed.
+
+Manual execution is still pending. Codex must not execute this SQL or touch Supabase Storage until Paul approves the exact database action.
 
 ### S2 storage policy plan
 
@@ -103,21 +107,22 @@ Implement archive/delete request and approval handling only after storage object
 Recommended:
 
 ```text
-CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-STORAGE-SQL-PACK-001
+CBM-CODEX-SPRINT-BUSINESS-CARD-CAPTURE-STORAGE-POST-VERIFY-001
 ```
 
 Goal:
 
-Prepare manual SQL/storage setup pack for private bucket and policies.
+Verify Paul's approved Supabase Storage SQL execution result for the private bucket and first-stage policies.
 
 Warning:
 
-Do not enable real upload until bucket/policy/API/storage preview are all reviewed.
+Do not enable real upload until bucket/policy execution is verified and upload API, storage preview, retention, and OCR boundaries are separately reviewed.
 
 ## Safety Gates Before Real Upload
 
 Real upload should wait for:
 
+- verified private bucket setup
 - reviewed private bucket setup pack
 - reviewed storage policies
 - upload API design
