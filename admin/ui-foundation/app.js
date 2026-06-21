@@ -213,9 +213,17 @@ const KNOWLEDGE_CATEGORIES_ENDPOINT = "/api/admin-read/knowledge-categories";
 const KNOWLEDGE_ITEMS_ENDPOINT = "/api/admin-read/knowledge-items";
 const KNOWLEDGE_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/knowledge-review-queue";
 const KNOWLEDGE_LINKED_CONTEXT_ENDPOINT = "/api/admin-read/knowledge-linked-context";
+const BUSINESS_CARD_SUMMARY_ENDPOINT = "/api/admin-read/business-card-summary";
+const BUSINESS_CARD_CAPTURE_SOURCES_ENDPOINT = "/api/admin-read/business-card-capture-sources";
+const BUSINESS_CARD_EXTRACTION_RESULTS_ENDPOINT = "/api/admin-read/business-card-extraction-results";
+const CUSTOMER_PROFILE_DRAFTS_ENDPOINT = "/api/admin-read/customer-profile-drafts";
+const BUSINESS_CARD_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/business-card-review-queue";
+const BUSINESS_CARD_DUPLICATE_CHECKS_ENDPOINT = "/api/admin-read/business-card-duplicate-checks";
+const BUSINESS_CARD_FOLLOWUP_DRAFTS_ENDPOINT = "/api/admin-read/business-card-followup-drafts";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
 const knowledgeApiState = createKnowledgeState();
+const businessCardApiState = createBusinessCardCaptureState();
 
 const companyPreviewFallback = [
   {
@@ -2055,6 +2063,9 @@ function setSection(sectionId) {
   if (sectionId === "knowledge-center") {
     loadKnowledgeCenterReadOnly();
   }
+  if (sectionId === "business-card-capture") {
+    loadBusinessCardCaptureReadOnly();
+  }
   if (sectionId === "files") {
     loadDocumentsReadOnly();
   }
@@ -3002,16 +3013,142 @@ function renderProspectingReview() {
   `;
 }
 
+function getBusinessCardCaptureViewModel() {
+  const fallback = fallbackBusinessCardApiData();
+  const isLive = businessCardApiState.status === "loaded" && businessCardApiState.source === "api";
+  const isLoading = businessCardApiState.status === "loading";
+  const summary = businessCardApiState.summary || fallback.summary;
+  const captureSources = businessCardApiState.captureSources.length ? businessCardApiState.captureSources : fallback.captureSources;
+  const extractionResults = businessCardApiState.extractionResults.length ? businessCardApiState.extractionResults : fallback.extractionResults;
+  const profileDrafts = businessCardApiState.profileDrafts.length ? businessCardApiState.profileDrafts : fallback.profileDrafts;
+  const reviewQueue = businessCardApiState.reviewQueue.length ? businessCardApiState.reviewQueue : fallback.reviewQueue;
+  const duplicateChecks = businessCardApiState.duplicateChecks.length ? businessCardApiState.duplicateChecks : fallback.duplicateChecks;
+  const followupDrafts = businessCardApiState.followupDrafts.length ? businessCardApiState.followupDrafts : fallback.followupDrafts;
+  const selectedExtraction = extractionResults[0] || {};
+  const selectedDraft = profileDrafts[0] || {};
+  const selectedSource = captureSources.find((source) => source.id === selectedDraft.capture_source_id) || captureSources[0] || {};
+  const selectedFollowup = followupDrafts.find((draft) => draft.customer_profile_draft_id === selectedDraft.id) || followupDrafts[0] || {};
+  const sourceLabel = isLive ? "实时只读数据" : fallbackLabel;
+
+  return {
+    isLive,
+    isLoading,
+    sourceLabel,
+    summary,
+    captureSources,
+    extractionResults,
+    profileDrafts,
+    reviewQueue,
+    duplicateChecks,
+    followupDrafts,
+    selectedSource,
+    selectedExtraction,
+    selectedDraft,
+    selectedFollowup,
+    headerCopy: isLive
+      ? "已连接 admin-read 名片识别只读数据。当前只展示捕获来源、提取结果、客户草稿、查重和跟进草稿，不上传文件、不执行 OCR、不创建客户。"
+      : "当前显示安全 fallback / DEMO 数据，用于验证名片识别到客户草稿的只读流程；不上传文件、不识别图片、不创建客户。",
+  };
+}
+
+function businessCardSummaryCardsFromModel(model) {
+  const summary = model.summary || {};
+  return [
+    { label: "捕获来源", value: displayValue(summary.total_captures || model.captureSources.length), subtitle: "名片 / 联系人图片来源", tone: "info" },
+    { label: "待复核草稿", value: displayValue(summary.needs_review_drafts || 0), subtitle: "客户资料必须人工确认", tone: "warning" },
+    { label: "可能重复", value: displayValue(summary.possible_duplicates || 0), subtitle: "公司 / 联系人相似需核对", tone: "warning" },
+    { label: "已批准草稿", value: displayValue(summary.approved_drafts || 0), subtitle: "当前仍不自动创建客户", tone: "neutral" },
+    { label: "跟进草稿", value: displayValue(summary.followup_drafts || model.followupDrafts.length), subtitle: "草稿只读，未发送", tone: "info" },
+    { label: "高风险", value: displayValue(summary.high_risk_drafts || 0), subtitle: "商业动作仍需人工审批", tone: "danger" },
+  ];
+}
+
+function businessCardFieldRows(model) {
+  const extraction = model.selectedExtraction;
+  const draft = model.selectedDraft;
+  const source = model.selectedSource;
+  return [
+    { label: "姓名", value: extraction.extracted_name || draft.proposed_customer_name, note: "提取字段 / 未验证" },
+    { label: "公司", value: extraction.extracted_company || draft.proposed_company_name, note: "客户档案草稿" },
+    { label: "职位", value: extraction.extracted_title, note: "需人工确认" },
+    { label: "邮箱", value: extraction.extracted_email || draft.proposed_email, note: "未验证，不能自动发送" },
+    { label: "电话", value: extraction.extracted_phone || draft.proposed_phone, note: "未验证" },
+    { label: "WhatsApp", value: extraction.extracted_whatsapp || draft.proposed_whatsapp, note: "未发送" },
+    { label: "网站", value: extraction.extracted_website || draft.proposed_website, note: "待确认" },
+    { label: "国家", value: extraction.extracted_country || draft.proposed_country, note: "需人工确认" },
+    { label: "地址", value: extraction.extracted_address, note: "待补全" },
+    { label: "客户类型", value: extraction.extracted_business_type || draft.proposed_customer_type, note: "AI/DEMO 推测" },
+    { label: "产品兴趣", value: extraction.extracted_product_interest || draft.proposed_product_interest, note: "用于复核，不报价" },
+    { label: "来源渠道", value: source.source_label || draft.source_channel, note: "只读来源记录" },
+    { label: "置信度", value: extraction.confidence_level || draft.confidence_level, note: `Review status: ${displayValue(draft.review_status)}` },
+    { label: "查重状态", value: draft.duplicate_status, note: "不能自动建客" },
+    { label: "风险提示", value: draft.risk_level, note: "不可自动发送" },
+  ].map((field) => ({
+    label: field.label,
+    value: displayValue(field.value),
+    note: displayValue(field.note),
+  }));
+}
+
+function businessCardAnalysisRowsFromModel(model) {
+  const extraction = model.selectedExtraction;
+  const draft = model.selectedDraft;
+  return [
+    ["可能客户类型", displayValue(extraction.extracted_business_type || draft.proposed_customer_type)],
+    ["可能关注产品", displayValue(extraction.extracted_product_interest || draft.proposed_product_interest)],
+    ["需要人工确认", "邮箱、网站、客户身份、真实采购需求和是否重复"],
+    ["推荐下一步", "人工核实名片信息，再决定是否进入客户资料创建或跟进草稿复核"],
+  ];
+}
+
+function businessCardDuplicateRowsFromModel(model) {
+  return model.duplicateChecks.slice(0, 3).map((record) => [
+    displayValue(record.match_label || record.match_type),
+    displayValue(record.match_reason || `置信度：${displayValue(record.match_confidence)}`),
+  ]);
+}
+
+function businessCardReviewQueueLabels(model) {
+  return model.reviewQueue.slice(0, 8).map((item) => {
+    const name = firstDisplayValue([item.proposed_company_name, item.proposed_customer_name, "未命名草稿"]);
+    return `${name} / ${displayValue(item.review_status)} / ${displayValue(item.duplicate_status)}`;
+  });
+}
+
+function renderBusinessCardSummaryCard(card) {
+  return `
+    <article class="business-card-summary-card business-card-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
 function renderBusinessCardCapture() {
+  const model = getBusinessCardCaptureViewModel();
+  const statusNotice =
+    businessCardApiState.status === "loading"
+      ? renderDataStatus("loading", "正在加载名片识别数据", `正在使用当前管理员会话请求 GET ${BUSINESS_CARD_SUMMARY_ENDPOINT}。`)
+      : businessCardApiState.status === "error"
+      ? renderDataStatus("error", "名片识别 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。系统提示：${businessCardApiState.error}`)
+      : businessCardApiState.status === "empty"
+      ? renderDataStatus("empty", "暂无实时名片识别数据", "当前没有可用实时名片记录，继续显示静态预览 fallback。")
+      : businessCardApiState.status === "loaded"
+      ? renderDataStatus("success", "名片识别只读数据已加载", "已读取 admin-read 只读数据；没有上传、OCR、客户创建或发送动作。")
+      : "";
+
   return `
     <div class="business-card-capture-preview" aria-label="AI 名片识别静态预览">
+      ${statusNotice}
       <div class="business-card-capture-hero">
         <div>
           <span class="state-label">AI Business Card Capture</span>
           <h3>AI 名片识别</h3>
-          <p>上传或拍摄客户名片、展会卡片、WhatsApp 联系人图片后，AI 将提取姓名、公司、邮箱、电话、网站、国家和客户类型，生成客户档案草稿。当前为只读预览，不上传文件、不识别图片、不创建客户。</p>
+          <p>${escapeHtml(model.headerCopy)}</p>
         </div>
         <div class="business-card-badges" aria-label="AI 名片识别预览状态">
+          ${badge(model.sourceLabel, model.isLive ? "active" : "draft")}
           ${badge("只读预览", "draft")}
           ${badge("不上传文件", "pending")}
           ${badge("不执行 OCR", "pending")}
@@ -3020,6 +3157,19 @@ function renderBusinessCardCapture() {
           ${badge("客户资料草稿", "active")}
         </div>
       </div>
+
+      <section class="business-card-section" aria-label="名片识别数据概览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>名片识别概览</h3>
+            <p>${model.isLive ? "来自 admin-read 的只读统计。" : "安全 fallback / DEMO 统计；不代表实时客户或名片状态。"}</p>
+          </div>
+          <span>${escapeHtml(model.sourceLabel)}</span>
+        </div>
+        <div class="business-card-summary-grid">
+          ${renderSummaryCards(businessCardSummaryCardsFromModel(model), renderBusinessCardSummaryCard)}
+        </div>
+      </section>
 
       <section class="business-card-section" aria-label="名片上传静态占位">
         <div class="workbench-section-header">
@@ -3044,12 +3194,12 @@ function renderBusinessCardCapture() {
           <div class="workbench-section-header">
             <div>
               <h3>字段提取预览</h3>
-              <p>固定 demo 数据，展示未来 AI 提取结果如何进入客户档案草稿复核。</p>
+              <p>${model.isLive ? "只读提取结果，展示如何进入客户档案草稿复核。" : "固定 demo 数据，展示未来 AI 提取结果如何进入客户档案草稿复核。"}</p>
             </div>
-            <span>DEMO / draft</span>
+            <span>${escapeHtml(model.isLive ? "admin-read / draft" : "DEMO / draft")}</span>
           </div>
           <div class="extraction-preview-grid">
-            ${businessCardCaptureFields.map(renderBusinessCardFieldCard).join("")}
+            ${businessCardFieldRows(model).map(renderBusinessCardFieldCard).join("")}
           </div>
         </section>
 
@@ -3057,19 +3207,19 @@ function renderBusinessCardCapture() {
           <div class="workbench-review-heading">
             <div>
               <h3>客户档案草稿</h3>
-              <p class="workbench-review-note">固定示例：Carlos Ramirez / Demo Facade Solutions。</p>
+              <p class="workbench-review-note">${model.isLive ? "只读草稿：" : "固定示例："}${escapeHtml(firstDisplayValue([model.selectedDraft.proposed_customer_name, "Carlos Ramirez"]))} / ${escapeHtml(firstDisplayValue([model.selectedDraft.proposed_company_name, "Demo Facade Solutions"]))}。</p>
             </div>
             ${badge("未验证", "pending")}
           </div>
           <dl class="business-card-draft-list">
             <dt>Review status</dt>
-            <dd>Needs Paul confirmation</dd>
+            <dd>${escapeHtml(displayValue(model.selectedDraft.review_status))}</dd>
             <dt>客户类型</dt>
-            <dd>Facade contractor / importer</dd>
+            <dd>${escapeHtml(displayValue(model.selectedDraft.proposed_customer_type))}</dd>
             <dt>国家</dt>
-            <dd>Peru</dd>
+            <dd>${escapeHtml(displayValue(model.selectedDraft.proposed_country))}</dd>
             <dt>来源</dt>
-            <dd>DEMO_TRADE_SHOW_CARD</dd>
+            <dd>${escapeHtml(displayValue(model.selectedSource.source_label || model.selectedDraft.source_channel))}</dd>
             <dt>安全状态</dt>
             <dd>草稿 / 未导入 / 不创建客户</dd>
           </dl>
@@ -3080,13 +3230,13 @@ function renderBusinessCardCapture() {
       </div>
 
       <div class="business-card-two-column">
-        ${renderBusinessCardAnalysisPanel()}
-        ${renderBusinessCardDuplicatePanel()}
+        ${renderBusinessCardAnalysisPanel(model)}
+        ${renderBusinessCardDuplicatePanel(model)}
       </div>
 
       <div class="business-card-two-column">
-        ${renderBusinessCardFollowupDraft()}
-        ${renderBusinessCardReviewQueue()}
+        ${renderBusinessCardFollowupDraft(model)}
+        ${renderBusinessCardReviewQueue(model)}
       </div>
 
       ${renderBusinessCardSafetyPanel()}
@@ -3104,7 +3254,7 @@ function renderBusinessCardFieldCard(field) {
   `;
 }
 
-function renderBusinessCardAnalysisPanel() {
+function renderBusinessCardAnalysisPanel(model) {
   return `
     <section class="business-card-section ai-card-analysis-panel" aria-label="AI 名片分析预览">
       <div class="workbench-section-header">
@@ -3115,30 +3265,35 @@ function renderBusinessCardAnalysisPanel() {
         <span>AI draft only</span>
       </div>
       <dl class="business-card-analysis-list">
-        ${businessCardAnalysisRows.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
+        ${businessCardAnalysisRowsFromModel(model).map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
       </dl>
     </section>
   `;
 }
 
-function renderBusinessCardDuplicatePanel() {
+function renderBusinessCardDuplicatePanel(model) {
   return `
     <section class="business-card-section duplicate-check-panel" aria-label="客户查重静态预览">
       <div class="workbench-section-header">
         <div>
           <h3>查重预览</h3>
-          <p>仅展示未来查重结果结构；当前未查询真实客户、邮箱或公司记录。</p>
+          <p>${model.isLive ? "只读展示查重结果结构；不创建客户、不合并客户、不写入数据库。" : "仅展示未来查重结果结构；当前未查询真实客户、邮箱或公司记录。"}</p>
         </div>
-        <span>未执行真实查重</span>
+        <span>${escapeHtml(model.isLive ? "只读查重结果" : "未执行真实查重")}</span>
       </div>
       <dl class="business-card-analysis-list">
-        ${businessCardDuplicateChecks.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
+        ${businessCardDuplicateRowsFromModel(model).map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
       </dl>
     </section>
   `;
 }
 
-function renderBusinessCardFollowupDraft() {
+function renderBusinessCardFollowupDraft(model) {
+  const draft = model.selectedFollowup;
+  const paragraphs = String(draft.body || "")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
   return `
     <section class="business-card-section followup-draft-preview" aria-label="跟进草稿静态预览">
       <div class="workbench-section-header">
@@ -3146,12 +3301,11 @@ function renderBusinessCardFollowupDraft() {
           <h3>温和跟进草稿</h3>
           <p>英文草稿仅供人工复核；当前没有复制、发送、审批或群发动作。</p>
         </div>
-        <span>草稿 / 未发送</span>
+        <span>${escapeHtml(displayValue(draft.review_status || "草稿 / 未发送"))}</span>
       </div>
       <div class="business-card-draft-box">
-        <p>Hi Carlos, nice to meet you at the exhibition.</p>
-        <p>We mainly supply aluminum windows, facade systems, glass and related building materials.</p>
-        <p>May I know what kind of project or product you are currently looking for?</p>
+        <p><strong>${escapeHtml(displayValue(draft.subject || "Follow-up draft"))}</strong></p>
+        ${paragraphs.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}
       </div>
       <div class="disabled-chip-row">
         ${renderDisabledCapabilities(["草稿", "未发送", "需人工确认", "不可复制执行", "不可群发"])}
@@ -3160,7 +3314,8 @@ function renderBusinessCardFollowupDraft() {
   `;
 }
 
-function renderBusinessCardReviewQueue() {
+function renderBusinessCardReviewQueue(model) {
+  const queueLabels = businessCardReviewQueueLabels(model);
   return `
     <section class="business-card-section capture-review-queue" aria-label="名片复核队列静态预览">
       <div class="workbench-section-header">
@@ -3168,10 +3323,10 @@ function renderBusinessCardReviewQueue() {
           <h3>复核队列预览</h3>
           <p>把名片草稿拆成可扫读的待确认项，但不创建任务或客户记录。</p>
         </div>
-        <span>6 个静态标签</span>
+        <span>${escapeHtml(model.isLive ? `${queueLabels.length} 个只读待复核项` : `${queueLabels.length} 个静态标签`)}</span>
       </div>
       <div class="business-card-queue-grid">
-        ${businessCardReviewQueue.map((item) => `<span class="business-card-queue-chip">${escapeHtml(item)}</span>`).join("")}
+        ${queueLabels.map((item) => `<span class="business-card-queue-chip">${escapeHtml(item)}</span>`).join("")}
       </div>
     </section>
   `;
@@ -3206,6 +3361,9 @@ function renderBusinessCardSafetyPanel() {
 }
 
 function renderBusinessCardCaptureReview() {
+  const model = getBusinessCardCaptureViewModel();
+  const selectedDraft = model.selectedDraft;
+  const selectedExtraction = model.selectedExtraction;
   return `
     <div class="review-stack">
       <div class="review-card">
@@ -3218,16 +3376,18 @@ function renderBusinessCardCaptureReview() {
         </ul>
       </div>
       <div class="review-card">
-        <h3>固定样本</h3>
+        <h3>${model.isLive ? "只读样本" : "固定样本"}</h3>
         <dl>
           <dt>样本联系人</dt>
-          <dd>Carlos Ramirez / Demo Facade Solutions</dd>
+          <dd>${escapeHtml(firstDisplayValue([selectedDraft.proposed_customer_name, selectedExtraction.extracted_name, "需要人工确认"]))} / ${escapeHtml(firstDisplayValue([selectedDraft.proposed_company_name, selectedExtraction.extracted_company, "需要人工确认"]))}</dd>
           <dt>样本来源</dt>
-          <dd>DEMO_TRADE_SHOW_CARD</dd>
+          <dd>${escapeHtml(firstDisplayValue([model.selectedSource.source_label, selectedDraft.source_channel, "需要人工确认"]))}</dd>
           <dt>客户类型</dt>
-          <dd>Facade contractor / importer（AI 推测，需 Paul 确认）</dd>
+          <dd>${escapeHtml(firstDisplayValue([selectedDraft.proposed_customer_type, selectedExtraction.extracted_business_type, "需要人工确认"]))}（AI / DEMO 推测，需 Paul 确认）</dd>
           <dt>复核状态</dt>
-          <dd>Needs Paul confirmation</dd>
+          <dd>${escapeHtml(displayValue(selectedDraft.review_status))}</dd>
+          <dt>数据状态</dt>
+          <dd>${escapeHtml(model.sourceLabel)}</dd>
         </dl>
       </div>
       <div class="review-card">
@@ -3552,6 +3712,339 @@ function refreshKnowledgeCenterView() {
   if (activeSectionId !== "knowledge-center") return;
   mainContent.innerHTML = renderKnowledgeCenter();
   reviewPanel.innerHTML = renderKnowledgeCenterReview();
+}
+
+async function fetchBusinessCardResource(endpoint) {
+  const token = getAdminAccessToken();
+  const response = await fetch(endpoint, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || `${endpoint} failed with ${response.status}`);
+  }
+  return payload;
+}
+
+function businessCardRecords(payload) {
+  return Array.isArray(payload?.records) ? payload.records : [];
+}
+
+function businessCardIsFallbackPayload(...payloads) {
+  return payloads.some((payload) => payload?.meta?.source === "fallback_demo" || payload?.meta?.is_fallback === true);
+}
+
+function fallbackBusinessCardApiData() {
+  const captureSources = [
+    {
+      id: "DEMO_CARD_SOURCE_PERU",
+      source_type: "trade_show_card",
+      source_label: "DEMO_TRADE_SHOW_CARD_PERU",
+      captured_channel: "manual_upload",
+      processing_status: "needs_review",
+      captured_at: "2026-06-21 demo",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CARD_SOURCE_PANAMA",
+      source_type: "trade_show_card",
+      source_label: "DEMO_TRADE_SHOW_CARD_PANAMA",
+      captured_channel: "manual_upload",
+      processing_status: "needs_review",
+      captured_at: "2026-06-21 demo",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CARD_SOURCE_INDONESIA",
+      source_type: "whatsapp_contact_image",
+      source_label: "DEMO_WHATSAPP_CONTACT_INDONESIA",
+      captured_channel: "manual_upload",
+      processing_status: "extracted",
+      captured_at: "2026-06-21 demo",
+      created_at: "2026-06-21 demo",
+    },
+  ];
+  const extractionResults = [
+    {
+      id: "DEMO_CARD_EXTRACTION_PERU",
+      capture_source_id: "DEMO_CARD_SOURCE_PERU",
+      extracted_name: "Carlos Ramirez",
+      extracted_company: "DEMO Facade Solutions",
+      extracted_title: "Project Manager",
+      extracted_email: "carlos.ramirez@example.com",
+      extracted_phone: "+51 900 000 000",
+      extracted_whatsapp: "+51 900 000 000",
+      extracted_website: "www.demo-facade.example",
+      extracted_country: "Peru",
+      extracted_address: "Lima, Peru",
+      extracted_business_type: "facade contractor",
+      extracted_product_interest: "aluminum windows and facade systems",
+      confidence_level: "medium",
+      extraction_language: "en",
+      extraction_notes: "DEMO extraction. Email, phone, company and product interest require human review.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CARD_EXTRACTION_PANAMA",
+      capture_source_id: "DEMO_CARD_SOURCE_PANAMA",
+      extracted_name: "Maria Gonzalez",
+      extracted_company: "DEMO Construction Importers",
+      extracted_title: "Purchasing Manager",
+      extracted_email: "maria.gonzalez@example.com",
+      extracted_phone: "+507 6000 0000",
+      extracted_whatsapp: "+507 6000 0000",
+      extracted_website: "www.demo-importers.example",
+      extracted_country: "Panama",
+      extracted_address: "Panama City, Panama",
+      extracted_business_type: "construction material importer",
+      extracted_product_interest: "glass and aluminum accessories",
+      confidence_level: "medium",
+      extraction_language: "es",
+      extraction_notes: "DEMO extraction. Possible duplicate requires human review.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_CARD_EXTRACTION_INDONESIA",
+      capture_source_id: "DEMO_CARD_SOURCE_INDONESIA",
+      extracted_name: "Daniel Wong",
+      extracted_company: "DEMO Building Materials Asia",
+      extracted_title: "Distributor",
+      extracted_email: "",
+      extracted_phone: "+62 800 0000 0000",
+      extracted_whatsapp: "+62 800 0000 0000",
+      extracted_website: "",
+      extracted_country: "Indonesia",
+      extracted_address: "Jakarta, Indonesia",
+      extracted_business_type: "distributor",
+      extracted_product_interest: "ceiling system and light steel keel",
+      confidence_level: "low",
+      extraction_language: "en",
+      extraction_notes: "DEMO extraction. Website and email are missing.",
+      created_at: "2026-06-21 demo",
+    },
+  ];
+  const profileDrafts = [
+    {
+      id: "DEMO_PROFILE_DRAFT_PERU",
+      proposed_customer_name: "Carlos Ramirez",
+      proposed_company_name: "DEMO Facade Solutions",
+      proposed_country: "Peru",
+      proposed_email: "carlos.ramirez@example.com",
+      proposed_phone: "+51 900 000 000",
+      proposed_whatsapp: "+51 900 000 000",
+      proposed_website: "www.demo-facade.example",
+      proposed_customer_type: "facade contractor",
+      proposed_product_interest: "aluminum windows and facade systems",
+      source_channel: "trade_show_card",
+      confidence_level: "medium",
+      duplicate_status: "not_checked",
+      risk_level: "medium",
+      review_status: "needs_review",
+      reviewer_notes: "DEMO draft only. Do not create customer until Paul reviews contact and project context.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_PROFILE_DRAFT_PANAMA",
+      proposed_customer_name: "Maria Gonzalez",
+      proposed_company_name: "DEMO Construction Importers",
+      proposed_country: "Panama",
+      proposed_email: "maria.gonzalez@example.com",
+      proposed_phone: "+507 6000 0000",
+      proposed_whatsapp: "+507 6000 0000",
+      proposed_website: "www.demo-importers.example",
+      proposed_customer_type: "construction material importer",
+      proposed_product_interest: "glass and aluminum accessories",
+      source_channel: "trade_show_card",
+      confidence_level: "medium",
+      duplicate_status: "possible_duplicate",
+      risk_level: "medium",
+      review_status: "needs_review",
+      reviewer_notes: "DEMO draft only. Possible duplicate should be reviewed before any customer profile is created.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_PROFILE_DRAFT_INDONESIA",
+      proposed_customer_name: "Daniel Wong",
+      proposed_company_name: "DEMO Building Materials Asia",
+      proposed_country: "Indonesia",
+      proposed_email: "",
+      proposed_phone: "+62 800 0000 0000",
+      proposed_whatsapp: "+62 800 0000 0000",
+      proposed_website: "",
+      proposed_customer_type: "distributor",
+      proposed_product_interest: "ceiling system and light steel keel",
+      source_channel: "whatsapp_contact_image",
+      confidence_level: "low",
+      duplicate_status: "not_checked",
+      risk_level: "medium",
+      review_status: "draft",
+      reviewer_notes: "DEMO draft only. Email and website are missing.",
+      created_at: "2026-06-21 demo",
+    },
+  ];
+  const duplicateChecks = [
+    {
+      id: "DEMO_DUPLICATE_PERU",
+      customer_profile_draft_id: "DEMO_PROFILE_DRAFT_PERU",
+      match_type: "none_detected_demo",
+      match_label: "No DEMO duplicate detected",
+      match_confidence: "low",
+      match_reason: "DEMO record has not been checked against real customer data.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_DUPLICATE_PANAMA",
+      customer_profile_draft_id: "DEMO_PROFILE_DRAFT_PANAMA",
+      match_type: "possible_company_match",
+      match_label: "Possible DEMO company-name similarity",
+      match_confidence: "medium",
+      match_reason: "Company name resembles an importer profile and requires human review.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_DUPLICATE_INDONESIA",
+      customer_profile_draft_id: "DEMO_PROFILE_DRAFT_INDONESIA",
+      match_type: "insufficient_contact_data",
+      match_label: "Missing email and website",
+      match_confidence: "low",
+      match_reason: "Not enough contact fields to complete duplicate review.",
+      created_at: "2026-06-21 demo",
+    },
+  ];
+  const followupDrafts = [
+    {
+      id: "DEMO_FOLLOWUP_PERU",
+      customer_profile_draft_id: "DEMO_PROFILE_DRAFT_PERU",
+      language: "en",
+      channel: "email",
+      subject: "Nice to meet you at the exhibition",
+      body: "Hi Carlos, nice to meet you at the exhibition. We mainly supply aluminum windows, facade systems, glass and related building materials. May I know what kind of project or product you are currently looking for?",
+      tone: "polite_intro",
+      review_status: "draft",
+      risk_notes: "Draft only. Paul must review before sending.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_FOLLOWUP_PANAMA",
+      customer_profile_draft_id: "DEMO_PROFILE_DRAFT_PANAMA",
+      language: "es",
+      channel: "email",
+      subject: "Seguimiento de productos de vidrio y aluminio",
+      body: "Hola Maria, fue un gusto conocerle. Podemos revisar productos de vidrio, accesorios de aluminio y materiales para construcción. Antes de continuar, ¿podría confirmar qué tipo de proyecto está evaluando?",
+      tone: "polite_intro",
+      review_status: "needs_review",
+      risk_notes: "Spanish draft only. Human review required before use.",
+      created_at: "2026-06-21 demo",
+    },
+    {
+      id: "DEMO_FOLLOWUP_INDONESIA",
+      customer_profile_draft_id: "DEMO_PROFILE_DRAFT_INDONESIA",
+      language: "en",
+      channel: "whatsapp",
+      subject: "Ceiling system inquiry follow-up",
+      body: "Hi Daniel, thanks for sharing your contact. We can review ceiling system and light steel keel requirements. Could you share your target specification, quantity and destination?",
+      tone: "polite_intro",
+      review_status: "draft",
+      risk_notes: "Draft only. Email and website are missing.",
+      created_at: "2026-06-21 demo",
+    },
+  ];
+  const reviewQueue = profileDrafts
+    .filter((record) => ["draft", "needs_review"].includes(record.review_status) || record.duplicate_status === "possible_duplicate")
+    .map((record) => ({
+      id: record.id,
+      proposed_customer_name: record.proposed_customer_name,
+      proposed_company_name: record.proposed_company_name,
+      review_status: record.review_status,
+      duplicate_status: record.duplicate_status,
+      risk_level: record.risk_level,
+      confidence_level: record.confidence_level,
+      reason: record.reviewer_notes,
+      created_at: record.created_at,
+    }));
+
+  return {
+    summary: {
+      total_captures: captureSources.length,
+      needs_review_drafts: profileDrafts.filter((record) => ["draft", "needs_review"].includes(record.review_status)).length,
+      possible_duplicates: profileDrafts.filter((record) => record.duplicate_status === "possible_duplicate").length,
+      approved_drafts: profileDrafts.filter((record) => record.review_status === "approved").length,
+      followup_drafts: followupDrafts.filter((record) => ["draft", "needs_review"].includes(record.review_status)).length,
+      high_risk_drafts: profileDrafts.filter((record) => record.risk_level === "high").length,
+    },
+    captureSources,
+    extractionResults,
+    profileDrafts,
+    reviewQueue,
+    duplicateChecks,
+    followupDrafts,
+  };
+}
+
+async function loadBusinessCardCaptureReadOnly() {
+  businessCardApiState.status = "loading";
+  businessCardApiState.error = "";
+  businessCardApiState.source = "api";
+  refreshBusinessCardCaptureView();
+
+  try {
+    const [summaryPayload, sourcesPayload, extractionsPayload, draftsPayload, queuePayload, duplicatePayload, followupPayload] =
+      await Promise.all([
+        fetchBusinessCardResource(BUSINESS_CARD_SUMMARY_ENDPOINT),
+        fetchBusinessCardResource(BUSINESS_CARD_CAPTURE_SOURCES_ENDPOINT),
+        fetchBusinessCardResource(BUSINESS_CARD_EXTRACTION_RESULTS_ENDPOINT),
+        fetchBusinessCardResource(CUSTOMER_PROFILE_DRAFTS_ENDPOINT),
+        fetchBusinessCardResource(BUSINESS_CARD_REVIEW_QUEUE_ENDPOINT),
+        fetchBusinessCardResource(BUSINESS_CARD_DUPLICATE_CHECKS_ENDPOINT),
+        fetchBusinessCardResource(BUSINESS_CARD_FOLLOWUP_DRAFTS_ENDPOINT),
+      ]);
+
+    businessCardApiState.summary = summaryPayload.summary || null;
+    businessCardApiState.captureSources = businessCardRecords(sourcesPayload);
+    businessCardApiState.extractionResults = businessCardRecords(extractionsPayload);
+    businessCardApiState.profileDrafts = businessCardRecords(draftsPayload);
+    businessCardApiState.reviewQueue = businessCardRecords(queuePayload);
+    businessCardApiState.duplicateChecks = businessCardRecords(duplicatePayload);
+    businessCardApiState.followupDrafts = businessCardRecords(followupPayload);
+
+    const recordCount =
+      businessCardApiState.captureSources.length +
+      businessCardApiState.extractionResults.length +
+      businessCardApiState.profileDrafts.length +
+      businessCardApiState.reviewQueue.length +
+      businessCardApiState.duplicateChecks.length +
+      businessCardApiState.followupDrafts.length;
+
+    if (businessCardIsFallbackPayload(summaryPayload, sourcesPayload, extractionsPayload, draftsPayload, queuePayload, duplicatePayload, followupPayload)) {
+      const fallback = fallbackBusinessCardApiData();
+      Object.assign(businessCardApiState, fallback);
+      businessCardApiState.status = "error";
+      businessCardApiState.error = "business-card admin-read source unavailable; showing fallback demo";
+      businessCardApiState.source = fallbackLabel;
+    } else if (recordCount === 0) {
+      const fallback = fallbackBusinessCardApiData();
+      Object.assign(businessCardApiState, fallback);
+      businessCardApiState.status = "empty";
+      businessCardApiState.source = fallbackLabel;
+    } else {
+      businessCardApiState.status = "loaded";
+      businessCardApiState.source = "api";
+    }
+  } catch (error) {
+    const fallback = fallbackBusinessCardApiData();
+    Object.assign(businessCardApiState, fallback);
+    businessCardApiState.status = "error";
+    businessCardApiState.error = error.message || "Unknown API error";
+    businessCardApiState.source = fallbackLabel;
+  }
+
+  refreshBusinessCardCaptureView();
+}
+
+function refreshBusinessCardCaptureView() {
+  if (activeSectionId !== "business-card-capture") return;
+  mainContent.innerHTML = renderBusinessCardCapture();
+  reviewPanel.innerHTML = renderBusinessCardCaptureReview();
 }
 
 async function loadDashboardSummaryReadOnly() {
@@ -4752,6 +5245,21 @@ function createReadOnlyState(collectionKey) {
   return {
     status: "idle",
     [collectionKey]: [],
+    error: "",
+    source: "not loaded",
+  };
+}
+
+function createBusinessCardCaptureState() {
+  return {
+    status: "idle",
+    summary: null,
+    captureSources: [],
+    extractionResults: [],
+    profileDrafts: [],
+    reviewQueue: [],
+    duplicateChecks: [],
+    followupDrafts: [],
     error: "",
     source: "not loaded",
   };

@@ -1406,6 +1406,58 @@ tr:last-child td {
   gap: 8px;
 }
 
+.business-card-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.business-card-summary-card {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.business-card-summary-card span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.business-card-summary-card strong {
+  color: var(--text);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.business-card-summary-card small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.business-card-summary-warning {
+  border-color: #f4d58d;
+  background: #fffaf0;
+}
+
+.business-card-summary-danger {
+  border-color: #fecaca;
+  background: #fff5f5;
+}
+
+.business-card-summary-info {
+  border-color: #bfdbfe;
+  background: #f8fbff;
+}
+
+.business-card-summary-neutral {
+  background: #fafafa;
+}
+
 .business-card-section {
   display: grid;
   gap: 12px;
@@ -5015,6 +5067,7 @@ tbody tr:hover {
   .draft-preview-grid,
   .daily-briefing-grid,
   .prospecting-grid,
+  .business-card-summary-grid,
   .extraction-preview-grid,
   .workflow-stepper,
   .knowledge-grid,
@@ -5054,6 +5107,7 @@ tbody tr:hover {
   .module-preview,
     .nav-list,
     .workbench-summary-grid,
+    .business-card-summary-grid,
     .daily-briefing-stats,
     .daily-priority-grid,
     .operations-metric-grid,

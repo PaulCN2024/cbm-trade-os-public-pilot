@@ -71,6 +71,25 @@ const KNOWLEDGE_DISABLED_ACTIONS = Object.freeze([
   "confirm_order",
 ]);
 
+const BUSINESS_CARD_DISABLED_ACTIONS = Object.freeze([
+  "upload_file",
+  "parse_image",
+  "run_ocr",
+  "call_ai_provider",
+  "create_customer",
+  "import_customer",
+  "create_task",
+  "send_email",
+  "send_whatsapp",
+  "send_followup",
+  "create_quote",
+  "generate_pi",
+  "confirm_order",
+  "confirm_payment",
+  "trigger_production",
+  "trigger_shipment",
+]);
+
 const DASHBOARD_HIGH_RISK_TERMS = Object.freeze([
   "price",
   "payment",
@@ -202,7 +221,14 @@ function isSupportedResource(resource) {
     resource === "knowledge-categories" ||
     resource === "knowledge-items" ||
     resource === "knowledge-review-queue" ||
-    resource === "knowledge-linked-context"
+    resource === "knowledge-linked-context" ||
+    resource === "business-card-summary" ||
+    resource === "business-card-capture-sources" ||
+    resource === "business-card-extraction-results" ||
+    resource === "customer-profile-drafts" ||
+    resource === "business-card-review-queue" ||
+    resource === "business-card-duplicate-checks" ||
+    resource === "business-card-followup-drafts"
   );
 }
 
@@ -818,6 +844,445 @@ function fallbackKnowledgeLinkedContext() {
   ];
 }
 
+const BUSINESS_CARD_FALLBACK_CAPTURE_SOURCES = Object.freeze([
+  {
+    id: "DEMO_CARD_SOURCE_PERU",
+    source_type: "trade_show_card",
+    source_label: "DEMO_TRADE_SHOW_CARD_PERU",
+    captured_channel: "manual_upload",
+    processing_status: "needs_review",
+    captured_at: "2026-06-21T09:00:00+08:00",
+    created_at: "2026-06-21T09:00:00+08:00",
+  },
+  {
+    id: "DEMO_CARD_SOURCE_PANAMA",
+    source_type: "trade_show_card",
+    source_label: "DEMO_TRADE_SHOW_CARD_PANAMA",
+    captured_channel: "manual_upload",
+    processing_status: "needs_review",
+    captured_at: "2026-06-21T09:10:00+08:00",
+    created_at: "2026-06-21T09:10:00+08:00",
+  },
+  {
+    id: "DEMO_CARD_SOURCE_INDONESIA",
+    source_type: "whatsapp_contact_image",
+    source_label: "DEMO_WHATSAPP_CONTACT_INDONESIA",
+    captured_channel: "manual_upload",
+    processing_status: "extracted",
+    captured_at: "2026-06-21T09:20:00+08:00",
+    created_at: "2026-06-21T09:20:00+08:00",
+  },
+]);
+
+const BUSINESS_CARD_FALLBACK_EXTRACTIONS = Object.freeze([
+  {
+    id: "DEMO_CARD_EXTRACTION_PERU",
+    capture_source_id: "DEMO_CARD_SOURCE_PERU",
+    extracted_name: "Carlos Ramirez",
+    extracted_company: "DEMO Facade Solutions",
+    extracted_title: "Project Manager",
+    extracted_email: "carlos.ramirez@example.com",
+    extracted_phone: "+51 900 000 000",
+    extracted_whatsapp: "+51 900 000 000",
+    extracted_website: "www.demo-facade.example",
+    extracted_country: "Peru",
+    extracted_address: "Lima, Peru",
+    extracted_business_type: "facade contractor",
+    extracted_product_interest: "aluminum windows and facade systems",
+    confidence_level: "medium",
+    extraction_language: "en",
+    extraction_notes: "DEMO extraction. Email, phone, company and product interest require human review.",
+    created_at: "2026-06-21T09:00:00+08:00",
+  },
+  {
+    id: "DEMO_CARD_EXTRACTION_PANAMA",
+    capture_source_id: "DEMO_CARD_SOURCE_PANAMA",
+    extracted_name: "Maria Gonzalez",
+    extracted_company: "DEMO Construction Importers",
+    extracted_title: "Purchasing Manager",
+    extracted_email: "maria.gonzalez@example.com",
+    extracted_phone: "+507 6000 0000",
+    extracted_whatsapp: "+507 6000 0000",
+    extracted_website: "www.demo-importers.example",
+    extracted_country: "Panama",
+    extracted_address: "Panama City, Panama",
+    extracted_business_type: "construction material importer",
+    extracted_product_interest: "glass and aluminum accessories",
+    confidence_level: "medium",
+    extraction_language: "es",
+    extraction_notes: "DEMO extraction. Possible duplicate requires human review.",
+    created_at: "2026-06-21T09:10:00+08:00",
+  },
+  {
+    id: "DEMO_CARD_EXTRACTION_INDONESIA",
+    capture_source_id: "DEMO_CARD_SOURCE_INDONESIA",
+    extracted_name: "Daniel Wong",
+    extracted_company: "DEMO Building Materials Asia",
+    extracted_title: "Distributor",
+    extracted_email: "",
+    extracted_phone: "+62 800 0000 0000",
+    extracted_whatsapp: "+62 800 0000 0000",
+    extracted_website: "",
+    extracted_country: "Indonesia",
+    extracted_address: "Jakarta, Indonesia",
+    extracted_business_type: "distributor",
+    extracted_product_interest: "ceiling system and light steel keel",
+    confidence_level: "low",
+    extraction_language: "en",
+    extraction_notes: "DEMO extraction. Website and email are missing.",
+    created_at: "2026-06-21T09:20:00+08:00",
+  },
+]);
+
+const BUSINESS_CARD_FALLBACK_PROFILE_DRAFTS = Object.freeze([
+  {
+    id: "DEMO_PROFILE_DRAFT_PERU",
+    capture_source_id: "DEMO_CARD_SOURCE_PERU",
+    extraction_result_id: "DEMO_CARD_EXTRACTION_PERU",
+    proposed_customer_name: "Carlos Ramirez",
+    proposed_company_name: "DEMO Facade Solutions",
+    proposed_country: "Peru",
+    proposed_email: "carlos.ramirez@example.com",
+    proposed_phone: "+51 900 000 000",
+    proposed_whatsapp: "+51 900 000 000",
+    proposed_website: "www.demo-facade.example",
+    proposed_customer_type: "facade contractor",
+    proposed_product_interest: "aluminum windows and facade systems",
+    source_channel: "trade_show_card",
+    confidence_level: "medium",
+    duplicate_status: "not_checked",
+    risk_level: "medium",
+    review_status: "needs_review",
+    reviewer_notes: "DEMO draft only. Do not create customer until Paul reviews contact and project context.",
+    created_at: "2026-06-21T09:00:00+08:00",
+  },
+  {
+    id: "DEMO_PROFILE_DRAFT_PANAMA",
+    capture_source_id: "DEMO_CARD_SOURCE_PANAMA",
+    extraction_result_id: "DEMO_CARD_EXTRACTION_PANAMA",
+    proposed_customer_name: "Maria Gonzalez",
+    proposed_company_name: "DEMO Construction Importers",
+    proposed_country: "Panama",
+    proposed_email: "maria.gonzalez@example.com",
+    proposed_phone: "+507 6000 0000",
+    proposed_whatsapp: "+507 6000 0000",
+    proposed_website: "www.demo-importers.example",
+    proposed_customer_type: "construction material importer",
+    proposed_product_interest: "glass and aluminum accessories",
+    source_channel: "trade_show_card",
+    confidence_level: "medium",
+    duplicate_status: "possible_duplicate",
+    risk_level: "medium",
+    review_status: "needs_review",
+    reviewer_notes: "DEMO draft only. Possible duplicate should be reviewed before any customer profile is created.",
+    created_at: "2026-06-21T09:10:00+08:00",
+  },
+  {
+    id: "DEMO_PROFILE_DRAFT_INDONESIA",
+    capture_source_id: "DEMO_CARD_SOURCE_INDONESIA",
+    extraction_result_id: "DEMO_CARD_EXTRACTION_INDONESIA",
+    proposed_customer_name: "Daniel Wong",
+    proposed_company_name: "DEMO Building Materials Asia",
+    proposed_country: "Indonesia",
+    proposed_email: "",
+    proposed_phone: "+62 800 0000 0000",
+    proposed_whatsapp: "+62 800 0000 0000",
+    proposed_website: "",
+    proposed_customer_type: "distributor",
+    proposed_product_interest: "ceiling system and light steel keel",
+    source_channel: "whatsapp_contact_image",
+    confidence_level: "low",
+    duplicate_status: "not_checked",
+    risk_level: "medium",
+    review_status: "draft",
+    reviewer_notes: "DEMO draft only. Email and website are missing.",
+    created_at: "2026-06-21T09:20:00+08:00",
+  },
+]);
+
+const BUSINESS_CARD_FALLBACK_DUPLICATE_CHECKS = Object.freeze([
+  {
+    id: "DEMO_DUPLICATE_PERU",
+    customer_profile_draft_id: "DEMO_PROFILE_DRAFT_PERU",
+    match_type: "none_detected_demo",
+    match_entity_type: "customer",
+    match_label: "No DEMO duplicate detected",
+    match_confidence: "low",
+    match_reason: "DEMO record has not been checked against real customer data.",
+    created_at: "2026-06-21T09:00:00+08:00",
+  },
+  {
+    id: "DEMO_DUPLICATE_PANAMA",
+    customer_profile_draft_id: "DEMO_PROFILE_DRAFT_PANAMA",
+    match_type: "possible_company_match",
+    match_entity_type: "customer",
+    match_label: "Possible DEMO company-name similarity",
+    match_confidence: "medium",
+    match_reason: "Company name resembles an importer profile and requires human review.",
+    created_at: "2026-06-21T09:10:00+08:00",
+  },
+  {
+    id: "DEMO_DUPLICATE_INDONESIA",
+    customer_profile_draft_id: "DEMO_PROFILE_DRAFT_INDONESIA",
+    match_type: "insufficient_contact_data",
+    match_entity_type: "customer",
+    match_label: "Missing email and website",
+    match_confidence: "low",
+    match_reason: "Not enough contact fields to complete duplicate review.",
+    created_at: "2026-06-21T09:20:00+08:00",
+  },
+]);
+
+const BUSINESS_CARD_FALLBACK_FOLLOWUP_DRAFTS = Object.freeze([
+  {
+    id: "DEMO_FOLLOWUP_PERU",
+    customer_profile_draft_id: "DEMO_PROFILE_DRAFT_PERU",
+    language: "en",
+    channel: "email",
+    subject: "Nice to meet you at the exhibition",
+    body: "Hi Carlos, nice to meet you at the exhibition. We mainly supply aluminum windows, facade systems, glass and related building materials. May I know what kind of project or product you are currently looking for?",
+    tone: "polite_intro",
+    review_status: "draft",
+    risk_notes: "Draft only. Paul must review before sending.",
+    created_at: "2026-06-21T09:00:00+08:00",
+  },
+  {
+    id: "DEMO_FOLLOWUP_PANAMA",
+    customer_profile_draft_id: "DEMO_PROFILE_DRAFT_PANAMA",
+    language: "es",
+    channel: "email",
+    subject: "Seguimiento de productos de vidrio y aluminio",
+    body: "Hola Maria, fue un gusto conocerle. Podemos revisar productos de vidrio, accesorios de aluminio y materiales para construcción. Antes de continuar, ¿podría confirmar qué tipo de proyecto está evaluando?",
+    tone: "polite_intro",
+    review_status: "needs_review",
+    risk_notes: "Spanish draft only. Human review required before use.",
+    created_at: "2026-06-21T09:10:00+08:00",
+  },
+  {
+    id: "DEMO_FOLLOWUP_INDONESIA",
+    customer_profile_draft_id: "DEMO_PROFILE_DRAFT_INDONESIA",
+    language: "en",
+    channel: "whatsapp",
+    subject: "Ceiling system inquiry follow-up",
+    body: "Hi Daniel, thanks for sharing your contact. We can review ceiling system and light steel keel requirements. Could you share your target specification, quantity and destination?",
+    tone: "polite_intro",
+    review_status: "draft",
+    risk_notes: "Draft only. Email and website are missing.",
+    created_at: "2026-06-21T09:20:00+08:00",
+  },
+]);
+
+function businessCardSafetyPayload() {
+  return {
+    mode: "read_only_preview",
+    human_review_required: true,
+    disabled_actions: [...BUSINESS_CARD_DISABLED_ACTIONS],
+  };
+}
+
+function businessCardFallbackWarnings(warnings) {
+  return warnings.length ? warnings : ["business_card_source_unavailable"];
+}
+
+function businessCardMeta(resource, warnings, source = "admin_read") {
+  return {
+    generated_at: new Date().toISOString(),
+    source,
+    resource,
+    is_fallback: source === "fallback_demo",
+    safety: source === "fallback_demo" ? "read_only_preview" : "auth_gated_read_only",
+    warnings,
+  };
+}
+
+function businessCardCaptureSourceRecord(row) {
+  return {
+    id: row.id || "",
+    source_type: row.source_type || "",
+    source_label: row.source_label || "",
+    captured_channel: row.captured_channel || "",
+    processing_status: row.processing_status || "",
+    captured_at: row.captured_at || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function businessCardExtractionRecord(row) {
+  return {
+    id: row.id || "",
+    capture_source_id: row.capture_source_id || "",
+    extracted_name: row.extracted_name || "",
+    extracted_company: row.extracted_company || "",
+    extracted_title: row.extracted_title || "",
+    extracted_email: row.extracted_email || "",
+    extracted_phone: row.extracted_phone || "",
+    extracted_whatsapp: row.extracted_whatsapp || "",
+    extracted_website: row.extracted_website || "",
+    extracted_country: row.extracted_country || "",
+    extracted_address: row.extracted_address || "",
+    extracted_business_type: row.extracted_business_type || "",
+    extracted_product_interest: row.extracted_product_interest || "",
+    confidence_level: row.confidence_level || "",
+    extraction_language: row.extraction_language || "",
+    extraction_notes: row.extraction_notes || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function customerProfileDraftRecord(row) {
+  return {
+    id: row.id || "",
+    capture_source_id: row.capture_source_id || "",
+    extraction_result_id: row.extraction_result_id || "",
+    proposed_customer_name: row.proposed_customer_name || "",
+    proposed_company_name: row.proposed_company_name || "",
+    proposed_country: row.proposed_country || "",
+    proposed_email: row.proposed_email || "",
+    proposed_phone: row.proposed_phone || "",
+    proposed_whatsapp: row.proposed_whatsapp || "",
+    proposed_website: row.proposed_website || "",
+    proposed_customer_type: row.proposed_customer_type || "",
+    proposed_product_interest: row.proposed_product_interest || "",
+    source_channel: row.source_channel || "",
+    confidence_level: row.confidence_level || "",
+    duplicate_status: row.duplicate_status || "",
+    risk_level: row.risk_level || "",
+    review_status: row.review_status || "",
+    reviewer_notes: row.reviewer_notes || "",
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function businessCardDuplicateCheckRecord(row) {
+  return {
+    id: row.id || "",
+    customer_profile_draft_id: row.customer_profile_draft_id || "",
+    match_type: row.match_type || "",
+    match_entity_type: row.match_entity_type || "",
+    match_entity_id: row.match_entity_id || "",
+    match_label: row.match_label || "",
+    match_confidence: row.match_confidence || "",
+    match_reason: row.match_reason || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function businessCardFollowupDraftRecord(row) {
+  return {
+    id: row.id || "",
+    customer_profile_draft_id: row.customer_profile_draft_id || "",
+    language: row.language || "",
+    channel: row.channel || "",
+    subject: row.subject || "",
+    body: row.body || "",
+    tone: row.tone || "",
+    review_status: row.review_status || "",
+    risk_notes: row.risk_notes || "",
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function businessCardReviewQueueRecord(row) {
+  return {
+    id: row.id || "",
+    proposed_customer_name: row.proposed_customer_name || "",
+    proposed_company_name: row.proposed_company_name || "",
+    review_status: row.review_status || "",
+    duplicate_status: row.duplicate_status || "",
+    risk_level: row.risk_level || "",
+    confidence_level: row.confidence_level || "",
+    reason: row.reviewer_notes || "Customer profile draft requires human review.",
+    created_at: row.created_at || "",
+  };
+}
+
+function businessCardSummary({ captureSources, profileDrafts, duplicateChecks, followupDrafts }) {
+  return {
+    total_captures: captureSources.length,
+    needs_review_drafts: profileDrafts.filter((record) => ["draft", "needs_review"].includes(record.review_status)).length,
+    possible_duplicates:
+      profileDrafts.filter((record) => record.duplicate_status === "possible_duplicate").length +
+      duplicateChecks.filter((record) => record.match_confidence === "medium" || record.match_confidence === "high").length,
+    approved_drafts: profileDrafts.filter((record) => record.review_status === "approved").length,
+    followup_drafts: followupDrafts.filter((record) => ["draft", "needs_review"].includes(record.review_status)).length,
+    high_risk_drafts: profileDrafts.filter((record) => record.risk_level === "high").length,
+  };
+}
+
+function fallbackBusinessCardData() {
+  return {
+    captureSources: BUSINESS_CARD_FALLBACK_CAPTURE_SOURCES.map(businessCardCaptureSourceRecord),
+    extractionResults: BUSINESS_CARD_FALLBACK_EXTRACTIONS.map(businessCardExtractionRecord),
+    profileDrafts: BUSINESS_CARD_FALLBACK_PROFILE_DRAFTS.map(customerProfileDraftRecord),
+    duplicateChecks: BUSINESS_CARD_FALLBACK_DUPLICATE_CHECKS.map(businessCardDuplicateCheckRecord),
+    followupDrafts: BUSINESS_CARD_FALLBACK_FOLLOWUP_DRAFTS.map(businessCardFollowupDraftRecord),
+  };
+}
+
+function businessCardReviewQueueFromDrafts(profileDrafts) {
+  return profileDrafts
+    .filter(
+      (record) =>
+        ["draft", "needs_review"].includes(record.review_status) ||
+        record.duplicate_status === "possible_duplicate" ||
+        record.risk_level === "high"
+    )
+    .slice(0, 50)
+    .map(businessCardReviewQueueRecord);
+}
+
+async function readBusinessCardSources(supabase, warnings) {
+  const [captureSources, extractionResults, profileDrafts, duplicateChecks, followupDrafts] = await Promise.all([
+    readSource({
+      supabase,
+      table: "card_capture_sources",
+      select: "id,source_type,source_label,captured_channel,processing_status,captured_at,created_at",
+      warning: "card_capture_sources_unavailable",
+      warnings,
+    }),
+    readSource({
+      supabase,
+      table: "card_extraction_results",
+      select:
+        "id,capture_source_id,extracted_name,extracted_company,extracted_title,extracted_email,extracted_phone,extracted_whatsapp,extracted_website,extracted_country,extracted_address,extracted_business_type,extracted_product_interest,confidence_level,extraction_language,extraction_notes,created_at",
+      warning: "card_extraction_results_unavailable",
+      warnings,
+    }),
+    readSource({
+      supabase,
+      table: "customer_profile_drafts",
+      select:
+        "id,capture_source_id,extraction_result_id,proposed_customer_name,proposed_company_name,proposed_country,proposed_email,proposed_phone,proposed_whatsapp,proposed_website,proposed_customer_type,proposed_product_interest,source_channel,confidence_level,duplicate_status,risk_level,review_status,reviewer_notes,created_at,updated_at",
+      warning: "customer_profile_drafts_unavailable",
+      warnings,
+    }),
+    readSource({
+      supabase,
+      table: "card_duplicate_checks",
+      select: "id,customer_profile_draft_id,match_type,match_entity_type,match_entity_id,match_label,match_confidence,match_reason,created_at",
+      warning: "card_duplicate_checks_unavailable",
+      warnings,
+    }),
+    readSource({
+      supabase,
+      table: "card_followup_drafts",
+      select: "id,customer_profile_draft_id,language,channel,subject,body,tone,review_status,risk_notes,created_at,updated_at",
+      warning: "card_followup_drafts_unavailable",
+      warnings,
+    }),
+  ]);
+
+  return {
+    captureSources: captureSources.map(businessCardCaptureSourceRecord),
+    extractionResults: extractionResults.map(businessCardExtractionRecord),
+    profileDrafts: profileDrafts.map(customerProfileDraftRecord),
+    duplicateChecks: duplicateChecks.map(businessCardDuplicateCheckRecord),
+    followupDrafts: followupDrafts.map(businessCardFollowupDraftRecord),
+  };
+}
+
 function dashboardSummaryCards({ inquiries, customers, aiAnalyses, followUps }, now = new Date()) {
   const newInquiries = inquiries.filter((record) => isToday(record.created_at, now)).length;
   const missingInquiryCount = inquiries.filter((record) => hasMissingInfo(record, "missing_info")).length;
@@ -1369,6 +1834,148 @@ async function readKnowledgeLinkedContext(response, supabase) {
   });
 }
 
+function sendBusinessCardPayload(response, resource, records, summary, warnings, source = "admin_read") {
+  sendJson(response, 200, {
+    meta: businessCardMeta(resource, warnings, source),
+    records,
+    summary,
+    safety: businessCardSafetyPayload(),
+    warnings,
+  });
+}
+
+function sendBusinessCardFallback(response, resource, records, summary, warnings) {
+  sendBusinessCardPayload(response, resource, records, summary, businessCardFallbackWarnings(warnings), "fallback_demo");
+}
+
+async function readBusinessCardSummary(response, supabase) {
+  const warnings = [];
+  const data = await readBusinessCardSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackBusinessCardData();
+    sendBusinessCardFallback(response, "business-card-summary", [], businessCardSummary(fallback), warnings);
+    return;
+  }
+
+  sendBusinessCardPayload(response, "business-card-summary", [], businessCardSummary(data), warnings);
+}
+
+async function readBusinessCardCaptureSources(response, supabase) {
+  const warnings = [];
+  const data = await readBusinessCardSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackBusinessCardData();
+    sendBusinessCardFallback(response, "business-card-capture-sources", fallback.captureSources, { total_records: fallback.captureSources.length }, warnings);
+    return;
+  }
+
+  sendBusinessCardPayload(response, "business-card-capture-sources", data.captureSources, { total_records: data.captureSources.length }, warnings);
+}
+
+async function readBusinessCardExtractionResults(response, supabase) {
+  const warnings = [];
+  const data = await readBusinessCardSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackBusinessCardData();
+    sendBusinessCardFallback(
+      response,
+      "business-card-extraction-results",
+      fallback.extractionResults.slice(0, 50),
+      { total_records: fallback.extractionResults.length },
+      warnings
+    );
+    return;
+  }
+
+  sendBusinessCardPayload(
+    response,
+    "business-card-extraction-results",
+    data.extractionResults.slice(0, 50),
+    { total_records: data.extractionResults.length },
+    warnings
+  );
+}
+
+async function readCustomerProfileDrafts(response, supabase) {
+  const warnings = [];
+  const data = await readBusinessCardSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackBusinessCardData();
+    sendBusinessCardFallback(
+      response,
+      "customer-profile-drafts",
+      fallback.profileDrafts.slice(0, 50),
+      businessCardSummary(fallback),
+      warnings
+    );
+    return;
+  }
+
+  sendBusinessCardPayload(response, "customer-profile-drafts", data.profileDrafts.slice(0, 50), businessCardSummary(data), warnings);
+}
+
+async function readBusinessCardReviewQueue(response, supabase) {
+  const warnings = [];
+  const data = await readBusinessCardSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackBusinessCardData();
+    const records = businessCardReviewQueueFromDrafts(fallback.profileDrafts);
+    sendBusinessCardFallback(response, "business-card-review-queue", records, { total_records: records.length }, warnings);
+    return;
+  }
+
+  const records = businessCardReviewQueueFromDrafts(data.profileDrafts);
+  sendBusinessCardPayload(response, "business-card-review-queue", records, { total_records: records.length }, warnings);
+}
+
+async function readBusinessCardDuplicateChecks(response, supabase) {
+  const warnings = [];
+  const data = await readBusinessCardSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackBusinessCardData();
+    sendBusinessCardFallback(
+      response,
+      "business-card-duplicate-checks",
+      fallback.duplicateChecks.slice(0, 50),
+      { total_records: fallback.duplicateChecks.length },
+      warnings
+    );
+    return;
+  }
+
+  sendBusinessCardPayload(
+    response,
+    "business-card-duplicate-checks",
+    data.duplicateChecks.slice(0, 50),
+    { total_records: data.duplicateChecks.length },
+    warnings
+  );
+}
+
+async function readBusinessCardFollowupDrafts(response, supabase) {
+  const warnings = [];
+  const data = await readBusinessCardSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackBusinessCardData();
+    sendBusinessCardFallback(
+      response,
+      "business-card-followup-drafts",
+      fallback.followupDrafts.slice(0, 50),
+      { total_records: fallback.followupDrafts.length },
+      warnings
+    );
+    return;
+  }
+
+  sendBusinessCardPayload(
+    response,
+    "business-card-followup-drafts",
+    data.followupDrafts.slice(0, 50),
+    { total_records: data.followupDrafts.length },
+    warnings
+  );
+}
+
 module.exports = async function handler(request, response) {
   try {
     if (request.method !== "GET") {
@@ -1462,6 +2069,48 @@ module.exports = async function handler(request, response) {
     if (resource === "knowledge-linked-context") {
       const supabase = getSupabaseClient(request);
       await readKnowledgeLinkedContext(response, supabase);
+      return;
+    }
+
+    if (resource === "business-card-summary") {
+      const supabase = getSupabaseClient(request);
+      await readBusinessCardSummary(response, supabase);
+      return;
+    }
+
+    if (resource === "business-card-capture-sources") {
+      const supabase = getSupabaseClient(request);
+      await readBusinessCardCaptureSources(response, supabase);
+      return;
+    }
+
+    if (resource === "business-card-extraction-results") {
+      const supabase = getSupabaseClient(request);
+      await readBusinessCardExtractionResults(response, supabase);
+      return;
+    }
+
+    if (resource === "customer-profile-drafts") {
+      const supabase = getSupabaseClient(request);
+      await readCustomerProfileDrafts(response, supabase);
+      return;
+    }
+
+    if (resource === "business-card-review-queue") {
+      const supabase = getSupabaseClient(request);
+      await readBusinessCardReviewQueue(response, supabase);
+      return;
+    }
+
+    if (resource === "business-card-duplicate-checks") {
+      const supabase = getSupabaseClient(request);
+      await readBusinessCardDuplicateChecks(response, supabase);
+      return;
+    }
+
+    if (resource === "business-card-followup-drafts") {
+      const supabase = getSupabaseClient(request);
+      await readBusinessCardFollowupDrafts(response, supabase);
       return;
     }
   } catch (error) {
