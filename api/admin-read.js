@@ -108,6 +108,23 @@ const CUSTOMER_VERIFICATION_DISABLED_ACTIONS = Object.freeze([
   "trigger_shipment",
 ]);
 
+const FOLLOWUP_ASSISTANT_DISABLED_ACTIONS = Object.freeze([
+  "create_task",
+  "schedule_reminder",
+  "send_email",
+  "send_whatsapp",
+  "send_linkedin",
+  "call_ai_provider",
+  "update_customer",
+  "update_inquiry",
+  "create_quote",
+  "generate_pi",
+  "confirm_order",
+  "confirm_payment",
+  "trigger_production",
+  "trigger_shipment",
+]);
+
 const DASHBOARD_HIGH_RISK_TERMS = Object.freeze([
   "price",
   "payment",
@@ -253,7 +270,14 @@ function isSupportedResource(resource) {
     resource === "customer-verification-scores" ||
     resource === "customer-verification-duplicate-matches" ||
     resource === "customer-verification-review-queue" ||
-    resource === "customer-verification-reviews"
+    resource === "customer-verification-reviews" ||
+    resource === "followup-summary" ||
+    resource === "followup-candidates" ||
+    resource === "followup-missing-information" ||
+    resource === "followup-recommendations" ||
+    resource === "followup-message-drafts" ||
+    resource === "followup-review-queue" ||
+    resource === "followup-reviews"
   );
 }
 
@@ -272,9 +296,9 @@ function standardPayload({ resource, records = [], summary = {}, warnings = [] }
   };
 }
 
-async function readSource({ supabase, table, select = "*", order = "created_at", orderOptions, warning, warnings }) {
+async function readSource({ supabase, table, select = "*", order = "created_at", orderOptions, limit = SOURCE_LIMIT, warning, warnings }) {
   try {
-    let query = supabase.from(table).select(select).limit(SOURCE_LIMIT);
+    let query = supabase.from(table).select(select).limit(limit);
     if (order) query = query.order(order, orderOptions || { ascending: false });
     const { data, error } = await query;
     if (error) throw error;
@@ -1888,6 +1912,585 @@ async function readCustomerVerificationReviews(response, supabase) {
   sendCustomerVerificationPayload(response, "customer-verification-reviews", data.reviews, { total_records: data.reviews.length }, warnings);
 }
 
+const FOLLOWUP_FALLBACK_CANDIDATES = Object.freeze([
+  {
+    id: "DEMO_FOLLOWUP_CARLOS",
+    source_type: "inquiry",
+    source_entity_id: "",
+    customer_id: "",
+    inquiry_id: "",
+    verification_request_id: "",
+    customer_name: "Carlos Ramirez",
+    company_name: "DEMO Facade Solutions",
+    contact_name: "Carlos Ramirez",
+    country: "Peru",
+    language: "en",
+    followup_reason: "Missing project location and product specifications before quotation judgment.",
+    current_stage: "information_request",
+    priority_level: "high",
+    risk_level: "medium",
+    confidence_level: "medium",
+    status: "needs_review",
+    created_at: "2026-06-22T00:00:00.000Z",
+    updated_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_MARIA",
+    source_type: "customer_verification",
+    source_entity_id: "",
+    customer_id: "",
+    inquiry_id: "",
+    verification_request_id: "",
+    customer_name: "Maria Gonzalez",
+    company_name: "DEMO Construction Importers",
+    contact_name: "Maria Gonzalez",
+    country: "Panama",
+    language: "es",
+    followup_reason: "Possible duplicate customer; review before using prior context.",
+    current_stage: "risk_hold",
+    priority_level: "medium",
+    risk_level: "medium",
+    confidence_level: "medium",
+    status: "needs_review",
+    created_at: "2026-06-22T00:00:00.000Z",
+    updated_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_DANIEL",
+    source_type: "business_card",
+    source_entity_id: "",
+    customer_id: "",
+    inquiry_id: "",
+    verification_request_id: "",
+    customer_name: "Daniel Wong",
+    company_name: "DEMO Building Materials Asia",
+    contact_name: "Daniel Wong",
+    country: "Indonesia",
+    language: "en",
+    followup_reason: "Need company website and buyer role before deeper follow-up.",
+    current_stage: "dormant",
+    priority_level: "low",
+    risk_level: "medium",
+    confidence_level: "low",
+    status: "draft",
+    created_at: "2026-06-22T00:00:00.000Z",
+    updated_at: "2026-06-22T00:00:00.000Z",
+  },
+]);
+
+const FOLLOWUP_FALLBACK_MISSING_INFORMATION = Object.freeze([
+  {
+    id: "DEMO_FOLLOWUP_INFO_1",
+    followup_candidate_id: "DEMO_FOLLOWUP_CARLOS",
+    info_type: "project_location",
+    info_label: "Project location",
+    required_level: "required",
+    status: "missing",
+    notes: "Ask before quotation judgment.",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_INFO_2",
+    followup_candidate_id: "DEMO_FOLLOWUP_CARLOS",
+    info_type: "product_specification",
+    info_label: "Product specification",
+    required_level: "required",
+    status: "missing",
+    notes: "Profile/window system details are not confirmed.",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_INFO_3",
+    followup_candidate_id: "DEMO_FOLLOWUP_CARLOS",
+    info_type: "quantity",
+    info_label: "Target quantity",
+    required_level: "recommended",
+    status: "missing",
+    notes: "Quantity affects quotation preparation.",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_INFO_4",
+    followup_candidate_id: "DEMO_FOLLOWUP_CARLOS",
+    info_type: "buyer_role",
+    info_label: "Buyer role",
+    required_level: "recommended",
+    status: "needs_review",
+    notes: "Confirm whether contact is buyer, contractor, or consultant.",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_INFO_5",
+    followup_candidate_id: "DEMO_FOLLOWUP_MARIA",
+    info_type: "company_website",
+    info_label: "Company website",
+    required_level: "recommended",
+    status: "missing",
+    notes: "Useful for duplicate and credibility review.",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_INFO_6",
+    followup_candidate_id: "DEMO_FOLLOWUP_MARIA",
+    info_type: "buyer_role",
+    info_label: "Buyer role",
+    required_level: "recommended",
+    status: "needs_review",
+    notes: "Clarify role before commercial follow-up.",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_INFO_7",
+    followup_candidate_id: "DEMO_FOLLOWUP_DANIEL",
+    info_type: "company_website",
+    info_label: "Company website",
+    required_level: "required",
+    status: "missing",
+    notes: "Needed before deeper lead qualification.",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_INFO_8",
+    followup_candidate_id: "DEMO_FOLLOWUP_DANIEL",
+    info_type: "buyer_role",
+    info_label: "Buyer role",
+    required_level: "required",
+    status: "missing",
+    notes: "Needed before adding to active follow-up queue.",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_INFO_9",
+    followup_candidate_id: "DEMO_FOLLOWUP_DANIEL",
+    info_type: "project_location",
+    info_label: "Project location",
+    required_level: "optional",
+    status: "not_required",
+    notes: "Optional at this early prospecting stage.",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+]);
+
+const FOLLOWUP_FALLBACK_RECOMMENDATIONS = Object.freeze([
+  {
+    id: "DEMO_FOLLOWUP_REC_1",
+    followup_candidate_id: "DEMO_FOLLOWUP_CARLOS",
+    recommended_action: "request_more_information",
+    recommendation_reason: "Project details are not complete enough for quotation judgment.",
+    suggested_timing: "within 24 hours",
+    priority_level: "high",
+    risk_level: "medium",
+    confidence_level: "medium",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_REC_2",
+    followup_candidate_id: "DEMO_FOLLOWUP_MARIA",
+    recommended_action: "hold_due_to_risk",
+    recommendation_reason: "Possible duplicate customer should be reviewed before follow-up.",
+    suggested_timing: "after duplicate review",
+    priority_level: "medium",
+    risk_level: "medium",
+    confidence_level: "medium",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_REC_3",
+    followup_candidate_id: "DEMO_FOLLOWUP_DANIEL",
+    recommended_action: "mark_low_priority",
+    recommendation_reason: "Lead needs more source evidence before active sales follow-up.",
+    suggested_timing: "30-60 days / after clarification",
+    priority_level: "low",
+    risk_level: "medium",
+    confidence_level: "low",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+]);
+
+const FOLLOWUP_FALLBACK_MESSAGE_DRAFTS = Object.freeze([
+  {
+    id: "DEMO_FOLLOWUP_DRAFT_1",
+    followup_candidate_id: "DEMO_FOLLOWUP_CARLOS",
+    language: "en",
+    channel: "email",
+    tone: "professional",
+    draft_subject: "Project details for your aluminum window inquiry",
+    draft_body:
+      "Dear Carlos, thank you for your inquiry. To help our team review the project correctly, could you share the project location, product specifications, drawings or photos, and target quantity?",
+    draft_status: "draft",
+    safety_notes: "Draft only. Must be reviewed by a human before any use.",
+    requires_approval: true,
+    created_at: "2026-06-22T00:00:00.000Z",
+    updated_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_DRAFT_2",
+    followup_candidate_id: "DEMO_FOLLOWUP_MARIA",
+    language: "es",
+    channel: "email",
+    tone: "professional",
+    draft_subject: "Confirmacion de empresa y proyecto",
+    draft_body:
+      "Hola Maria, gracias por su mensaje. Antes de continuar, podriamos confirmar el nombre de la empresa, su sitio web y algunos detalles basicos del proyecto?",
+    draft_status: "needs_review",
+    safety_notes: "Draft only. Duplicate context must be reviewed first.",
+    requires_approval: true,
+    created_at: "2026-06-22T00:00:00.000Z",
+    updated_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_DRAFT_3",
+    followup_candidate_id: "DEMO_FOLLOWUP_DANIEL",
+    language: "en",
+    channel: "email",
+    tone: "concise",
+    draft_subject: "Quick check on your building materials interest",
+    draft_body:
+      "Hi Daniel, thank you for connecting. Could you share your company website and your role in the buying process so our team can review whether our aluminum and building-material products are relevant?",
+    draft_status: "draft",
+    safety_notes: "Draft only. Low-priority lead, no automatic sending.",
+    requires_approval: true,
+    created_at: "2026-06-22T00:00:00.000Z",
+    updated_at: "2026-06-22T00:00:00.000Z",
+  },
+]);
+
+const FOLLOWUP_FALLBACK_REVIEWS = Object.freeze([
+  {
+    id: "DEMO_FOLLOWUP_REVIEW_1",
+    followup_candidate_id: "DEMO_FOLLOWUP_CARLOS",
+    reviewer: "Paul",
+    review_status: "pending",
+    decision: "",
+    reviewer_notes: "",
+    approved_next_action: "",
+    reviewed_at: "",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_REVIEW_2",
+    followup_candidate_id: "DEMO_FOLLOWUP_MARIA",
+    reviewer: "Paul",
+    review_status: "pending",
+    decision: "",
+    reviewer_notes: "",
+    approved_next_action: "",
+    reviewed_at: "",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+  {
+    id: "DEMO_FOLLOWUP_REVIEW_3",
+    followup_candidate_id: "DEMO_FOLLOWUP_DANIEL",
+    reviewer: "Paul",
+    review_status: "pending",
+    decision: "",
+    reviewer_notes: "",
+    approved_next_action: "",
+    reviewed_at: "",
+    created_at: "2026-06-22T00:00:00.000Z",
+  },
+]);
+
+function followupSafetyPayload() {
+  return {
+    human_review_required: true,
+    safety: "read_only_preview",
+    disabled_actions: [...FOLLOWUP_ASSISTANT_DISABLED_ACTIONS],
+  };
+}
+
+function followupFallbackWarnings(warnings) {
+  return warnings.length ? warnings : ["followup_source_unavailable"];
+}
+
+function followupMeta(resource, warnings, source = "admin_read") {
+  return {
+    generated_at: new Date().toISOString(),
+    source,
+    resource,
+    is_fallback: source === "fallback_demo" || warnings.length > 0,
+  };
+}
+
+function followupCandidateRecord(row) {
+  return {
+    id: row.id || "",
+    source_type: row.source_type || "",
+    source_entity_id: row.source_entity_id || "",
+    customer_id: row.customer_id || "",
+    inquiry_id: row.inquiry_id || "",
+    verification_request_id: row.verification_request_id || "",
+    customer_name: row.customer_name || "",
+    company_name: row.company_name || "",
+    contact_name: row.contact_name || "",
+    country: row.country || "",
+    language: row.language || "",
+    followup_reason: row.followup_reason || "",
+    current_stage: row.current_stage || "",
+    priority_level: row.priority_level || "",
+    risk_level: row.risk_level || "",
+    confidence_level: row.confidence_level || "",
+    status: row.status || "",
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function followupMissingInformationRecord(row) {
+  return {
+    id: row.id || "",
+    followup_candidate_id: row.followup_candidate_id || "",
+    info_type: row.info_type || "",
+    info_label: row.info_label || "",
+    required_level: row.required_level || "",
+    status: row.status || "",
+    notes: row.notes || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function followupRecommendationRecord(row) {
+  return {
+    id: row.id || "",
+    followup_candidate_id: row.followup_candidate_id || "",
+    recommended_action: row.recommended_action || "",
+    recommendation_reason: row.recommendation_reason || "",
+    suggested_timing: row.suggested_timing || "",
+    priority_level: row.priority_level || "",
+    risk_level: row.risk_level || "",
+    confidence_level: row.confidence_level || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function followupMessageDraftRecord(row) {
+  return {
+    id: row.id || "",
+    followup_candidate_id: row.followup_candidate_id || "",
+    language: row.language || "",
+    channel: row.channel || "",
+    tone: row.tone || "",
+    draft_subject: row.draft_subject || "",
+    draft_body: row.draft_body || "",
+    draft_status: row.draft_status || "",
+    safety_notes: row.safety_notes || "",
+    requires_approval: row.requires_approval !== false,
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function followupReviewRecord(row) {
+  return {
+    id: row.id || "",
+    followup_candidate_id: row.followup_candidate_id || "",
+    reviewer: row.reviewer || "",
+    review_status: row.review_status || "",
+    decision: row.decision || "",
+    reviewer_notes: row.reviewer_notes || "",
+    approved_next_action: row.approved_next_action || "",
+    reviewed_at: row.reviewed_at || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function fallbackFollowupData() {
+  return {
+    candidates: FOLLOWUP_FALLBACK_CANDIDATES.map(followupCandidateRecord),
+    missingInformation: FOLLOWUP_FALLBACK_MISSING_INFORMATION.map(followupMissingInformationRecord),
+    recommendations: FOLLOWUP_FALLBACK_RECOMMENDATIONS.map(followupRecommendationRecord),
+    messageDrafts: FOLLOWUP_FALLBACK_MESSAGE_DRAFTS.map(followupMessageDraftRecord),
+    reviews: FOLLOWUP_FALLBACK_REVIEWS.map(followupReviewRecord),
+  };
+}
+
+function followupSummary(data) {
+  const candidates = data.candidates || [];
+  const missingInformation = data.missingInformation || [];
+  const messageDrafts = data.messageDrafts || [];
+  return {
+    total_candidates: candidates.length,
+    needs_review: candidates.filter((record) => record.status === "needs_review").length,
+    high_priority: candidates.filter((record) => record.priority_level === "high").length,
+    missing_information: missingInformation.filter((record) => ["missing", "needs_review"].includes(record.status)).length,
+    draft_messages: messageDrafts.filter((record) => ["draft", "needs_review"].includes(record.draft_status)).length,
+    risk_hold: candidates.filter((record) => record.current_stage === "risk_hold").length,
+    waiting_response: candidates.filter((record) => record.current_stage === "waiting_response").length,
+  };
+}
+
+function followupReviewQueueFromData(data) {
+  const recommendationMap = new Map((data.recommendations || []).map((record) => [record.followup_candidate_id, record]));
+  return (data.candidates || [])
+    .filter((record) => !["completed", "skipped", "archived"].includes(record.status))
+    .map((record) => {
+      const recommendation = recommendationMap.get(record.id) || {};
+      return {
+        id: record.id,
+        customer_name: record.customer_name,
+        company_name: record.company_name,
+        country: record.country,
+        current_stage: record.current_stage,
+        priority_level: record.priority_level,
+        risk_level: record.risk_level,
+        confidence_level: record.confidence_level,
+        followup_reason: record.followup_reason,
+        recommended_action: recommendation.recommended_action || "",
+        suggested_timing: recommendation.suggested_timing || "",
+        status: record.status,
+        created_at: record.created_at,
+      };
+    })
+    .slice(0, 50);
+}
+
+async function readFollowupSources(supabase, warnings) {
+  const [candidates, missingInformation, recommendations, messageDrafts, reviews] = await Promise.all([
+    readSource({
+      supabase,
+      table: "followup_candidates",
+      select:
+        "id,source_type,source_entity_id,customer_id,inquiry_id,verification_request_id,customer_name,company_name,contact_name,country,language,followup_reason,current_stage,priority_level,risk_level,confidence_level,status,created_at,updated_at",
+      warning: "followup_candidates_unavailable",
+      warnings,
+      limit: 50,
+    }),
+    readSource({
+      supabase,
+      table: "followup_missing_information",
+      select: "id,followup_candidate_id,info_type,info_label,required_level,status,notes,created_at",
+      warning: "followup_missing_information_unavailable",
+      warnings,
+      limit: 100,
+    }),
+    readSource({
+      supabase,
+      table: "followup_recommendations",
+      select:
+        "id,followup_candidate_id,recommended_action,recommendation_reason,suggested_timing,priority_level,risk_level,confidence_level,created_at",
+      warning: "followup_recommendations_unavailable",
+      warnings,
+      limit: 50,
+    }),
+    readSource({
+      supabase,
+      table: "followup_message_drafts",
+      select:
+        "id,followup_candidate_id,language,channel,tone,draft_subject,draft_body,draft_status,safety_notes,requires_approval,created_at,updated_at",
+      warning: "followup_message_drafts_unavailable",
+      warnings,
+      limit: 50,
+    }),
+    readSource({
+      supabase,
+      table: "followup_reviews",
+      select: "id,followup_candidate_id,reviewer,review_status,decision,reviewer_notes,approved_next_action,reviewed_at,created_at",
+      warning: "followup_reviews_unavailable",
+      warnings,
+      limit: 50,
+    }),
+  ]);
+
+  return {
+    candidates: candidates.map(followupCandidateRecord),
+    missingInformation: missingInformation.map(followupMissingInformationRecord),
+    recommendations: recommendations.map(followupRecommendationRecord),
+    messageDrafts: messageDrafts.map(followupMessageDraftRecord),
+    reviews: reviews.map(followupReviewRecord),
+  };
+}
+
+function sendFollowupPayload(response, resource, records, summary, warnings, source = "admin_read") {
+  sendJson(response, 200, {
+    meta: followupMeta(resource, warnings, source),
+    records,
+    summary,
+    safety: followupSafetyPayload(),
+    warnings,
+  });
+}
+
+function sendFollowupFallback(response, resource, records, summary, warnings) {
+  const fallbackWarnings = followupFallbackWarnings(warnings);
+  sendFollowupPayload(response, resource, records, summary, fallbackWarnings, "fallback_demo");
+}
+
+async function readFollowupDataOrFallback(response, supabase, resource, pickRecords, pickSummary) {
+  const warnings = [];
+  const data = await readFollowupSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const fallback = fallbackFollowupData();
+    sendFollowupFallback(response, resource, pickRecords(fallback), pickSummary(fallback), warnings);
+    return;
+  }
+
+  sendFollowupPayload(response, resource, pickRecords(data), pickSummary(data), warnings);
+}
+
+async function readFollowupSummary(response, supabase) {
+  await readFollowupDataOrFallback(response, supabase, "followup-summary", () => [], followupSummary);
+}
+
+async function readFollowupCandidates(response, supabase) {
+  await readFollowupDataOrFallback(
+    response,
+    supabase,
+    "followup-candidates",
+    (data) => data.candidates,
+    (data) => followupSummary(data)
+  );
+}
+
+async function readFollowupMissingInformation(response, supabase) {
+  await readFollowupDataOrFallback(
+    response,
+    supabase,
+    "followup-missing-information",
+    (data) => data.missingInformation,
+    (data) => ({ total_records: data.missingInformation.length })
+  );
+}
+
+async function readFollowupRecommendations(response, supabase) {
+  await readFollowupDataOrFallback(
+    response,
+    supabase,
+    "followup-recommendations",
+    (data) => data.recommendations,
+    (data) => ({ total_records: data.recommendations.length })
+  );
+}
+
+async function readFollowupMessageDrafts(response, supabase) {
+  await readFollowupDataOrFallback(
+    response,
+    supabase,
+    "followup-message-drafts",
+    (data) => data.messageDrafts,
+    (data) => ({ total_records: data.messageDrafts.length })
+  );
+}
+
+async function readFollowupReviewQueue(response, supabase) {
+  await readFollowupDataOrFallback(
+    response,
+    supabase,
+    "followup-review-queue",
+    followupReviewQueueFromData,
+    (data) => ({ total_records: followupReviewQueueFromData(data).length })
+  );
+}
+
+async function readFollowupReviews(response, supabase) {
+  await readFollowupDataOrFallback(
+    response,
+    supabase,
+    "followup-reviews",
+    (data) => data.reviews,
+    (data) => ({ total_records: data.reviews.length })
+  );
+}
+
 function dashboardSummaryCards({ inquiries, customers, aiAnalyses, followUps }, now = new Date()) {
   const newInquiries = inquiries.filter((record) => isToday(record.created_at, now)).length;
   const missingInquiryCount = inquiries.filter((record) => hasMissingInfo(record, "missing_info")).length;
@@ -2758,6 +3361,48 @@ module.exports = async function handler(request, response) {
     if (resource === "customer-verification-reviews") {
       const supabase = getSupabaseClient(request);
       await readCustomerVerificationReviews(response, supabase);
+      return;
+    }
+
+    if (resource === "followup-summary") {
+      const supabase = getSupabaseClient(request);
+      await readFollowupSummary(response, supabase);
+      return;
+    }
+
+    if (resource === "followup-candidates") {
+      const supabase = getSupabaseClient(request);
+      await readFollowupCandidates(response, supabase);
+      return;
+    }
+
+    if (resource === "followup-missing-information") {
+      const supabase = getSupabaseClient(request);
+      await readFollowupMissingInformation(response, supabase);
+      return;
+    }
+
+    if (resource === "followup-recommendations") {
+      const supabase = getSupabaseClient(request);
+      await readFollowupRecommendations(response, supabase);
+      return;
+    }
+
+    if (resource === "followup-message-drafts") {
+      const supabase = getSupabaseClient(request);
+      await readFollowupMessageDrafts(response, supabase);
+      return;
+    }
+
+    if (resource === "followup-review-queue") {
+      const supabase = getSupabaseClient(request);
+      await readFollowupReviewQueue(response, supabase);
+      return;
+    }
+
+    if (resource === "followup-reviews") {
+      const supabase = getSupabaseClient(request);
+      await readFollowupReviews(response, supabase);
       return;
     }
   } catch (error) {

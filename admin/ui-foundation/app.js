@@ -245,11 +245,19 @@ const CUSTOMER_VERIFICATION_SCORES_ENDPOINT = "/api/admin-read/customer-verifica
 const CUSTOMER_VERIFICATION_DUPLICATE_MATCHES_ENDPOINT = "/api/admin-read/customer-verification-duplicate-matches";
 const CUSTOMER_VERIFICATION_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/customer-verification-review-queue";
 const CUSTOMER_VERIFICATION_REVIEWS_ENDPOINT = "/api/admin-read/customer-verification-reviews";
+const FOLLOWUP_SUMMARY_ENDPOINT = "/api/admin-read/followup-summary";
+const FOLLOWUP_CANDIDATES_ENDPOINT = "/api/admin-read/followup-candidates";
+const FOLLOWUP_MISSING_INFORMATION_ENDPOINT = "/api/admin-read/followup-missing-information";
+const FOLLOWUP_RECOMMENDATIONS_ENDPOINT = "/api/admin-read/followup-recommendations";
+const FOLLOWUP_MESSAGE_DRAFTS_ENDPOINT = "/api/admin-read/followup-message-drafts";
+const FOLLOWUP_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/followup-review-queue";
+const FOLLOWUP_REVIEWS_ENDPOINT = "/api/admin-read/followup-reviews";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
 const knowledgeApiState = createKnowledgeState();
 const businessCardApiState = createBusinessCardCaptureState();
 const customerVerificationApiState = createCustomerVerificationState();
+const followupAssistantApiState = createFollowupAssistantState();
 
 const companyPreviewFallback = [
   {
@@ -2211,6 +2219,9 @@ function setSection(sectionId) {
   if (sectionId === "customer-verification") {
     loadCustomerVerificationReadOnly();
   }
+  if (sectionId === "followup-assistant") {
+    loadFollowupAssistantReadOnly();
+  }
   if (sectionId === "files") {
     loadDocumentsReadOnly();
   }
@@ -3724,17 +3735,18 @@ const followupAssistantDecisions = [
 ];
 
 function renderFollowupAssistant() {
-  const selected = followupAssistantCandidates[0];
+  const model = getFollowupAssistantViewModel();
+  const selected = model.selectedCandidate;
   return `
-    <div class="followup-assistant-preview" aria-label="AI 跟进助手静态只读预览">
+    <div class="followup-assistant-preview" aria-label="AI 跟进助手只读数据预览">
       <div class="followup-hero">
         <div>
-          <span class="state-label">AI Follow-up Assistant</span>
+          <span class="state-label">${escapeHtml(model.sourceLabel)}</span>
           <h3>AI 跟进助手</h3>
-          <p>根据客户验证、询盘状态、报价阶段和缺失信息，辅助判断下一步跟进动作。当前为只读预览，不自动创建任务、不自动发送消息、不自动修改客户状态。</p>
+          <p>${escapeHtml(model.headerCopy)}</p>
         </div>
         <div class="followup-badge-row" aria-label="AI 跟进助手状态">
-          ${badge("只读预览", "draft")}
+          ${badge(model.isLive ? "实时只读" : "Fallback 预览", "draft")}
           ${badge("AI 建议", "active")}
           ${badge("草稿", "draft")}
           ${badge("未发送", "pending")}
@@ -3747,12 +3759,12 @@ function renderFollowupAssistant() {
         <div class="workbench-section-header">
           <div>
             <h3>跟进概览</h3>
-            <p>DEMO 静态数据，仅用于验证后续跟进工作台的信息结构和人工复核边界。</p>
+            <p>展示跟进候选、缺失信息、草稿和复核状态；所有动作仍为只读展示。</p>
           </div>
-          <span>Static preview</span>
+          <span>${escapeHtml(model.sourceLabel)}</span>
         </div>
         <div class="followup-summary-grid">
-          ${followupAssistantSummaryCards.map(renderFollowupSummaryCard).join("")}
+          ${model.summaryCards.map(renderFollowupSummaryCard).join("")}
         </div>
       </section>
 
@@ -3763,16 +3775,16 @@ function renderFollowupAssistant() {
               <h3>建议跟进队列</h3>
               <p>队列项不可点击，不创建任务；仅展示 AI 建议和 Paul 复核所需信息。</p>
             </div>
-            <span>3 DEMO candidates</span>
+            <span>${escapeHtml(model.queueCountLabel)}</span>
           </div>
-          ${followupAssistantCandidates.map(renderFollowupCandidateCard).join("")}
+          ${model.candidates.map(renderFollowupCandidateCard).join("")}
         </section>
 
         <aside class="followup-detail-panel" aria-label="选中候选详情">
           <div class="workbench-review-heading">
             <div>
               <h3>选中候选详情</h3>
-              <p class="workbench-review-note">固定示例：Carlos Ramirez。当前没有点击选择行为。</p>
+              <p class="workbench-review-note">固定展示第一条只读候选。当前没有点击选择行为。</p>
             </div>
             ${badge("需人工确认", "approval")}
           </div>
@@ -3809,7 +3821,7 @@ function renderFollowupAssistant() {
               <h3>消息草稿预览</h3>
               <p>Draft only. Not sent. Human approval required.</p>
             </div>
-            <span>未发送</span>
+            <span>${escapeHtml(selected.draftStatus || "draft")}</span>
           </div>
           <div class="followup-draft-box">
             <span>Subject: ${escapeHtml(selected.draftSubject)}</span>
@@ -3943,26 +3955,28 @@ function renderFollowupMissingInfoItem([label, status]) {
 }
 
 function renderFollowupAssistantReview() {
+  const model = getFollowupAssistantViewModel();
+  const selected = model.selectedCandidate;
   return `
     <div class="review-stack">
       <div class="review-card">
         <h3>AI 跟进助手只读边界</h3>
         <ul class="check-list">
-          <li>静态预览，不调用 AI provider，不连接 Email / WhatsApp / LinkedIn</li>
+          <li>${escapeHtml(model.sourceLabel)}，不调用 AI provider，不连接 Email / WhatsApp / LinkedIn</li>
           <li>不自动创建任务、不创建定时提醒、不写入客户或询盘状态</li>
           <li>不发送消息，不生成报价、PI、订单，不触发付款 / 生产 / 发货</li>
           <li>所有外部沟通必须 Paul 人工确认后才可执行</li>
         </ul>
       </div>
       <div class="review-card">
-        <h3>当前预览样本</h3>
+        <h3>当前复核样本</h3>
         <dl>
           <dt>候选客户</dt>
-          <dd>Carlos Ramirez / DEMO Facade Solutions</dd>
+          <dd>${escapeHtml(selected.customerName)} / ${escapeHtml(selected.company)}</dd>
           <dt>建议动作</dt>
-          <dd>先索取项目位置、规格、数量和买家角色，再考虑报价准备。</dd>
+          <dd>${escapeHtml(selected.recommendedAction)}</dd>
           <dt>草稿状态</dt>
-          <dd>Draft only / Not sent / Human approval required</dd>
+          <dd>${escapeHtml(selected.draftStatus || "Draft only")} / Not sent / Human approval required</dd>
         </dl>
       </div>
       <div class="review-card">
@@ -3973,6 +3987,349 @@ function renderFollowupAssistantReview() {
       </div>
     </div>
   `;
+}
+
+function getFollowupAssistantViewModel() {
+  const fallback = fallbackFollowupAssistantApiData();
+  const isLive = followupAssistantApiState.status === "loaded" && followupAssistantApiState.source === "api";
+  const isLoading = followupAssistantApiState.status === "loading";
+  const summary = followupAssistantApiState.summary || fallback.summary;
+  const candidates = followupAssistantApiState.candidates.length ? followupAssistantApiState.candidates : fallback.candidates;
+  const missingInformation = followupAssistantApiState.missingInformation.length
+    ? followupAssistantApiState.missingInformation
+    : fallback.missingInformation;
+  const recommendations = followupAssistantApiState.recommendations.length ? followupAssistantApiState.recommendations : fallback.recommendations;
+  const messageDrafts = followupAssistantApiState.messageDrafts.length ? followupAssistantApiState.messageDrafts : fallback.messageDrafts;
+  const reviewQueue = followupAssistantApiState.reviewQueue.length ? followupAssistantApiState.reviewQueue : fallback.reviewQueue;
+  const reviews = followupAssistantApiState.reviews.length ? followupAssistantApiState.reviews : fallback.reviews;
+  const selectedCandidate = candidates[0] || fallback.candidates[0];
+  const sourceLabel = isLive ? "实时只读数据" : followupAssistantApiState.status === "loading" ? "正在读取 admin-read 数据" : fallbackLabel;
+
+  return {
+    isLive,
+    isLoading,
+    sourceLabel,
+    summary,
+    summaryCards: buildFollowupSummaryCards(summary),
+    candidates,
+    missingInformation,
+    recommendations,
+    messageDrafts,
+    reviewQueue,
+    reviews,
+    selectedCandidate,
+    queueCountLabel: `${candidates.length} 条只读候选`,
+    headerCopy: isLive
+      ? "已连接 admin-read 跟进助手只读数据。当前仅展示候选、缺失信息、建议、草稿和复核记录，不创建任务、不发送消息、不写入客户或询盘。"
+      : "当前显示安全 fallback / DEMO 数据，用于验证跟进候选、缺失信息、草稿和人工复核边界；不调用 API 写入、不执行助手、不发送消息。",
+  };
+}
+
+function buildFollowupSummaryCards(summary) {
+  return [
+    {
+      label: "跟进候选",
+      value: safeDashboardText(summary?.total_candidates, "0"),
+      subtitle: "只读候选，不自动创建任务",
+      tone: "active",
+    },
+    {
+      label: "需要复核",
+      value: safeDashboardText(summary?.needs_review, "0"),
+      subtitle: "人工确认后才可继续",
+      tone: "warning",
+    },
+    {
+      label: "缺失信息",
+      value: safeDashboardText(summary?.missing_information, "0"),
+      subtitle: "规格、数量、角色或项目资料缺失",
+      tone: "info",
+    },
+    {
+      label: "草稿消息",
+      value: safeDashboardText(summary?.draft_messages, "0"),
+      subtitle: "仅草稿，未发送",
+      tone: "neutral",
+    },
+    {
+      label: "高优先级",
+      value: safeDashboardText(summary?.high_priority, "0"),
+      subtitle: "适合优先人工查看",
+      tone: "active",
+    },
+    {
+      label: "风险暂缓",
+      value: safeDashboardText(summary?.risk_hold, "0"),
+      subtitle: "重复、身份或风险信号待确认",
+      tone: "danger",
+    },
+  ];
+}
+
+function fallbackFollowupAssistantApiData() {
+  const candidates = followupAssistantCandidates.map((candidate, index) => ({
+    ...candidate,
+    id: `DEMO_FOLLOWUP_UI_${index + 1}`,
+    status: index === 2 ? "draft" : "needs_review",
+    draftStatus: index === 1 ? "needs_review" : "draft",
+  }));
+  const missingInformation = candidates.flatMap((candidate) =>
+    candidate.missingInformation.map(([label, status], index) => ({
+      id: `${candidate.id}_INFO_${index + 1}`,
+      followup_candidate_id: candidate.id,
+      info_label: label,
+      status,
+    }))
+  );
+  const recommendations = candidates.map((candidate, index) => ({
+    id: `${candidate.id}_RECOMMENDATION`,
+    followup_candidate_id: candidate.id,
+    recommended_action: candidate.recommendedAction,
+    recommendation_reason: candidate.actionReason,
+    suggested_timing: candidate.suggestedTiming,
+    priority_level: candidate.priority.toLowerCase(),
+    risk_level: candidate.risk.toLowerCase(),
+    confidence_level: candidate.confidence.toLowerCase(),
+    created_at: `2026-06-22 demo ${index + 1}`,
+  }));
+  const messageDrafts = candidates.map((candidate, index) => ({
+    id: `${candidate.id}_DRAFT`,
+    followup_candidate_id: candidate.id,
+    language: candidate.suggestedLanguage,
+    channel: candidate.channel,
+    tone: candidate.tone,
+    draft_subject: candidate.draftSubject,
+    draft_body: candidate.draftBody,
+    draft_status: candidate.draftStatus,
+    safety_notes: "Draft only. Human approval required before any use.",
+    requires_approval: true,
+    created_at: `2026-06-22 demo ${index + 1}`,
+  }));
+  const reviews = candidates.map((candidate, index) => ({
+    id: `${candidate.id}_REVIEW`,
+    followup_candidate_id: candidate.id,
+    reviewer: "Paul",
+    review_status: "pending",
+    decision: "",
+    reviewer_notes: "",
+    approved_next_action: "",
+    reviewed_at: "",
+    created_at: `2026-06-22 demo ${index + 1}`,
+  }));
+  const summary = {
+    total_candidates: candidates.length,
+    needs_review: candidates.filter((candidate) => candidate.status === "needs_review").length,
+    high_priority: candidates.filter((candidate) => candidate.priority.toLowerCase().includes("high")).length,
+    missing_information: missingInformation.filter((record) => ["missing", "needs_review"].includes(record.status)).length,
+    draft_messages: messageDrafts.filter((record) => ["draft", "needs_review"].includes(record.draft_status)).length,
+    risk_hold: candidates.filter((candidate) => candidate.currentStage.includes("risk")).length,
+    waiting_response: 0,
+  };
+
+  return {
+    summary,
+    candidates,
+    missingInformation,
+    recommendations,
+    messageDrafts,
+    reviewQueue: candidates,
+    reviews,
+  };
+}
+
+function followupRecords(payload) {
+  return Array.isArray(payload?.records) ? payload.records : [];
+}
+
+function followupIsFallbackPayload(...payloads) {
+  return payloads.some((payload) => payload?.meta?.source === "fallback_demo" || payload?.meta?.is_fallback === true);
+}
+
+function followupStageLabel(stage) {
+  const labels = {
+    first_contact: "首次接触",
+    information_request: "资料补充",
+    quotation_pending: "报价准备",
+    quotation_sent: "报价后待回复",
+    sample_discussion: "样品沟通",
+    negotiation: "谈判中",
+    waiting_response: "等待回复",
+    dormant: "低频线索",
+    risk_hold: "风险暂缓",
+    closed: "已关闭",
+  };
+  return labels[stage] || safeDashboardText(stage, "待复核");
+}
+
+function followupDisplayLevel(value) {
+  const normalized = String(value || "").trim();
+  const labels = { high: "High", medium: "Medium", low: "Low" };
+  return labels[normalized] || safeDashboardText(normalized, "Medium");
+}
+
+function normalizeFollowupCandidates({ candidates, missingInformation, recommendations, messageDrafts }) {
+  const missingMap = groupFollowupRecords(missingInformation, "followup_candidate_id");
+  const recommendationMap = new Map((recommendations || []).map((record) => [record.followup_candidate_id, record]));
+  const draftMap = new Map((messageDrafts || []).map((record) => [record.followup_candidate_id, record]));
+
+  return (candidates || []).map((candidate) => {
+    const recommendation = recommendationMap.get(candidate.id) || {};
+    const draft = draftMap.get(candidate.id) || {};
+    const stage = safeDashboardText(candidate.current_stage, "needs_review");
+    const missingItems = missingMap.get(candidate.id) || [];
+    return {
+      id: safeDashboardText(candidate.id, "FOLLOWUP_CANDIDATE"),
+      customerName: safeDashboardText(candidate.customer_name || candidate.contact_name, "待确认联系人"),
+      company: safeDashboardText(candidate.company_name, "待确认公司"),
+      country: safeDashboardText(candidate.country, "待确认国家"),
+      source: safeDashboardText(candidate.source_type, "manual_note"),
+      currentStage: stage,
+      stageLabel: followupStageLabel(stage),
+      productInterest: "Follow-up candidate",
+      lastInteraction: safeDashboardText(candidate.followup_reason, "需要人工复核跟进原因"),
+      reason: safeDashboardText(candidate.followup_reason, "需要人工复核跟进原因"),
+      priority: followupDisplayLevel(candidate.priority_level || recommendation.priority_level),
+      risk: followupDisplayLevel(candidate.risk_level || recommendation.risk_level),
+      confidence: followupDisplayLevel(candidate.confidence_level || recommendation.confidence_level),
+      suggestedTiming: safeDashboardText(recommendation.suggested_timing, "人工判断后再跟进"),
+      suggestedLanguage: safeDashboardText(candidate.language || draft.language, "en"),
+      alternativeLanguage: candidate.language === "zh" ? "English" : "Chinese",
+      channel: safeDashboardText(draft.channel, "email"),
+      tone: safeDashboardText(draft.tone, "professional"),
+      recommendedAction: safeDashboardText(recommendation.recommended_action, "request_more_information"),
+      actionReason: safeDashboardText(recommendation.recommendation_reason, "需要人工确认下一步"),
+      riskNotes: safeDashboardText(draft.safety_notes, "Draft only. Human approval required before any use."),
+      status: safeDashboardText(candidate.status, "needs_review"),
+      draftStatus: safeDashboardText(draft.draft_status, "draft"),
+      missingInformation: missingItems.length
+        ? missingItems.map((item) => [safeDashboardText(item.info_label || item.info_type, "缺失信息"), safeDashboardText(item.status, "missing")])
+        : [["missing information", "needs_review"]],
+      draftSubject: safeDashboardText(draft.draft_subject, "Follow-up draft requires review"),
+      draftBody: safeDashboardText(draft.draft_body, "Draft body is not available. Please review manually before any external communication."),
+    };
+  });
+}
+
+function groupFollowupRecords(records, key) {
+  return (records || []).reduce((map, record) => {
+    const groupKey = record?.[key] || "";
+    if (!map.has(groupKey)) map.set(groupKey, []);
+    map.get(groupKey).push(record);
+    return map;
+  }, new Map());
+}
+
+async function fetchFollowupResource(endpoint) {
+  const token = getAdminAccessToken();
+  const response = await fetch(endpoint, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || `${endpoint} failed with ${response.status}`);
+  }
+  return payload;
+}
+
+function fetchFollowupSummary() {
+  return fetchFollowupResource(FOLLOWUP_SUMMARY_ENDPOINT);
+}
+
+function fetchFollowupCandidates() {
+  return fetchFollowupResource(FOLLOWUP_CANDIDATES_ENDPOINT);
+}
+
+function fetchFollowupMissingInformation() {
+  return fetchFollowupResource(FOLLOWUP_MISSING_INFORMATION_ENDPOINT);
+}
+
+function fetchFollowupRecommendations() {
+  return fetchFollowupResource(FOLLOWUP_RECOMMENDATIONS_ENDPOINT);
+}
+
+function fetchFollowupMessageDrafts() {
+  return fetchFollowupResource(FOLLOWUP_MESSAGE_DRAFTS_ENDPOINT);
+}
+
+function fetchFollowupReviewQueue() {
+  return fetchFollowupResource(FOLLOWUP_REVIEW_QUEUE_ENDPOINT);
+}
+
+function fetchFollowupReviews() {
+  return fetchFollowupResource(FOLLOWUP_REVIEWS_ENDPOINT);
+}
+
+async function loadFollowupAssistantReadOnly() {
+  followupAssistantApiState.status = "loading";
+  followupAssistantApiState.error = "";
+  followupAssistantApiState.source = "api";
+  refreshFollowupAssistantView();
+
+  try {
+    const [summaryPayload, candidatesPayload, missingPayload, recommendationsPayload, draftsPayload, queuePayload, reviewsPayload] =
+      await Promise.all([
+        fetchFollowupSummary(),
+        fetchFollowupCandidates(),
+        fetchFollowupMissingInformation(),
+        fetchFollowupRecommendations(),
+        fetchFollowupMessageDrafts(),
+        fetchFollowupReviewQueue(),
+        fetchFollowupReviews(),
+      ]);
+
+    const rawCandidates = followupRecords(candidatesPayload);
+    const missingInformation = followupRecords(missingPayload);
+    const recommendations = followupRecords(recommendationsPayload);
+    const messageDrafts = followupRecords(draftsPayload);
+    const reviewQueue = followupRecords(queuePayload);
+    const reviews = followupRecords(reviewsPayload);
+    const candidates = normalizeFollowupCandidates({
+      candidates: rawCandidates,
+      missingInformation,
+      recommendations,
+      messageDrafts,
+    });
+
+    followupAssistantApiState.summary = summaryPayload.summary || null;
+    followupAssistantApiState.candidates = candidates;
+    followupAssistantApiState.missingInformation = missingInformation;
+    followupAssistantApiState.recommendations = recommendations;
+    followupAssistantApiState.messageDrafts = messageDrafts;
+    followupAssistantApiState.reviewQueue = reviewQueue;
+    followupAssistantApiState.reviews = reviews;
+
+    const recordCount = candidates.length + missingInformation.length + recommendations.length + messageDrafts.length + reviewQueue.length + reviews.length;
+
+    if (followupIsFallbackPayload(summaryPayload, candidatesPayload, missingPayload, recommendationsPayload, draftsPayload, queuePayload, reviewsPayload)) {
+      const fallback = fallbackFollowupAssistantApiData();
+      Object.assign(followupAssistantApiState, fallback);
+      followupAssistantApiState.status = "error";
+      followupAssistantApiState.error = "followup admin-read source unavailable; showing fallback demo";
+      followupAssistantApiState.source = fallbackLabel;
+    } else if (recordCount === 0) {
+      const fallback = fallbackFollowupAssistantApiData();
+      Object.assign(followupAssistantApiState, fallback);
+      followupAssistantApiState.status = "empty";
+      followupAssistantApiState.source = fallbackLabel;
+    } else {
+      followupAssistantApiState.status = "loaded";
+      followupAssistantApiState.source = "api";
+    }
+  } catch (error) {
+    const fallback = fallbackFollowupAssistantApiData();
+    Object.assign(followupAssistantApiState, fallback);
+    followupAssistantApiState.status = "error";
+    followupAssistantApiState.error = error.message || "Unknown API error";
+    followupAssistantApiState.source = fallbackLabel;
+  }
+
+  refreshFollowupAssistantView();
+}
+
+function refreshFollowupAssistantView() {
+  if (activeSectionId !== "followup-assistant") return;
+  mainContent.innerHTML = renderFollowupAssistant();
+  reviewPanel.innerHTML = renderFollowupAssistantReview();
 }
 
 function getBusinessCardCaptureViewModel() {
@@ -6658,6 +7015,21 @@ function createCustomerVerificationState() {
     evidence: [],
     scores: [],
     duplicateMatches: [],
+    reviewQueue: [],
+    reviews: [],
+    error: "",
+    source: "not loaded",
+  };
+}
+
+function createFollowupAssistantState() {
+  return {
+    status: "idle",
+    summary: null,
+    candidates: [],
+    missingInformation: [],
+    recommendations: [],
+    messageDrafts: [],
     reviewQueue: [],
     reviews: [],
     error: "",
