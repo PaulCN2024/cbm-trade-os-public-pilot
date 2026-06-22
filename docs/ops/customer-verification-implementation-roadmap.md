@@ -15,6 +15,7 @@ The roadmap is planning-only. It does not authorize schema changes, SQL, API imp
 - Read-only and safety patterns are established.
 - Admin-read dispatcher pattern exists for protected read-only resources.
 - Human approval boundary is documented.
+- Customer Verification Duplicate Check Planning is completed.
 
 ## Roadmap
 
@@ -104,6 +105,10 @@ Goal:
 
 Plan and then implement safe local duplicate candidates from existing customer fields.
 
+Current status:
+
+Duplicate check planning is complete. Real duplicate matching remains a future read-only task. No automatic merge is allowed.
+
 Boundaries:
 
 - candidate matches only
@@ -191,20 +196,20 @@ Boundaries:
 Recommended:
 
 ```text
-CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-DATA-READONLY-001
+CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001
 ```
 
 Goal:
 
-Create SQL/manual pack, DEMO data, admin-read route plan/implementation boundary, and UI binding plan for customer verification records, still read-only and fallback-safe.
+Plan the human-reviewed follow-up assistant behavior that can later use customer verification results without sending messages, creating tasks, quoting, or making business commitments.
 
 Alternative:
 
 ```text
-CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001
+CBM-CODEX-SPRINT-CUSTOMER-VERIFICATION-DUPLICATE-READONLY-001
 ```
 
-Use this alternative if Paul wants to design the customer follow-up workflow before creating customer verification data tables.
+Use this alternative if Paul wants the next task to focus on deterministic read-only duplicate candidate display from existing customer/contact data.
 
 ## Stop Conditions
 
