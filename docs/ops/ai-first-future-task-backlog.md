@@ -48,7 +48,10 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 - Supplier Intelligence read-only data foundation
 - Supplier Intelligence RFQ draft rules
 - Supplier Intelligence capability match rules
+- Supplier Intelligence capability match read-only projection
+- Supplier Intelligence RFQ workflow plan
 - Supplier Intelligence AI provider plan
+- Quote Review Intelligence UI preview
 - Follow-up Assistant Plan
 - Risk Center Plan
 - BI Plan
@@ -145,6 +148,9 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 | `CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-RFQ-DRAFT-RULES-001` | Supplier Intelligence | Define safe supplier RFQ draft question rules | draft supplier questions and assumptions | no supplier contact, no RFQ sending, no price/delivery commitment | docs only | Medium | 33.4 |
 | `CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-CAPABILITY-MATCH-RULES-001` | Supplier Intelligence | Define deterministic supplier capability match rules | classify strong/possible/needs-confirm/not-ready/risk-hold | advisory only, no supplier confirmation | docs only | Low | 33.5 |
 | `CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-AI-PROVIDER-PLAN-001` | Supplier Intelligence | Plan future AI provider use for supplier matching | define prompt privacy, source boundaries, confidence, and cost | no live AI calls, no provider keys, no supplier contact | docs only | Medium | 33.6 |
+| `CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-CAPABILITY-MATCH-READONLY-001` | Supplier Intelligence | Add read-only capability match projection after data foundation approval | expose match levels, reasons, risk, and confidence for review | no supplier confirmation, no supplier selection, no RFQ sending | docs/API/UI only if separately approved | Medium | 33.7 |
+| `CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-RFQ-PLAN-001` | Supplier Intelligence | Plan controlled supplier RFQ workflow after read-only foundation | define approval, audit, send boundary, response capture, and rollback notes | planning only, no supplier contact or RFQ sending | docs only | Medium | 33.8 |
+| `CBM-CODEX-SPRINT-QUOTE-REVIEW-INTELLIGENCE-UI-001` | Quote Review Intelligence | Preview how supplier intelligence informs quote readiness | show supplier-confirm-needed, missing cost basis, and quote blockers | no official quotation, no price commitment, no PI/order/payment action | docs/UI only if separately approved | Medium-low | 33.9 |
 | `CBM-CODEX-SPRINT-FILE-DRAWING-INTELLIGENCE-PLAN-001` | File/Drawing Intelligence | Plan PDF/drawing/manual understanding | summarize and extract metadata | no upload/OCR/parsing until approved | docs only | Medium | 34 |
 | `CBM-CODEX-SPRINT-MODEL-ROUTER-PLAN-001` | Model Router | Plan multi-model provider routing | select models by task type | no provider keys or live calls | docs only | Medium | 35 |
 | `CBM-CODEX-SPRINT-RAG-ARCHITECTURE-PLAN-001` | RAG/Embedding | Plan retrieval architecture | cite verified knowledge | no vector implementation yet | docs only | Medium | 36 |
@@ -155,12 +161,12 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 Recommended next task:
 
 ```text
-CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-DATA-PLAN-001
+CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-DATA-READONLY-001
 ```
 
 Reason:
 
-AI Supplier Intelligence now has a static/read-only UI preview. The next recommended task is a docs-only data plan before any schema, API, SQL execution, AI provider, supplier contact, RFQ creation/sending, quotation, customer/supplier/inquiry mutation, or business execution work.
+AI Supplier Intelligence now has a static/read-only UI preview and a documentation-only data model, capability, RFQ, risk/confidence, human review, and roadmap planning package. The next recommended task is a separately approved read-only data foundation before any live AI provider, supplier contact, RFQ creation/sending, quotation, customer/supplier/inquiry mutation, or business execution work.
 
 ## Business Card Capture Real Upload/OCR Pause
 
