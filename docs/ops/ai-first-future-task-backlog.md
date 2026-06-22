@@ -52,6 +52,11 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 - Supplier Intelligence RFQ workflow plan
 - Supplier Intelligence AI provider plan
 - Quote Review Intelligence UI preview
+- CBM-CODEX-SPRINT-QUOTE-REVIEW-INTELLIGENCE-DATA-PLAN-001
+- CBM-CODEX-SPRINT-QUOTE-REVIEW-INTELLIGENCE-DATA-READONLY-001
+- CBM-CODEX-SPRINT-QUOTE-REVIEW-COST-RISK-RULES-001
+- CBM-CODEX-SPRINT-QUOTE-REVIEW-READINESS-RULES-001
+- CBM-CODEX-SPRINT-FORMAL-QUOTE-METADATA-UI-001
 - Follow-up Assistant Plan
 - Risk Center Plan
 - BI Plan
@@ -151,6 +156,11 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 | `CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-CAPABILITY-MATCH-READONLY-001` | Supplier Intelligence | Add read-only capability match projection after data foundation approval | expose match levels, reasons, risk, and confidence for review | no supplier confirmation, no supplier selection, no RFQ sending | docs/API/UI only if separately approved | Medium | 33.7 |
 | `CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-RFQ-PLAN-001` | Supplier Intelligence | Plan controlled supplier RFQ workflow after read-only foundation | define approval, audit, send boundary, response capture, and rollback notes | planning only, no supplier contact or RFQ sending | docs only | Medium | 33.8 |
 | `CBM-CODEX-SPRINT-QUOTE-REVIEW-INTELLIGENCE-UI-001` | Quote Review Intelligence | Preview how supplier intelligence informs quote readiness | show supplier-confirm-needed, missing cost basis, and quote blockers | no official quotation, no price commitment, no PI/order/payment action | docs/UI only if separately approved | Medium-low | 33.9 |
+| `CBM-CODEX-SPRINT-QUOTE-REVIEW-INTELLIGENCE-DATA-PLAN-001` | Quote Review Intelligence | Plan read-only quote review data model and admin-read projection | define readiness, blockers, cost basis, risk, confidence, and review queue shape | planning only, no schema/API execution, no real quotation | docs only | Low | 33.91 |
+| `CBM-CODEX-SPRINT-QUOTE-REVIEW-INTELLIGENCE-DATA-READONLY-001` | Quote Review Intelligence | Create read-only quote review foundation after planning approval | expose reviewed quote readiness metadata and fallback safely | no price calculation, no quotation/PI/order creation, no customer/supplier contact | docs/API/schema only if separately approved | Medium | 33.92 |
+| `CBM-CODEX-SPRINT-QUOTE-REVIEW-COST-RISK-RULES-001` | Quote Review Intelligence | Define deterministic cost and risk basis rules | identify factory cost, FOB, tax/VAT, freight, exchange rate, packing/loading and validity risks | advisory only, no price commitment or quote generation | docs only | Medium | 33.93 |
+| `CBM-CODEX-SPRINT-QUOTE-REVIEW-READINESS-RULES-001` | Quote Review Intelligence | Define budget/formal/hold readiness rules | classify budget estimate, formal quote readiness, supplier-confirm-needed, and risk hold | advisory only, no automatic quotation, PI, order or send action | docs only | Medium | 33.94 |
+| `CBM-CODEX-SPRINT-FORMAL-QUOTE-METADATA-UI-001` | Formal Quote Metadata | Plan or preview safe formal quotation metadata surface | show quote records, status, approval boundary and hidden-field rules | no price calculation, no quote document generation, no send | docs/UI only if separately approved | Medium-low | 33.95 |
 | `CBM-CODEX-SPRINT-FILE-DRAWING-INTELLIGENCE-PLAN-001` | File/Drawing Intelligence | Plan PDF/drawing/manual understanding | summarize and extract metadata | no upload/OCR/parsing until approved | docs only | Medium | 34 |
 | `CBM-CODEX-SPRINT-MODEL-ROUTER-PLAN-001` | Model Router | Plan multi-model provider routing | select models by task type | no provider keys or live calls | docs only | Medium | 35 |
 | `CBM-CODEX-SPRINT-RAG-ARCHITECTURE-PLAN-001` | RAG/Embedding | Plan retrieval architecture | cite verified knowledge | no vector implementation yet | docs only | Medium | 36 |

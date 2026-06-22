@@ -14,6 +14,7 @@ const navItems = [
   { id: "companies", label: "客户公司" },
   { id: "suppliers", label: "供应商" },
   { id: "supplier-intelligence", label: "AI 供应商智能匹配" },
+  { id: "quote-review-intelligence", label: "AI 报价前复核" },
   { id: "products", label: "产品" },
   { id: "manufacturing-capabilities", label: "制造能力" },
   { id: "ai-drafts", label: "AI 复核" },
@@ -130,6 +131,14 @@ const sections = {
     sectionHelp: "静态只读预览。当前不调用 AI、不联系供应商、不创建 RFQ、不报价、不发送消息、不写入数据。",
     content: renderSupplierIntelligence,
     review: renderSupplierIntelligenceReview,
+  },
+  "quote-review-intelligence": {
+    title: "AI 报价前复核",
+    description: "生成正式报价、PI 或订单前的报价准备度、成本基础、风险和人工确认静态复核预览。",
+    sectionTitle: "AI 报价前复核",
+    sectionHelp: "静态只读预览。当前不计算真实价格、不生成报价、不生成 PI、不创建订单、不联系客户或供应商。",
+    content: renderQuoteReviewIntelligence,
+    review: renderQuoteReviewIntelligenceReview,
   },
   products: {
     title: "产品",
@@ -10004,6 +10013,482 @@ function renderFileReview() {
       <div class="file-review-group">
         <h4>安全边界</h4>
         <p>${isLive ? "本页只展示实时只读文件元数据；不读取文件内容、不展示存储路径或下载链接、不上传、不删除、不解析、不归档，也不生成报价、PI、合同或订单。" : "本页只展示静态文件复核预览；不读取真实文件、不上传、不删除、不解析、不归档，也不生成报价、PI、合同或订单。"}</p>
+      </div>
+    </div>
+  `;
+}
+
+const quoteReviewIntelligenceSummaryCards = [
+  { label: "待复核报价", value: "7", subtitle: "需要 Paul 判断是否进入报价准备", tone: "info" },
+  { label: "可做预算报价", value: "3", subtitle: "可带假设条件做内部预算判断", tone: "active" },
+  { label: "可进入正式报价", value: "1", subtitle: "资料相对完整，仍需人工确认", tone: "neutral" },
+  { label: "需补充信息", value: "5", subtitle: "规格、数量、包装或目的港待补充", tone: "warning" },
+  { label: "需供应商确认", value: "4", subtitle: "成本、重量、装柜或交期待供应商确认", tone: "warning" },
+  { label: "高风险报价", value: "2", subtitle: "价格、FOB、责任或汇率假设风险较高", tone: "danger" },
+];
+
+const quoteReviewIntelligenceCases = [
+  {
+    title: "Peru Light Steel Keel Quote Review",
+    customer: "DEMO Construction Importers",
+    country: "Peru",
+    inquiryTitle: "Drywall galvanized steel profiles for 20GP loading",
+    product: "Drywall galvanized steel profiles",
+    productCategory: "Light Steel Keel / Drywall Profile",
+    status: "budget_estimate_possible",
+    priority: "High",
+    risk: "Medium",
+    confidence: "Medium-high",
+    blocker: "thickness and quantity split not fully confirmed",
+    customerVerification: "basic company evidence reviewed / buyer role still needs Paul check",
+    inquiryIntelligence: "product category identified; quotation readiness needs missing info review",
+    supplierIntelligence: "supplier unit weight, packing and FOB basis not confirmed",
+    followupStatus: "customer clarification needed before formal quote",
+    quotationReadiness: "Budget estimate possible; formal quote blocked",
+    missingBlockers: ["厚度未最终确认", "数量拆分缺失", "供应商单位重量未确认", "包装 / 装柜方式未确认", "FOB 本地费用未确认"],
+    badges: ["预算报价建议", "正式报价前需确认", "需供应商确认"],
+  },
+  {
+    title: "Indonesia Ceiling System Quote Review",
+    customer: "DEMO Building Materials Asia",
+    country: "Indonesia",
+    inquiryTitle: "Ceiling system material option and drawing review",
+    product: "Aluminum ceiling / light steel keel",
+    productCategory: "Ceiling System",
+    status: "supplier_confirm_needed",
+    priority: "Medium-high",
+    risk: "Medium",
+    confidence: "Medium",
+    blocker: "drawing and thickness confirmation",
+    customerVerification: "company appears plausible in DEMO; contact role still needs confirmation",
+    inquiryIntelligence: "drawing and system option are not complete",
+    supplierIntelligence: "supplier type possible; exact product option must be confirmed",
+    followupStatus: "ask customer to confirm drawing, material and thickness",
+    quotationReadiness: "Supplier confirmation needed before budget estimate",
+    missingBlockers: ["图纸未复核", "材料方案未确认", "板厚 / 龙骨厚度待确认", "目标港口和包装要求待确认"],
+    badges: ["需补充信息", "需复核", "供应商确认"],
+  },
+  {
+    title: "Ecuador Window Project Quote Review",
+    customer: "DEMO Developer Contact",
+    country: "Ecuador",
+    inquiryTitle: "Window and door project quotation readiness",
+    product: "Aluminum window/door project",
+    productCategory: "Window / Door Project",
+    status: "not_ready",
+    priority: "Medium",
+    risk: "Medium-high",
+    confidence: "Medium",
+    blocker: "site measurement and installation responsibility unclear",
+    customerVerification: "developer contact needs stronger evidence and project role check",
+    inquiryIntelligence: "project scope and measurements are incomplete",
+    supplierIntelligence: "factory feasibility cannot be judged before drawings and responsibility boundary",
+    followupStatus: "clarify project scope before supplier or quote review",
+    quotationReadiness: "Hold; not ready for budget or formal quote",
+    missingBlockers: ["现场尺寸未确认", "安装责任不清楚", "型材系统待确认", "玻璃 / 五金配置缺失", "不应承诺交期"],
+    badges: ["暂缓", "高风险", "责任边界"],
+  },
+];
+
+const quoteReadinessChecklist = [
+  ["customer verified", "needs_review"],
+  ["product category confirmed", "confirmed"],
+  ["specification confirmed", "missing"],
+  ["quantity confirmed", "missing"],
+  ["supplier cost confirmed", "supplier_confirm"],
+  ["FOB/local cost confirmed", "needs_review"],
+  ["packing/loading confirmed", "supplier_confirm"],
+  ["target port confirmed", "confirmed"],
+  ["tax/VAT consideration", "needs_review"],
+  ["exchange rate basis", "risk"],
+  ["lead time confirmed", "supplier_confirm"],
+  ["payment terms confirmed", "needs_review"],
+];
+
+const quoteCostRiskBasis = [
+  ["factory cost", "not confirmed", "risk"],
+  ["tax/VAT", "needs review", "needs_review"],
+  ["FOB cost", "needs estimate", "needs_review"],
+  ["freight", "not included / future stage", "not_required"],
+  ["exchange rate", "assumption required", "risk"],
+  ["packing/loading", "supplier confirm needed", "supplier_confirm"],
+  ["validity period", "required", "missing"],
+  ["payment terms", "required", "missing"],
+];
+
+const quoteReviewRiskSignals = [
+  "incomplete specification",
+  "supplier cost not confirmed",
+  "quantity split missing",
+  "exchange rate assumption",
+  "FOB cost not confirmed",
+  "customer role unclear",
+  "possible duplicate/risk flag",
+  "drawing not reviewed",
+  "installation responsibility unclear",
+];
+
+const quoteReviewDisabledDecisions = [
+  "禁用：批准预算报价",
+  "禁用：请求客户补充信息",
+  "禁用：请求供应商确认",
+  "禁用：进入正式报价准备",
+  "禁用：因风险暂缓",
+  "禁用：归档",
+];
+
+const quoteReviewSafetyItems = [
+  "不自动生成正式报价",
+  "不生成 PI",
+  "不自动创建订单",
+  "不自动联系客户",
+  "不自动联系供应商",
+  "不确认价格 / 付款 / 生产 / 发货",
+  "所有商业结论必须 Paul 人工确认",
+];
+
+function renderQuoteReviewIntelligence() {
+  const selected = quoteReviewIntelligenceCases[0];
+  return `
+    <div class="quote-review-intelligence-preview" aria-label="AI 报价前复核静态只读预览">
+      <div class="quote-review-intelligence-hero">
+        <div>
+          <span class="state-label">静态只读预览</span>
+          <h3>AI 报价前复核</h3>
+          <p>AI Quote Review Intelligence Center</p>
+          <p>用于在生成正式报价、PI 或订单前，对客户、询盘、供应商、成本、物流、税费、汇率和风险进行 AI 辅助复核。当前为只读预览，不自动报价、不生成 PI、不创建订单。</p>
+        </div>
+        <div class="quote-review-intelligence-badges" aria-label="AI 报价前复核状态">
+          ${badge("只读预览", "draft")}
+          ${badge("AI 建议", "active")}
+          ${badge("不自动报价", "pending")}
+          ${badge("不生成 PI", "pending")}
+          ${badge("不创建订单", "pending")}
+          ${badge("需人工确认", "approval")}
+        </div>
+      </div>
+
+      <section class="quote-review-intelligence-section" aria-label="报价前复核概览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>报价复核概览</h3>
+            <p>DEMO 数字仅用于验证报价前复核信息架构，不代表实时客户、供应商、成本或报价状态。</p>
+          </div>
+          <span>preview metrics</span>
+        </div>
+        <div class="quote-review-intelligence-summary-grid">
+          ${renderSummaryCards(quoteReviewIntelligenceSummaryCards, renderQuoteReviewIntelligenceSummaryCard)}
+        </div>
+      </section>
+
+      <div class="quote-review-intelligence-layout">
+        <section class="quote-review-intelligence-queue" aria-label="DEMO 报价复核队列">
+          <div class="workbench-section-header">
+            <div>
+              <h3>DEMO 报价复核队列</h3>
+              <p>队列不可点击。当前固定展示三个只读案例，用于判断预算报价、正式报价和暂缓边界。</p>
+            </div>
+            <span>3 demo cases</span>
+          </div>
+          ${quoteReviewIntelligenceCases.map(renderQuoteReviewIntelligenceCaseCard).join("")}
+        </section>
+
+        <aside class="quote-review-detail-panel" aria-label="选中报价复核详情">
+          <div class="workbench-review-heading">
+            <div>
+              <h3>选中报价复核详情</h3>
+              <p class="workbench-review-note">固定展示 Peru Light Steel Keel 示例。当前没有点击选择行为。</p>
+            </div>
+            ${badge("Paul 人工确认", "approval")}
+          </div>
+          ${renderQuoteReviewDetail(selected)}
+        </aside>
+      </div>
+
+      <div class="quote-review-intelligence-two-column">
+        <section class="quote-readiness-checklist" aria-label="报价准备度检查清单">
+          <div class="workbench-section-header">
+            <div>
+              <h3>报价准备度清单</h3>
+              <p>用于判断缺失条件、供应商确认点和风险假设；不触发报价创建。</p>
+            </div>
+            <span>readiness checklist</span>
+          </div>
+          <div class="quote-review-check-grid">
+            ${quoteReadinessChecklist.map(renderQuoteReadinessCheckItem).join("")}
+          </div>
+        </section>
+
+        <section class="quote-cost-risk-panel" aria-label="成本和风险基础">
+          <div class="workbench-section-header">
+            <div>
+              <h3>成本 / 风险基础</h3>
+              <p>成本和费用项只显示准备状态，不计算真实价格，不给出正式报价金额。</p>
+            </div>
+            <span>cost basis</span>
+          </div>
+          <div class="quote-cost-risk-grid">
+            ${quoteCostRiskBasis.map(renderQuoteCostRiskItem).join("")}
+          </div>
+        </section>
+      </div>
+
+      <div class="quote-review-intelligence-two-column">
+        ${renderQuoteTypeRecommendationPanel(selected)}
+        ${renderQuoteRiskSignalsPanel()}
+      </div>
+
+      <div class="quote-review-intelligence-two-column">
+        ${renderQuoteRecommendedActionPanel(selected)}
+        ${renderQuoteDraftNotePanel()}
+      </div>
+
+      <div class="quote-review-intelligence-two-column">
+        ${renderQuoteDecisionPanel()}
+        <section class="quote-safety-panel" aria-label="AI 报价前复核安全边界">
+          <div class="workbench-section-header">
+            <div>
+              <h3>安全边界</h3>
+              <p>报价前复核只帮助 Paul 看清条件和风险；所有商业结论必须人工确认。</p>
+            </div>
+            <span>human approval</span>
+          </div>
+          <div class="quote-review-safety-grid">
+            ${quoteReviewSafetyItems.map((item) => `<span class="quote-review-safety-chip">${escapeHtml(item)}</span>`).join("")}
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+}
+
+function renderQuoteReviewIntelligenceSummaryCard(card) {
+  return `
+    <article class="quote-review-intelligence-summary-card quote-review-intelligence-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderQuoteReviewIntelligenceCaseCard(item, index) {
+  const isSelected = index === 0;
+  return `
+    <article class="quote-review-intelligence-card ${isSelected ? "quote-review-intelligence-card-selected" : ""}" aria-label="${escapeHtml(item.title)} 报价复核">
+      <div class="quote-review-intelligence-card-heading">
+        <div>
+          <span class="workbench-category">${escapeHtml(item.status)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+          <p>${escapeHtml(item.customer)} / ${escapeHtml(item.country)}</p>
+        </div>
+        <span>${escapeHtml(item.priority)}</span>
+      </div>
+      <dl class="quote-review-compact-list">
+        <dt>Product</dt>
+        <dd>${escapeHtml(item.product)}</dd>
+        <dt>Risk</dt>
+        <dd>${escapeHtml(item.risk)}</dd>
+        <dt>Blocker</dt>
+        <dd>${escapeHtml(item.blocker)}</dd>
+      </dl>
+      <div class="quote-review-intelligence-chip-row">
+        ${renderChipList(item.badges, "quote-review-status-chip")}
+      </div>
+    </article>
+  `;
+}
+
+function renderQuoteReviewDetail(item) {
+  return `
+    <dl class="quote-review-meta-list">
+      <dt>customer / company</dt>
+      <dd>${escapeHtml(item.customer)}</dd>
+      <dt>country</dt>
+      <dd>${escapeHtml(item.country)}</dd>
+      <dt>inquiry title</dt>
+      <dd>${escapeHtml(item.inquiryTitle)}</dd>
+      <dt>product category</dt>
+      <dd>${escapeHtml(item.productCategory)}</dd>
+      <dt>customer verification</dt>
+      <dd>${escapeHtml(item.customerVerification)}</dd>
+      <dt>inquiry intelligence</dt>
+      <dd>${escapeHtml(item.inquiryIntelligence)}</dd>
+      <dt>supplier intelligence</dt>
+      <dd>${escapeHtml(item.supplierIntelligence)}</dd>
+      <dt>follow-up status</dt>
+      <dd>${escapeHtml(item.followupStatus)}</dd>
+      <dt>quotation readiness</dt>
+      <dd>${escapeHtml(item.quotationReadiness)}</dd>
+      <dt>missing blockers</dt>
+      <dd>${escapeHtml(item.missingBlockers.join(", "))}</dd>
+      <dt>priority / risk</dt>
+      <dd>${escapeHtml(item.priority)} / ${escapeHtml(item.risk)}</dd>
+      <dt>confidence</dt>
+      <dd>${escapeHtml(item.confidence)}</dd>
+    </dl>
+  `;
+}
+
+function renderQuoteReadinessCheckItem([label, status]) {
+  return `
+    <div class="quote-readiness-item">
+      <span>${escapeHtml(label)}</span>
+      <small class="quote-readiness-status quote-readiness-${escapeHtml(status)}">${escapeHtml(status)}</small>
+    </div>
+  `;
+}
+
+function renderQuoteCostRiskItem([label, value, status]) {
+  return `
+    <div class="quote-cost-risk-item">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+      <small class="quote-readiness-status quote-readiness-${escapeHtml(status)}">${escapeHtml(status)}</small>
+    </div>
+  `;
+}
+
+function renderQuoteTypeRecommendationPanel(selected) {
+  return `
+    <section class="quote-type-panel" aria-label="报价类型建议">
+      <div class="workbench-section-header">
+        <div>
+          <h3>报价类型建议</h3>
+          <p>建议只作为人工复核材料；不生成正式报价，不确认价格。</p>
+        </div>
+        <span>budget only</span>
+      </div>
+      <dl class="quote-review-meta-list">
+        <dt>recommended quote type</dt>
+        <dd>Budget estimate possible; formal quote blocked</dd>
+        <dt>reason</dt>
+        <dd>${escapeHtml(selected.blocker)}</dd>
+        <dt>required before formal quote</dt>
+        <dd>supplier unit weight, exact quantity, packing/loading, FOB cost</dd>
+        <dt>formal quote status</dt>
+        <dd>blocked until Paul confirms assumptions and supplier basis</dd>
+      </dl>
+    </section>
+  `;
+}
+
+function renderQuoteRiskSignalsPanel() {
+  return `
+    <section class="quote-risk-panel" aria-label="报价风险信号">
+      <div class="workbench-section-header">
+        <div>
+          <h3>风险信号</h3>
+          <p>风险标签只提示人工复核重点，不自动阻断、不生成动作。</p>
+        </div>
+        <span>risk review</span>
+      </div>
+      <div class="quote-risk-grid">
+        ${quoteReviewRiskSignals.map((item) => `<span class="quote-risk-signal-chip">${escapeHtml(item)}</span>`).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderQuoteRecommendedActionPanel(selected) {
+  return `
+    <section class="quote-action-panel" aria-label="推荐人工动作">
+      <div class="workbench-section-header">
+        <div>
+          <h3>推荐人工动作</h3>
+          <p>下一步建议只给 Paul 参考，不自动联系客户或供应商。</p>
+        </div>
+        <span>${escapeHtml(selected.priority)}</span>
+      </div>
+      <dl class="quote-review-meta-list">
+        <dt>recommended action</dt>
+        <dd>Prepare a budget estimate with clear assumptions, but do not issue a formal quotation until thickness, quantity breakdown, supplier unit weight, packing, and FOB cost are confirmed.</dd>
+        <dt>reason</dt>
+        <dd>Formal quote basis is incomplete and may create price, loading, FOB or supplier-cost risk.</dd>
+        <dt>priority</dt>
+        <dd>${escapeHtml(selected.priority)}</dd>
+        <dt>confidence</dt>
+        <dd>${escapeHtml(selected.confidence)}</dd>
+        <dt>safety note</dt>
+        <dd>预算报价建议必须标明假设；正式报价、PI、订单和发送动作必须 Paul 人工确认。</dd>
+      </dl>
+    </section>
+  `;
+}
+
+function renderQuoteDraftNotePanel() {
+  return `
+    <section class="quote-draft-note-panel" aria-label="报价说明草稿预览">
+      <div class="workbench-section-header">
+        <div>
+          <h3>报价说明草稿</h3>
+          <p>Draft note only. Not official quotation. Human approval required.</p>
+        </div>
+        <span>draft only</span>
+      </div>
+      <div class="quote-draft-note-box">
+        <span>Preliminary note</span>
+        <pre>This preliminary estimate is based on assumed thickness and loading method. Final quotation will be provided after confirmation of exact specifications, quantity breakdown, packing, FOB charges, and supplier unit weight.</pre>
+      </div>
+      <div class="quote-review-intelligence-chip-row">
+        ${renderChipList(["Draft note only", "Not official quotation", "Human approval required"], "quote-review-status-chip")}
+      </div>
+    </section>
+  `;
+}
+
+function renderQuoteDecisionPanel() {
+  return `
+    <section class="quote-decision-panel" aria-label="禁用决策预览">
+      <div class="workbench-section-header">
+        <div>
+          <h3>禁用决策预览</h3>
+          <p>这些是未来可能的人工决策方向；当前全部禁用、不可点击、不可执行。</p>
+        </div>
+        <span>disabled</span>
+      </div>
+      <div class="quote-decision-grid">
+        ${quoteReviewDisabledDecisions.map((item) => `<span class="quote-decision-chip" aria-disabled="true">${escapeHtml(item)}</span>`).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderQuoteReviewIntelligenceReview() {
+  const selected = quoteReviewIntelligenceCases[0];
+  return `
+    <div class="review-stack">
+      <div class="review-card">
+        <h3>AI 报价前复核只读边界</h3>
+        <ul class="check-list">
+          <li>静态只读预览，不调用 AI provider，不计算真实价格，不读取外部 API</li>
+          <li>不创建正式报价，不生成 PI，不创建订单，不确认付款、生产或发货</li>
+          <li>不联系客户或供应商，不发送消息，不创建 RFQ，不修改客户、供应商或询盘数据</li>
+          <li>所有商业结论、预算报价说明和正式报价动作必须 Paul 人工确认</li>
+        </ul>
+      </div>
+      <div class="review-card">
+        <h3>当前复核样本</h3>
+        <dl>
+          <dt>数据来源</dt>
+          <dd>静态只读 DEMO 数据</dd>
+          <dt>复核案例</dt>
+          <dd>${escapeHtml(selected.title)}</dd>
+          <dt>客户 / 国家</dt>
+          <dd>${escapeHtml(selected.customer)} / ${escapeHtml(selected.country)}</dd>
+          <dt>报价建议</dt>
+          <dd>${escapeHtml(selected.quotationReadiness)}</dd>
+          <dt>主要阻塞</dt>
+          <dd>${escapeHtml(selected.blocker)}</dd>
+          <dt>草稿状态</dt>
+          <dd>Draft note only / Not official quotation / Human approval required</dd>
+        </dl>
+      </div>
+      <div class="review-card">
+        <h3>禁用能力</h3>
+        <div class="disabled-chip-row">
+          ${renderDisabledCapabilities(["不可生成正式报价", "不可生成 PI", "不可创建订单", "不可发送客户", "不可联系供应商", "不可确认价格", "不可触发付款 / 生产 / 发货"])}
+        </div>
       </div>
     </div>
   `;
