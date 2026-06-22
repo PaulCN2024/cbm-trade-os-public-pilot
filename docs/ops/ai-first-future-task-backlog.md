@@ -37,9 +37,13 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 - Inquiry Intelligence UI preview
 - Inquiry Intelligence data plan
 - Inquiry Intelligence read-only data foundation
+- Inquiry Intelligence supplier/RFQ plan
+- Inquiry Intelligence quote-readiness read-only projection
+- Inquiry Intelligence file parsing plan
 - Inquiry Intelligence missing-information rules
 - Inquiry Intelligence supplier/RFQ boundary plan
 - Inquiry Intelligence AI provider plan
+- Supplier Intelligence UI preview
 - Follow-up Assistant Plan
 - Risk Center Plan
 - BI Plan
@@ -107,8 +111,11 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 | `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-DATA-PLAN-001` | Inquiry Intelligence | Plan read-only data foundation for inquiry intelligence | define safe tables/projection for analyzed inquiry metadata | docs only first, no schema/API execution | docs only | Low | 21.2 |
 | `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-DATA-READONLY-001` | Inquiry Intelligence | Create read-only inquiry intelligence data foundation after planning approval | expose reviewed analysis metadata and fallback safely | no customer/inquiry mutation, no quotation/RFQ execution | docs/API/schema only if separately approved | Medium | 21.3 |
 | `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-MISSING-INFO-RULES-001` | Inquiry Intelligence | Plan deterministic missing-information checklist rules | classify drawings, specs, quantity, packing, port, payment and responsibility gaps | advisory only, no blocking/write action | docs only | Low | 21.4 |
-| `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-RFQ-PLAN-001` | Inquiry Intelligence | Plan supplier/RFQ draft boundary for inquiry intelligence | identify supplier questions and draft RFQ fields for human review | no supplier contact, no RFQ creation, no price/delivery commitment | docs only | Medium | 21.5 |
-| `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-AI-PROVIDER-PLAN-001` | Inquiry Intelligence | Plan future AI provider use for inquiry analysis | define prompt privacy, source limits, confidence, citations and cost boundary | no live AI calls, no provider keys, no automatic decisions | docs only | Medium | 21.6 |
+| `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-SUPPLIER-RFQ-PLAN-001` | Inquiry Intelligence | Plan supplier/RFQ package boundary for inquiry intelligence | identify supplier questions and draft RFQ fields for human review | no supplier contact, no RFQ creation, no price/delivery commitment | docs only | Medium | 21.5 |
+| `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-QUOTE-READINESS-READONLY-001` | Inquiry Intelligence | Plan or implement read-only quotation-readiness projection | show budget/formal/supplier-confirm/risk-hold status safely | no quotation creation, no price commitment, no send | docs/API/UI only if separately approved | Medium | 21.6 |
+| `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-FILE-PARSING-PLAN-001` | Inquiry Intelligence | Plan drawing/photo/file parsing boundaries for inquiry analysis | define safe future extraction inputs and review workflow | no upload/OCR/parsing, no provider keys, no file mutation | docs only | Medium | 21.7 |
+| `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-RFQ-PLAN-001` | Inquiry Intelligence | Legacy alias: plan supplier/RFQ draft boundary for inquiry intelligence | identify supplier questions and draft RFQ fields for human review | no supplier contact, no RFQ creation, no price/delivery commitment | docs only | Medium | 21.8 |
+| `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-AI-PROVIDER-PLAN-001` | Inquiry Intelligence | Plan future AI provider use for inquiry analysis | define prompt privacy, source limits, confidence, citations and cost boundary | no live AI calls, no provider keys, no automatic decisions | docs only | Medium | 21.9 |
 | `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001` | Follow-up Assistant | Prevent missed customer follow-up | suggest timing and draft messages | no auto-send, no task creation yet | docs only | Low | 22 |
 | `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-UI-001` | Follow-up Assistant | Add static/read-only Follow-up Assistant UI preview | show candidates, missing info, timing, draft-only labels | no send, no task creation, no customer mutation | UI only if separately approved | Medium-low | 22.1 |
 | `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-DATA-PLAN-001` | Follow-up Assistant | Plan follow-up data foundation and admin-read shape | candidates, missing info, recommendations, drafts, reviews | docs only, no schema execution | docs only | Low | 22.2 |
@@ -127,6 +134,7 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 | `CBM-CODEX-SPRINT-AFTERSALES-ASSISTANT-PLAN-001` | After-sales Assistant | Plan complaint and quality issue assistance | classify, evidence checklist, draft response | no compensation promise, no responsibility judgment | docs only | Low | 31 |
 | `CBM-CODEX-SPRINT-QUOTATION-INTELLIGENCE-PLAN-001` | Quotation Intelligence | Plan quote readiness and quote draft workflow | compare, warn, draft explanation | no official quote, no price commitment | docs only | Medium | 32 |
 | `CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-PLAN-001` | Supplier Intelligence | Plan supplier matching and RFQ support | match suppliers, draft Chinese RFQ | no auto-RFQ, no supplier commitment | docs only | Medium | 33 |
+| `CBM-CODEX-SPRINT-SUPPLIER-INTELLIGENCE-UI-001` | Supplier Intelligence | Add or plan static/read-only supplier intelligence preview | show supplier fit, RFQ questions, and disabled decisions | no supplier contact, no RFQ sending, no commitment | docs/UI only if separately approved | Medium-low | 33.1 |
 | `CBM-CODEX-SPRINT-FILE-DRAWING-INTELLIGENCE-PLAN-001` | File/Drawing Intelligence | Plan PDF/drawing/manual understanding | summarize and extract metadata | no upload/OCR/parsing until approved | docs only | Medium | 34 |
 | `CBM-CODEX-SPRINT-MODEL-ROUTER-PLAN-001` | Model Router | Plan multi-model provider routing | select models by task type | no provider keys or live calls | docs only | Medium | 35 |
 | `CBM-CODEX-SPRINT-RAG-ARCHITECTURE-PLAN-001` | RAG/Embedding | Plan retrieval architecture | cite verified knowledge | no vector implementation yet | docs only | Medium | 36 |
@@ -137,12 +145,12 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 Recommended next task:
 
 ```text
-CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-DATA-PLAN-001
+CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-DATA-READONLY-001
 ```
 
 Reason:
 
-AI Inquiry Intelligence now has a static/read-only UI preview. The next recommended task is a documentation-only data foundation plan before schema, API, AI provider, supplier RFQ, quotation, sending, customer/inquiry mutation, or business execution work.
+AI Inquiry Intelligence now has a static/read-only UI preview and a documentation-only data/rules planning package. The next recommended task is a separately approved read-only data foundation with fallback-safe records before AI provider, supplier RFQ, quotation, sending, customer/inquiry mutation, or business execution work.
 
 ## Business Card Capture Real Upload/OCR Pause
 
