@@ -125,6 +125,25 @@ const FOLLOWUP_ASSISTANT_DISABLED_ACTIONS = Object.freeze([
   "trigger_shipment",
 ]);
 
+const INQUIRY_INTELLIGENCE_DISABLED_ACTIONS = Object.freeze([
+  "call_ai_provider",
+  "parse_file",
+  "parse_drawing",
+  "create_supplier_rfq",
+  "send_supplier_rfq",
+  "contact_supplier",
+  "create_quote",
+  "send_quote",
+  "send_customer_message",
+  "update_customer",
+  "update_inquiry",
+  "generate_pi",
+  "confirm_order",
+  "confirm_payment",
+  "trigger_production",
+  "trigger_shipment",
+]);
+
 const DASHBOARD_HIGH_RISK_TERMS = Object.freeze([
   "price",
   "payment",
@@ -277,7 +296,16 @@ function isSupportedResource(resource) {
     resource === "followup-recommendations" ||
     resource === "followup-message-drafts" ||
     resource === "followup-review-queue" ||
-    resource === "followup-reviews"
+    resource === "followup-reviews" ||
+    resource === "inquiry-intelligence-summary" ||
+    resource === "inquiry-intelligence-requests" ||
+    resource === "inquiry-product-classifications" ||
+    resource === "inquiry-missing-information" ||
+    resource === "inquiry-quotation-readiness" ||
+    resource === "inquiry-supplier-rfq-requirements" ||
+    resource === "inquiry-reply-drafts" ||
+    resource === "inquiry-intelligence-review-queue" ||
+    resource === "inquiry-intelligence-reviews"
   );
 }
 
@@ -2491,6 +2519,388 @@ async function readFollowupReviews(response, supabase) {
   );
 }
 
+function inquiryIntelligenceSafetyPayload() {
+  return {
+    human_review_required: true,
+    safety: "read_only_preview",
+    disabled_actions: [...INQUIRY_INTELLIGENCE_DISABLED_ACTIONS],
+  };
+}
+
+function inquiryIntelligenceMeta(resource, warnings, source = "admin_read") {
+  return {
+    generated_at: new Date().toISOString(),
+    source,
+    resource,
+    is_fallback: source === "fallback_demo" || warnings.length > 0,
+  };
+}
+
+function inquiryIntelligenceFallbackWarnings(warnings) {
+  return warnings.length ? warnings : ["inquiry_intelligence_source_unavailable"];
+}
+
+function inquiryIntelligenceRequestRecord(row) {
+  return {
+    id: row.id || "",
+    source_type: row.source_type || "",
+    source_entity_id: row.source_entity_id || "",
+    inquiry_id: row.inquiry_id || "",
+    customer_id: row.customer_id || "",
+    customer_name: row.customer_name || "",
+    company_name: row.company_name || "",
+    country: row.country || "",
+    source_channel: row.source_channel || "",
+    inquiry_title: row.inquiry_title || "",
+    inquiry_text: row.inquiry_text || "",
+    language: row.language || "",
+    analysis_status: row.analysis_status || "",
+    priority_level: row.priority_level || "",
+    risk_level: row.risk_level || "",
+    confidence_level: row.confidence_level || "",
+    requested_by: row.requested_by || "",
+    requested_at: row.requested_at || "",
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function inquiryProductClassificationRecord(row) {
+  return {
+    id: row.id || "",
+    inquiry_intelligence_request_id: row.inquiry_intelligence_request_id || "",
+    primary_category: row.primary_category || "",
+    secondary_category: row.secondary_category || "",
+    product_family: row.product_family || "",
+    material: row.material || "",
+    likely_process: row.likely_process || "",
+    supplier_type_needed: row.supplier_type_needed || "",
+    classification_confidence: row.classification_confidence || "",
+    classification_notes: row.classification_notes || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function inquiryMissingInformationRecord(row) {
+  return {
+    id: row.id || "",
+    inquiry_intelligence_request_id: row.inquiry_intelligence_request_id || "",
+    info_type: row.info_type || "",
+    info_label: row.info_label || "",
+    required_level: row.required_level || "",
+    status: row.status || "",
+    reason: row.reason || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function inquiryQuotationReadinessRecord(row) {
+  return {
+    id: row.id || "",
+    inquiry_intelligence_request_id: row.inquiry_intelligence_request_id || "",
+    readiness_status: row.readiness_status || "",
+    can_prepare_budget_estimate: row.can_prepare_budget_estimate === true,
+    can_prepare_formal_quote: row.can_prepare_formal_quote === true,
+    quote_blockers: row.quote_blockers || "",
+    assumption_needed: row.assumption_needed || "",
+    risk_if_quoted_now: row.risk_if_quoted_now || "",
+    confidence_level: row.confidence_level || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function inquirySupplierRfqRequirementRecord(row) {
+  return {
+    id: row.id || "",
+    inquiry_intelligence_request_id: row.inquiry_intelligence_request_id || "",
+    supplier_required: row.supplier_required === true,
+    supplier_category: row.supplier_category || "",
+    rfq_needed: row.rfq_needed === true,
+    rfq_reason: row.rfq_reason || "",
+    supplier_questions: row.supplier_questions || "",
+    priority_level: row.priority_level || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function inquiryReplyDraftRecord(row) {
+  return {
+    id: row.id || "",
+    inquiry_intelligence_request_id: row.inquiry_intelligence_request_id || "",
+    language: row.language || "",
+    channel: row.channel || "",
+    draft_subject: row.draft_subject || "",
+    draft_body: row.draft_body || "",
+    draft_status: row.draft_status || "",
+    safety_notes: row.safety_notes || "",
+    requires_approval: row.requires_approval !== false,
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function inquiryIntelligenceReviewRecord(row) {
+  return {
+    id: row.id || "",
+    inquiry_intelligence_request_id: row.inquiry_intelligence_request_id || "",
+    reviewer: row.reviewer || "",
+    review_status: row.review_status || "",
+    decision: row.decision || "",
+    reviewer_notes: row.reviewer_notes || "",
+    approved_next_action: row.approved_next_action || "",
+    reviewed_at: row.reviewed_at || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function inquiryIntelligenceSummary(data) {
+  const requests = data.requests || [];
+  const missingInformation = data.missingInformation || [];
+  const quotationReadiness = data.quotationReadiness || [];
+  const supplierRequirements = data.supplierRequirements || [];
+  const replyDrafts = data.replyDrafts || [];
+  return {
+    total_requests: requests.length,
+    needs_more_info: requests.filter((record) => record.analysis_status === "needs_more_info").length,
+    supplier_confirm_needed: requests.filter((record) => record.analysis_status === "supplier_confirm_needed").length,
+    quote_ready: requests.filter((record) => record.analysis_status === "quote_ready").length,
+    risk_hold: requests.filter((record) => record.analysis_status === "risk_hold" || record.risk_level === "high").length,
+    missing_information: missingInformation.filter((record) => ["missing", "needs_review", "supplier_confirm"].includes(record.status)).length,
+    supplier_rfq_needed: supplierRequirements.filter((record) => record.rfq_needed === true || record.supplier_required === true).length,
+    budget_estimate_possible: quotationReadiness.filter((record) => record.can_prepare_budget_estimate === true).length,
+    formal_quote_possible: quotationReadiness.filter((record) => record.can_prepare_formal_quote === true).length,
+    draft_replies: replyDrafts.filter((record) => ["draft", "needs_review"].includes(record.draft_status)).length,
+    high_priority: requests.filter((record) => record.priority_level === "high").length,
+  };
+}
+
+function inquiryIntelligenceReviewQueueFromData(data) {
+  const readinessMap = new Map((data.quotationReadiness || []).map((record) => [record.inquiry_intelligence_request_id, record]));
+  const reviewMap = new Map((data.reviews || []).map((record) => [record.inquiry_intelligence_request_id, record]));
+  return (data.requests || [])
+    .filter((record) => record.analysis_status !== "archived")
+    .map((record) => {
+      const readiness = readinessMap.get(record.id) || {};
+      const review = reviewMap.get(record.id) || {};
+      return {
+        id: record.id,
+        inquiry_title: record.inquiry_title,
+        customer_name: record.customer_name,
+        company_name: record.company_name,
+        country: record.country,
+        analysis_status: record.analysis_status,
+        priority_level: record.priority_level,
+        risk_level: record.risk_level,
+        confidence_level: record.confidence_level,
+        readiness_status: readiness.readiness_status || "",
+        review_status: review.review_status || "pending",
+        recommended_next_action:
+          review.approved_next_action ||
+          (readiness.readiness_status === "supplier_confirm_needed"
+            ? "Review supplier confirmation requirements before any RFQ or quotation."
+            : "Review missing information before any customer reply or quotation step."),
+        created_at: record.created_at,
+      };
+    })
+    .slice(0, 50);
+}
+
+async function readInquiryIntelligenceSources(supabase, warnings) {
+  const [requests, classifications, missingInformation, quotationReadiness, supplierRequirements, replyDrafts, reviews] = await Promise.all([
+    readSource({
+      supabase,
+      table: "inquiry_intelligence_requests",
+      select:
+        "id,source_type,source_entity_id,inquiry_id,customer_id,customer_name,company_name,country,source_channel,inquiry_title,inquiry_text,language,analysis_status,priority_level,risk_level,confidence_level,requested_by,requested_at,created_at,updated_at",
+      warning: "inquiry_intelligence_requests_unavailable",
+      warnings,
+      order: "requested_at",
+      limit: 50,
+    }),
+    readSource({
+      supabase,
+      table: "inquiry_product_classifications",
+      select:
+        "id,inquiry_intelligence_request_id,primary_category,secondary_category,product_family,material,likely_process,supplier_type_needed,classification_confidence,classification_notes,created_at",
+      warning: "inquiry_product_classifications_unavailable",
+      warnings,
+      limit: 50,
+    }),
+    readSource({
+      supabase,
+      table: "inquiry_missing_information",
+      select: "id,inquiry_intelligence_request_id,info_type,info_label,required_level,status,reason,created_at",
+      warning: "inquiry_missing_information_unavailable",
+      warnings,
+      limit: 120,
+    }),
+    readSource({
+      supabase,
+      table: "inquiry_quotation_readiness",
+      select:
+        "id,inquiry_intelligence_request_id,readiness_status,can_prepare_budget_estimate,can_prepare_formal_quote,quote_blockers,assumption_needed,risk_if_quoted_now,confidence_level,created_at",
+      warning: "inquiry_quotation_readiness_unavailable",
+      warnings,
+      limit: 50,
+    }),
+    readSource({
+      supabase,
+      table: "inquiry_supplier_rfq_requirements",
+      select:
+        "id,inquiry_intelligence_request_id,supplier_required,supplier_category,rfq_needed,rfq_reason,supplier_questions,priority_level,created_at",
+      warning: "inquiry_supplier_rfq_requirements_unavailable",
+      warnings,
+      limit: 50,
+    }),
+    readSource({
+      supabase,
+      table: "inquiry_reply_drafts",
+      select:
+        "id,inquiry_intelligence_request_id,language,channel,draft_subject,draft_body,draft_status,safety_notes,requires_approval,created_at,updated_at",
+      warning: "inquiry_reply_drafts_unavailable",
+      warnings,
+      limit: 50,
+    }),
+    readSource({
+      supabase,
+      table: "inquiry_intelligence_reviews",
+      select:
+        "id,inquiry_intelligence_request_id,reviewer,review_status,decision,reviewer_notes,approved_next_action,reviewed_at,created_at",
+      warning: "inquiry_intelligence_reviews_unavailable",
+      warnings,
+      limit: 50,
+    }),
+  ]);
+
+  return {
+    requests: requests.map(inquiryIntelligenceRequestRecord),
+    classifications: classifications.map(inquiryProductClassificationRecord),
+    missingInformation: missingInformation.map(inquiryMissingInformationRecord),
+    quotationReadiness: quotationReadiness.map(inquiryQuotationReadinessRecord),
+    supplierRequirements: supplierRequirements.map(inquirySupplierRfqRequirementRecord),
+    replyDrafts: replyDrafts.map(inquiryReplyDraftRecord),
+    reviews: reviews.map(inquiryIntelligenceReviewRecord),
+  };
+}
+
+function sendInquiryIntelligencePayload(response, resource, records, summary, warnings, source = "admin_read") {
+  sendJson(response, 200, {
+    meta: inquiryIntelligenceMeta(resource, warnings, source),
+    records,
+    summary,
+    safety: inquiryIntelligenceSafetyPayload(),
+    warnings,
+  });
+}
+
+function sendInquiryIntelligenceFallback(response, resource, records, summary, warnings) {
+  sendInquiryIntelligencePayload(response, resource, records, summary, inquiryIntelligenceFallbackWarnings(warnings), "fallback_demo");
+}
+
+async function readInquiryIntelligenceDataOrFallback(response, supabase, resource, pickRecords, pickSummary) {
+  const warnings = [];
+  const data = await readInquiryIntelligenceSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const emptyData = {
+      requests: [],
+      classifications: [],
+      missingInformation: [],
+      quotationReadiness: [],
+      supplierRequirements: [],
+      replyDrafts: [],
+      reviews: [],
+    };
+    sendInquiryIntelligenceFallback(response, resource, pickRecords(emptyData), pickSummary(emptyData), warnings);
+    return;
+  }
+
+  sendInquiryIntelligencePayload(response, resource, pickRecords(data), pickSummary(data), warnings);
+}
+
+async function readInquiryIntelligenceSummary(response, supabase) {
+  await readInquiryIntelligenceDataOrFallback(response, supabase, "inquiry-intelligence-summary", () => [], inquiryIntelligenceSummary);
+}
+
+async function readInquiryIntelligenceRequests(response, supabase) {
+  await readInquiryIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "inquiry-intelligence-requests",
+    (data) => data.requests,
+    inquiryIntelligenceSummary
+  );
+}
+
+async function readInquiryProductClassifications(response, supabase) {
+  await readInquiryIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "inquiry-product-classifications",
+    (data) => data.classifications,
+    (data) => ({ total_records: data.classifications.length })
+  );
+}
+
+async function readInquiryMissingInformation(response, supabase) {
+  await readInquiryIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "inquiry-missing-information",
+    (data) => data.missingInformation,
+    (data) => ({ total_records: data.missingInformation.length })
+  );
+}
+
+async function readInquiryQuotationReadiness(response, supabase) {
+  await readInquiryIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "inquiry-quotation-readiness",
+    (data) => data.quotationReadiness,
+    (data) => ({ total_records: data.quotationReadiness.length })
+  );
+}
+
+async function readInquirySupplierRfqRequirements(response, supabase) {
+  await readInquiryIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "inquiry-supplier-rfq-requirements",
+    (data) => data.supplierRequirements,
+    (data) => ({ total_records: data.supplierRequirements.length })
+  );
+}
+
+async function readInquiryReplyDrafts(response, supabase) {
+  await readInquiryIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "inquiry-reply-drafts",
+    (data) => data.replyDrafts,
+    (data) => ({ total_records: data.replyDrafts.length })
+  );
+}
+
+async function readInquiryIntelligenceReviewQueue(response, supabase) {
+  await readInquiryIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "inquiry-intelligence-review-queue",
+    inquiryIntelligenceReviewQueueFromData,
+    (data) => ({ total_records: inquiryIntelligenceReviewQueueFromData(data).length })
+  );
+}
+
+async function readInquiryIntelligenceReviews(response, supabase) {
+  await readInquiryIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "inquiry-intelligence-reviews",
+    (data) => data.reviews,
+    (data) => ({ total_records: data.reviews.length })
+  );
+}
+
 function dashboardSummaryCards({ inquiries, customers, aiAnalyses, followUps }, now = new Date()) {
   const newInquiries = inquiries.filter((record) => isToday(record.created_at, now)).length;
   const missingInquiryCount = inquiries.filter((record) => hasMissingInfo(record, "missing_info")).length;
@@ -3403,6 +3813,60 @@ module.exports = async function handler(request, response) {
     if (resource === "followup-reviews") {
       const supabase = getSupabaseClient(request);
       await readFollowupReviews(response, supabase);
+      return;
+    }
+
+    if (resource === "inquiry-intelligence-summary") {
+      const supabase = getSupabaseClient(request);
+      await readInquiryIntelligenceSummary(response, supabase);
+      return;
+    }
+
+    if (resource === "inquiry-intelligence-requests") {
+      const supabase = getSupabaseClient(request);
+      await readInquiryIntelligenceRequests(response, supabase);
+      return;
+    }
+
+    if (resource === "inquiry-product-classifications") {
+      const supabase = getSupabaseClient(request);
+      await readInquiryProductClassifications(response, supabase);
+      return;
+    }
+
+    if (resource === "inquiry-missing-information") {
+      const supabase = getSupabaseClient(request);
+      await readInquiryMissingInformation(response, supabase);
+      return;
+    }
+
+    if (resource === "inquiry-quotation-readiness") {
+      const supabase = getSupabaseClient(request);
+      await readInquiryQuotationReadiness(response, supabase);
+      return;
+    }
+
+    if (resource === "inquiry-supplier-rfq-requirements") {
+      const supabase = getSupabaseClient(request);
+      await readInquirySupplierRfqRequirements(response, supabase);
+      return;
+    }
+
+    if (resource === "inquiry-reply-drafts") {
+      const supabase = getSupabaseClient(request);
+      await readInquiryReplyDrafts(response, supabase);
+      return;
+    }
+
+    if (resource === "inquiry-intelligence-review-queue") {
+      const supabase = getSupabaseClient(request);
+      await readInquiryIntelligenceReviewQueue(response, supabase);
+      return;
+    }
+
+    if (resource === "inquiry-intelligence-reviews") {
+      const supabase = getSupabaseClient(request);
+      await readInquiryIntelligenceReviews(response, supabase);
       return;
     }
   } catch (error) {

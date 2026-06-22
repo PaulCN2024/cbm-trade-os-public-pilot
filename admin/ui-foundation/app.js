@@ -261,12 +261,22 @@ const FOLLOWUP_RECOMMENDATIONS_ENDPOINT = "/api/admin-read/followup-recommendati
 const FOLLOWUP_MESSAGE_DRAFTS_ENDPOINT = "/api/admin-read/followup-message-drafts";
 const FOLLOWUP_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/followup-review-queue";
 const FOLLOWUP_REVIEWS_ENDPOINT = "/api/admin-read/followup-reviews";
+const INQUIRY_INTELLIGENCE_SUMMARY_ENDPOINT = "/api/admin-read/inquiry-intelligence-summary";
+const INQUIRY_INTELLIGENCE_REQUESTS_ENDPOINT = "/api/admin-read/inquiry-intelligence-requests";
+const INQUIRY_PRODUCT_CLASSIFICATIONS_ENDPOINT = "/api/admin-read/inquiry-product-classifications";
+const INQUIRY_MISSING_INFORMATION_ENDPOINT = "/api/admin-read/inquiry-missing-information";
+const INQUIRY_QUOTATION_READINESS_ENDPOINT = "/api/admin-read/inquiry-quotation-readiness";
+const INQUIRY_SUPPLIER_RFQ_REQUIREMENTS_ENDPOINT = "/api/admin-read/inquiry-supplier-rfq-requirements";
+const INQUIRY_REPLY_DRAFTS_ENDPOINT = "/api/admin-read/inquiry-reply-drafts";
+const INQUIRY_INTELLIGENCE_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/inquiry-intelligence-review-queue";
+const INQUIRY_INTELLIGENCE_REVIEWS_ENDPOINT = "/api/admin-read/inquiry-intelligence-reviews";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
 const knowledgeApiState = createKnowledgeState();
 const businessCardApiState = createBusinessCardCaptureState();
 const customerVerificationApiState = createCustomerVerificationState();
 const followupAssistantApiState = createFollowupAssistantState();
+const inquiryIntelligenceApiState = createInquiryIntelligenceState();
 
 const companyPreviewFallback = [
   {
@@ -2230,6 +2240,9 @@ function setSection(sectionId) {
   }
   if (sectionId === "followup-assistant") {
     loadFollowupAssistantReadOnly();
+  }
+  if (sectionId === "inquiry-intelligence") {
+    loadInquiryIntelligenceReadOnly();
   }
   if (sectionId === "files") {
     loadDocumentsReadOnly();
@@ -4569,19 +4582,256 @@ const inquiryIntelligenceSafetyItems = [
   "所有结论需要 Paul 人工确认",
 ];
 
+function fallbackInquiryIntelligenceApiData() {
+  return {
+    summary: {
+      total_requests: inquiryIntelligenceItems.length,
+      needs_more_info: 2,
+      supplier_confirm_needed: 1,
+      quote_ready: 0,
+      risk_hold: 0,
+      missing_information: 7,
+      supplier_rfq_needed: 2,
+      draft_replies: 3,
+      high_priority: 1,
+    },
+    items: inquiryIntelligenceItems,
+    requests: [],
+    classifications: [],
+    missingInformation: [],
+    quotationReadiness: [],
+    supplierRequirements: [],
+    replyDrafts: [],
+    reviewQueue: [],
+    reviews: [],
+  };
+}
+
+function getInquiryIntelligenceViewModel() {
+  const fallback = fallbackInquiryIntelligenceApiData();
+  const isLive = inquiryIntelligenceApiState.status === "loaded" && inquiryIntelligenceApiState.source === "api";
+  const isLoading = inquiryIntelligenceApiState.status === "loading";
+  const summary = inquiryIntelligenceApiState.summary || fallback.summary;
+  const liveItems = normalizeInquiryIntelligenceItems({
+    requests: inquiryIntelligenceApiState.requests,
+    classifications: inquiryIntelligenceApiState.classifications,
+    missingInformation: inquiryIntelligenceApiState.missingInformation,
+    quotationReadiness: inquiryIntelligenceApiState.quotationReadiness,
+    supplierRequirements: inquiryIntelligenceApiState.supplierRequirements,
+    replyDrafts: inquiryIntelligenceApiState.replyDrafts,
+    reviews: inquiryIntelligenceApiState.reviews,
+  });
+  const items = isLive && liveItems.length ? liveItems : fallback.items;
+  const sourceLabel = isLive ? "实时只读数据" : isLoading ? "正在读取 admin-read 数据" : fallbackLabel;
+
+  return {
+    isLive,
+    isLoading,
+    sourceLabel,
+    summaryCards: buildInquiryIntelligenceSummaryCards(summary),
+    items,
+    selected: items[0] || fallback.items[0],
+    queueCountLabel: `${items.length} 条${isLive ? "只读记录" : "静态示例"}`,
+    headerCopy: isLive
+      ? "当前展示 admin-read 只读数据；不调用 AI、不解析附件、不创建 RFQ、不报价、不发送。"
+      : "当前显示安全 fallback 示例；不调用 AI、不解析真实附件、不联系供应商、不报价、不发送。",
+  };
+}
+
+function buildInquiryIntelligenceSummaryCards(summary) {
+  return [
+    {
+      label: "待分析询盘",
+      value: String(summary.total_requests ?? 0),
+      subtitle: "只读分析请求，用于人工复核",
+      tone: "info",
+    },
+    {
+      label: "可进入预算判断",
+      value: String(summary.budget_estimate_possible ?? 0),
+      subtitle: "仍需人工确认假设、价格和交期边界",
+      tone: "active",
+    },
+    {
+      label: "需补充信息",
+      value: String(summary.missing_information ?? summary.needs_more_info ?? 0),
+      subtitle: "图纸、规格、数量或包装资料缺失",
+      tone: "warning",
+    },
+    {
+      label: "需供应商确认",
+      value: String(summary.supplier_rfq_needed ?? summary.supplier_confirm_needed ?? 0),
+      subtitle: "单位重量、MOQ、装柜或交期待核实",
+      tone: "warning",
+    },
+    {
+      label: "高风险询盘",
+      value: String(summary.risk_hold ?? 0),
+      subtitle: "价格、付款、质量责任或交期风险",
+      tone: "danger",
+    },
+    {
+      label: "草稿回复",
+      value: String(summary.draft_replies ?? 0),
+      subtitle: "Draft only，发送前必须人工确认",
+      tone: "neutral",
+    },
+  ];
+}
+
+function groupInquiryIntelligenceRecords(records, key = "inquiry_intelligence_request_id") {
+  return (records || []).reduce((map, record) => {
+    const groupKey = record?.[key] || "";
+    if (!map.has(groupKey)) map.set(groupKey, []);
+    map.get(groupKey).push(record);
+    return map;
+  }, new Map());
+}
+
+function firstInquiryIntelligenceRecord(records, key = "inquiry_intelligence_request_id") {
+  const grouped = groupInquiryIntelligenceRecords(records, key);
+  return new Map(Array.from(grouped.entries()).map(([groupKey, groupRecords]) => [groupKey, groupRecords[0] || {}]));
+}
+
+function normalizeInquiryIntelligenceItems(data) {
+  const requests = data.requests || [];
+  if (!requests.length) return [];
+
+  const classificationMap = firstInquiryIntelligenceRecord(data.classifications || []);
+  const missingMap = groupInquiryIntelligenceRecords(data.missingInformation || []);
+  const readinessMap = firstInquiryIntelligenceRecord(data.quotationReadiness || []);
+  const supplierMap = firstInquiryIntelligenceRecord(data.supplierRequirements || []);
+  const draftMap = firstInquiryIntelligenceRecord(data.replyDrafts || []);
+  const reviewMap = firstInquiryIntelligenceRecord(data.reviews || []);
+
+  return requests.map((request) => {
+    const classification = classificationMap.get(request.id) || {};
+    const missingItems = missingMap.get(request.id) || [];
+    const readiness = readinessMap.get(request.id) || {};
+    const supplier = supplierMap.get(request.id) || {};
+    const draft = draftMap.get(request.id) || {};
+    const review = reviewMap.get(request.id) || {};
+    const missingChecklist = missingItems.length
+      ? missingItems.map((item) => [
+          safeDashboardText(item.info_label || item.info_type, "缺失信息"),
+          normalizeInquiryChecklistStatus(item.status),
+        ])
+      : [["missing information", "needs_review"]];
+
+    return {
+      title: safeDashboardText(request.inquiry_title, "未命名询盘分析"),
+      customer: safeDashboardText(request.customer_name, "需要人工确认"),
+      company: safeDashboardText(request.company_name, "需要人工确认"),
+      country: safeDashboardText(request.country, "—"),
+      channel: safeDashboardText(request.source_channel || request.source_type, "manual_note"),
+      category: "询盘",
+      product: safeDashboardText(classification.primary_category || classification.product_family, "产品类别待确认"),
+      requestedQuantity: "需要人工确认",
+      targetPort: missingItems.find((item) => item.info_type === "target_port")?.status === "confirmed" ? "已确认" : "待确认",
+      stage: safeDashboardText(request.analysis_status, "pending"),
+      stageLabel: inquiryIntelligenceStageLabel(request.analysis_status),
+      priority: safeDashboardText(request.priority_level, "medium"),
+      risk: safeDashboardText(request.risk_level, "medium"),
+      confidence: safeDashboardText(request.confidence_level || classification.classification_confidence, "medium"),
+      customerVerificationStatus: "needs_review",
+      followupStatus: "information_request",
+      badges: inquiryIntelligenceBadges(request, readiness, supplier),
+      needs: missingItems
+        .filter((item) => ["missing", "needs_review", "supplier_confirm"].includes(item.status))
+        .map((item) => safeDashboardText(item.info_label || item.info_type, "缺失信息"))
+        .slice(0, 6),
+      summary: truncateForDisplay(request.inquiry_text, "客户询盘需要人工复核后才能进入报价或供应商确认判断。", 220),
+      classification: {
+        primaryCategory: safeDashboardText(classification.primary_category, "待分类"),
+        secondaryCategory: safeDashboardText(classification.secondary_category, "待分类"),
+        productFamily: safeDashboardText(classification.product_family, "待确认"),
+        possibleMaterial: safeDashboardText(classification.material, "待确认"),
+        productionProcess: safeDashboardText(classification.likely_process, "待确认"),
+        supplierType: safeDashboardText(classification.supplier_type_needed, "待确认"),
+      },
+      missingChecklist,
+      quotationReadiness: [
+        ["Ready for quotation", readiness.can_prepare_formal_quote ? "Possible after human review" : "No / Needs review"],
+        ["Readiness status", safeDashboardText(readiness.readiness_status, "not_ready")],
+        ["Can prepare budget estimate", readiness.can_prepare_budget_estimate ? "Yes, only with assumptions and Paul review" : "No"],
+        ["Formal quotation", readiness.can_prepare_formal_quote ? "Requires Paul approval before use" : "Blocked until information is confirmed"],
+        ["Risk if quote now", safeDashboardText(readiness.risk_if_quoted_now || readiness.quote_blockers, "需要人工复核风险。")],
+      ],
+      supplierRequirement: [
+        ["Supplier confirmation needed", supplier.supplier_required ? "Yes" : "Not yet"],
+        ["Need to ask supplier", safeDashboardText(supplier.supplier_questions, "待人工确认")],
+        ["Supplier category", safeDashboardText(supplier.supplier_category, "待确认")],
+        ["RFQ status", supplier.rfq_needed ? "Needed later, but not created" : "Not created"],
+      ],
+      risks: [
+        safeDashboardText(readiness.quote_blockers, "quotation readiness requires review"),
+        safeDashboardText(readiness.assumption_needed, "assumptions require review"),
+        safeDashboardText(readiness.risk_if_quoted_now, "risk if quoted now requires review"),
+      ].filter((item, index, list) => item && list.indexOf(item) === index),
+      recommendedAction: {
+        action: safeDashboardText(
+          review.approved_next_action,
+          supplier.rfq_needed
+            ? "人工复核缺失信息和供应商确认点，再决定是否准备 RFQ 草稿。"
+            : "先补齐关键信息，再由人工决定是否进入报价准备。"
+        ),
+        reason: safeDashboardText(readiness.quote_blockers || supplier.rfq_reason, "正式报价或客户回复前需要人工复核。"),
+        timing: "Before supplier RFQ or customer quotation preparation",
+        priority: safeDashboardText(request.priority_level, "medium"),
+        confidence: safeDashboardText(request.confidence_level, "medium"),
+      },
+      draftSubject: safeDashboardText(draft.draft_subject, "Draft reply requires review"),
+      draftBody: safeDashboardText(draft.draft_body, "Draft body is not available. Human review is required before any customer communication."),
+      disabledCapabilities: ["不可发送", "不可报价", "不可生成 PI", "不可创建 RFQ", "不可下单", "不可触发付款 / 生产 / 发货"],
+    };
+  });
+}
+
+function normalizeInquiryChecklistStatus(status) {
+  return ["confirmed", "missing", "needs_review", "supplier_confirm", "not_required"].includes(status) ? status : "needs_review";
+}
+
+function inquiryIntelligenceStageLabel(status) {
+  const labels = {
+    draft: "草稿",
+    pending: "待分析",
+    analyzed: "已分析",
+    needs_more_info: "缺失信息",
+    supplier_confirm_needed: "供应商确认",
+    quote_ready: "可复核报价",
+    risk_hold: "风险暂停",
+    archived: "已归档",
+  };
+  return labels[status] || "需要复核";
+}
+
+function inquiryIntelligenceBadges(request, readiness, supplier) {
+  const labels = [inquiryIntelligenceStageLabel(request.analysis_status), "需要人工复核"];
+  if (request.risk_level === "high") labels.push("高风险");
+  if (readiness?.readiness_status === "blocked_by_missing_info") labels.push("缺失信息");
+  if (supplier?.supplier_required || supplier?.rfq_needed) labels.push("供应商确认");
+  return labels;
+}
+
+function truncateForDisplay(value, fallback, maxLength = 180) {
+  const text = safeDashboardText(value, fallback);
+  return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
+}
+
 function renderInquiryIntelligence() {
-  const selected = inquiryIntelligenceItems[0];
+  const model = getInquiryIntelligenceViewModel();
+  const selected = model.selected;
   return `
     <div class="inquiry-intelligence-preview" aria-label="AI 询盘智能分析静态只读预览">
       <div class="inquiry-intelligence-hero">
         <div>
-          <span class="state-label">静态只读预览</span>
+          <span class="state-label">${escapeHtml(model.sourceLabel)}</span>
           <h3>AI 询盘智能分析</h3>
           <p>把客户询盘拆成产品类别、缺失信息、报价准备度、供应商确认点、风险信号和草稿回复，帮助 Paul 判断下一步。</p>
-          <p>当前只展示 DEMO 结果；不调用 AI、不解析真实附件、不联系供应商、不报价、不发送。</p>
+          <p>${escapeHtml(model.headerCopy)}</p>
         </div>
         <div class="inquiry-intelligence-badges" aria-label="AI 询盘智能分析状态">
-          ${badge("只读预览", "draft")}
+          ${badge(model.isLive ? "实时只读数据" : "只读预览", model.isLive ? "active" : "draft")}
           ${badge("AI 建议", "active")}
           ${badge("不自动报价", "pending")}
           ${badge("不自动发送", "pending")}
@@ -4596,10 +4846,10 @@ function renderInquiryIntelligence() {
             <h3>询盘智能概览</h3>
             <p>以静态 DEMO 方式展示未来 AI 可以整理的询盘状态，不代表实时客户或真实报价状态。</p>
           </div>
-          <span>static demo</span>
+          <span>${escapeHtml(model.sourceLabel)}</span>
         </div>
         <div class="inquiry-intelligence-summary-grid">
-          ${renderSummaryCards(inquiryIntelligenceSummaryCards, renderInquiryIntelligenceSummaryCard)}
+          ${renderSummaryCards(model.summaryCards, renderInquiryIntelligenceSummaryCard)}
         </div>
       </section>
 
@@ -4608,11 +4858,11 @@ function renderInquiryIntelligence() {
           <div class="workbench-section-header">
             <div>
               <h3>DEMO 询盘分析队列</h3>
-              <p>队列项不可点击；固定展示三条示例询盘，验证 AI 分析信息架构。</p>
+              <p>队列项不可点击；展示只读分析记录或安全 fallback 示例，验证 AI 分析信息架构。</p>
             </div>
-            <span>${escapeHtml(String(inquiryIntelligenceItems.length))} 条静态示例</span>
+            <span>${escapeHtml(model.queueCountLabel)}</span>
           </div>
-          ${inquiryIntelligenceItems.map(renderInquiryIntelligenceQueueItem).join("")}
+          ${model.items.map(renderInquiryIntelligenceQueueItem).join("")}
         </section>
 
         <aside class="inquiry-intelligence-detail-panel" aria-label="选中询盘详情">
@@ -4865,7 +5115,8 @@ function renderInquiryIntelligenceChecklistItem([label, status]) {
 }
 
 function renderInquiryIntelligenceReview() {
-  const selected = inquiryIntelligenceItems[0];
+  const model = getInquiryIntelligenceViewModel();
+  const selected = model.selected;
   return `
     <div class="review-stack">
       <div class="review-card">
@@ -4880,6 +5131,10 @@ function renderInquiryIntelligenceReview() {
       <div class="review-card">
         <h3>当前复核样本</h3>
         <dl>
+          <dt>API 路由</dt>
+          <dd>GET ${INQUIRY_INTELLIGENCE_REQUESTS_ENDPOINT}</dd>
+          <dt>数据状态</dt>
+          <dd>${escapeHtml(model.sourceLabel)}</dd>
           <dt>询盘</dt>
           <dd>${escapeHtml(selected.title)}</dd>
           <dt>客户 / 公司</dt>
@@ -4898,6 +5153,135 @@ function renderInquiryIntelligenceReview() {
       </div>
     </div>
   `;
+}
+
+async function fetchInquiryIntelligenceResource(endpoint) {
+  const token = getAdminAccessToken();
+  const response = await fetch(endpoint, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || `${endpoint} failed with ${response.status}`);
+  }
+  return payload;
+}
+
+function inquiryIntelligenceRecords(payload) {
+  return Array.isArray(payload?.records) ? payload.records : [];
+}
+
+function inquiryIntelligenceIsFallbackPayload(...payloads) {
+  return payloads.some((payload) => payload?.meta?.source === "fallback_demo" || payload?.meta?.is_fallback === true);
+}
+
+async function loadInquiryIntelligenceReadOnly() {
+  inquiryIntelligenceApiState.status = "loading";
+  inquiryIntelligenceApiState.error = "";
+  inquiryIntelligenceApiState.source = "api";
+  refreshInquiryIntelligenceView();
+
+  try {
+    const [
+      summaryPayload,
+      requestsPayload,
+      classificationsPayload,
+      missingPayload,
+      readinessPayload,
+      supplierPayload,
+      draftsPayload,
+      queuePayload,
+      reviewsPayload,
+    ] = await Promise.all([
+      fetchInquiryIntelligenceResource(INQUIRY_INTELLIGENCE_SUMMARY_ENDPOINT),
+      fetchInquiryIntelligenceResource(INQUIRY_INTELLIGENCE_REQUESTS_ENDPOINT),
+      fetchInquiryIntelligenceResource(INQUIRY_PRODUCT_CLASSIFICATIONS_ENDPOINT),
+      fetchInquiryIntelligenceResource(INQUIRY_MISSING_INFORMATION_ENDPOINT),
+      fetchInquiryIntelligenceResource(INQUIRY_QUOTATION_READINESS_ENDPOINT),
+      fetchInquiryIntelligenceResource(INQUIRY_SUPPLIER_RFQ_REQUIREMENTS_ENDPOINT),
+      fetchInquiryIntelligenceResource(INQUIRY_REPLY_DRAFTS_ENDPOINT),
+      fetchInquiryIntelligenceResource(INQUIRY_INTELLIGENCE_REVIEW_QUEUE_ENDPOINT),
+      fetchInquiryIntelligenceResource(INQUIRY_INTELLIGENCE_REVIEWS_ENDPOINT),
+    ]);
+
+    inquiryIntelligenceApiState.summary = summaryPayload.summary || null;
+    inquiryIntelligenceApiState.requests = inquiryIntelligenceRecords(requestsPayload);
+    inquiryIntelligenceApiState.classifications = inquiryIntelligenceRecords(classificationsPayload);
+    inquiryIntelligenceApiState.missingInformation = inquiryIntelligenceRecords(missingPayload);
+    inquiryIntelligenceApiState.quotationReadiness = inquiryIntelligenceRecords(readinessPayload);
+    inquiryIntelligenceApiState.supplierRequirements = inquiryIntelligenceRecords(supplierPayload);
+    inquiryIntelligenceApiState.replyDrafts = inquiryIntelligenceRecords(draftsPayload);
+    inquiryIntelligenceApiState.reviewQueue = inquiryIntelligenceRecords(queuePayload);
+    inquiryIntelligenceApiState.reviews = inquiryIntelligenceRecords(reviewsPayload);
+
+    const recordCount =
+      inquiryIntelligenceApiState.requests.length +
+      inquiryIntelligenceApiState.classifications.length +
+      inquiryIntelligenceApiState.missingInformation.length +
+      inquiryIntelligenceApiState.quotationReadiness.length +
+      inquiryIntelligenceApiState.supplierRequirements.length +
+      inquiryIntelligenceApiState.replyDrafts.length +
+      inquiryIntelligenceApiState.reviewQueue.length +
+      inquiryIntelligenceApiState.reviews.length;
+
+    if (
+      inquiryIntelligenceIsFallbackPayload(
+        summaryPayload,
+        requestsPayload,
+        classificationsPayload,
+        missingPayload,
+        readinessPayload,
+        supplierPayload,
+        draftsPayload,
+        queuePayload,
+        reviewsPayload
+      )
+    ) {
+      const fallback = fallbackInquiryIntelligenceApiData();
+      inquiryIntelligenceApiState.summary = fallback.summary;
+      inquiryIntelligenceApiState.requests = [];
+      inquiryIntelligenceApiState.classifications = [];
+      inquiryIntelligenceApiState.missingInformation = [];
+      inquiryIntelligenceApiState.quotationReadiness = [];
+      inquiryIntelligenceApiState.supplierRequirements = [];
+      inquiryIntelligenceApiState.replyDrafts = [];
+      inquiryIntelligenceApiState.reviewQueue = [];
+      inquiryIntelligenceApiState.reviews = [];
+      inquiryIntelligenceApiState.status = "error";
+      inquiryIntelligenceApiState.error = "inquiry-intelligence admin-read source unavailable; showing fallback demo";
+      inquiryIntelligenceApiState.source = fallbackLabel;
+    } else if (recordCount === 0) {
+      const fallback = fallbackInquiryIntelligenceApiData();
+      inquiryIntelligenceApiState.summary = fallback.summary;
+      inquiryIntelligenceApiState.status = "empty";
+      inquiryIntelligenceApiState.source = fallbackLabel;
+    } else {
+      inquiryIntelligenceApiState.status = "loaded";
+      inquiryIntelligenceApiState.source = "api";
+    }
+  } catch (error) {
+    const fallback = fallbackInquiryIntelligenceApiData();
+    inquiryIntelligenceApiState.summary = fallback.summary;
+    inquiryIntelligenceApiState.requests = [];
+    inquiryIntelligenceApiState.classifications = [];
+    inquiryIntelligenceApiState.missingInformation = [];
+    inquiryIntelligenceApiState.quotationReadiness = [];
+    inquiryIntelligenceApiState.supplierRequirements = [];
+    inquiryIntelligenceApiState.replyDrafts = [];
+    inquiryIntelligenceApiState.reviewQueue = [];
+    inquiryIntelligenceApiState.reviews = [];
+    inquiryIntelligenceApiState.status = "error";
+    inquiryIntelligenceApiState.error = error.message || "Unknown API error";
+    inquiryIntelligenceApiState.source = fallbackLabel;
+  }
+
+  refreshInquiryIntelligenceView();
+}
+
+function refreshInquiryIntelligenceView() {
+  if (activeSectionId !== "inquiry-intelligence") return;
+  mainContent.innerHTML = renderInquiryIntelligence();
+  reviewPanel.innerHTML = renderInquiryIntelligenceReview();
 }
 
 function getBusinessCardCaptureViewModel() {
@@ -7598,6 +7982,23 @@ function createFollowupAssistantState() {
     missingInformation: [],
     recommendations: [],
     messageDrafts: [],
+    reviewQueue: [],
+    reviews: [],
+    error: "",
+    source: "not loaded",
+  };
+}
+
+function createInquiryIntelligenceState() {
+  return {
+    status: "idle",
+    summary: null,
+    requests: [],
+    classifications: [],
+    missingInformation: [],
+    quotationReadiness: [],
+    supplierRequirements: [],
+    replyDrafts: [],
     reviewQueue: [],
     reviews: [],
     error: "",
