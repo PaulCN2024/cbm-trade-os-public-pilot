@@ -13,6 +13,7 @@ const navItems = [
   { id: "customers", label: "客户" },
   { id: "companies", label: "客户公司" },
   { id: "suppliers", label: "供应商" },
+  { id: "supplier-intelligence", label: "AI 供应商智能匹配" },
   { id: "products", label: "产品" },
   { id: "manufacturing-capabilities", label: "制造能力" },
   { id: "ai-drafts", label: "AI 复核" },
@@ -121,6 +122,14 @@ const sections = {
     sectionHelp: "静态只读预览。当前不发送 RFQ，不确认报价、交期或供应商承诺。",
     content: renderSuppliers,
     review: renderSupplierReview,
+  },
+  "supplier-intelligence": {
+    title: "AI 供应商智能匹配",
+    description: "根据询盘产品分类、材料、工艺、缺失参数和报价准备度，辅助判断供应商类型、能力匹配、RFQ 准备度和风险。",
+    sectionTitle: "AI 供应商智能匹配",
+    sectionHelp: "静态只读预览。当前不调用 AI、不联系供应商、不创建 RFQ、不报价、不发送消息、不写入数据。",
+    content: renderSupplierIntelligence,
+    review: renderSupplierIntelligenceReview,
   },
   products: {
     title: "产品",
@@ -5149,6 +5158,495 @@ function renderInquiryIntelligenceReview() {
         <h3>禁用能力</h3>
         <div class="disabled-chip-row">
           ${renderDisabledCapabilities(selected.disabledCapabilities)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+const supplierIntelligenceSummaryCards = [
+  { label: "待匹配询盘", value: "6", subtitle: "需要判断供应商类型和能力方向", tone: "info" },
+  { label: "已匹配能力", value: "9", subtitle: "DEMO 能力标签，仅供人工复核", tone: "active" },
+  { label: "需供应商确认", value: "4", subtitle: "厚度、单位重量、MOQ、包装或交期待确认", tone: "warning" },
+  { label: "可准备 RFQ 草稿", value: "2", subtitle: "草稿仅供 Paul 审核，不自动发送", tone: "neutral" },
+  { label: "高风险匹配", value: "1", subtitle: "规格、责任或供应能力仍不清楚", tone: "danger" },
+  { label: "待补充参数", value: "8", subtitle: "图纸、规格、数量、装柜等信息缺失", tone: "warning" },
+];
+
+const supplierIntelligenceMatches = [
+  {
+    title: "Peru Light Steel Keel Inquiry",
+    customer: "Maria Gonzalez / DEMO Construction Importers",
+    country: "Peru",
+    product: "Drywall galvanized steel profiles",
+    category: "Light Steel Keel / Drywall Profile",
+    material: "Galvanized steel",
+    likelyProcess: "Roll forming / cutting / packing",
+    requiredSupplierType: "galvanized steel profile roll-forming factory",
+    matchedCapability: "Roll forming + packing/loading calculation",
+    matchStatus: "supplier confirmation needed",
+    priority: "High",
+    risk: "Medium",
+    confidence: "Medium-high",
+    quotationReadiness: "No / needs more information",
+    canPrepareRfqDraft: "Yes, with assumptions",
+    canSendRfq: "No, requires Paul approval",
+    riskIfRfqNow: "wrong spec / wrong supplier / wrong cost basis",
+    badges: ["需供应商确认", "High priority", "RFQ 草稿可准备"],
+    needConfirm: ["thickness", "unit weight", "packing", "loading quantity"],
+    supplierQuestions: [
+      "Can you produce this profile?",
+      "What thickness is available?",
+      "What is unit weight per meter?",
+      "What is MOQ?",
+      "What is packing method?",
+      "How many meters can fit in 20GP?",
+      "What is FOB cost?",
+      "What is lead time?",
+    ],
+    recommendedAction:
+      "Prepare a supplier RFQ draft asking for thickness, unit weight, MOQ, packing, 20GP loading quantity, FOB cost, and production lead time. Do not send until Paul confirms customer specifications.",
+    actionReason: "Customer specification and loading assumptions are not complete enough for a safe supplier request.",
+    safetyNote: "供应商沟通必须 Paul 人工确认；本模块不发送、不创建 RFQ、不报价。",
+  },
+  {
+    title: "Indonesia Ceiling System Inquiry",
+    customer: "Daniel Wong / DEMO Building Materials Asia",
+    country: "Indonesia",
+    product: "Aluminum ceiling / light steel keel system",
+    category: "Ceiling system",
+    material: "Aluminum or galvanized steel",
+    likelyProcess: "Extrusion / roll forming / surface treatment",
+    requiredSupplierType: "aluminum ceiling / light steel keel system supplier",
+    matchedCapability: "Ceiling system production + custom drawing review",
+    matchStatus: "capability match possible",
+    priority: "Medium-high",
+    risk: "Medium",
+    confidence: "Medium",
+    quotationReadiness: "Needs more info",
+    canPrepareRfqDraft: "Possible after option clarification",
+    canSendRfq: "No, requires Paul approval",
+    riskIfRfqNow: "wrong product option / unclear material / uncertain packing",
+    badges: ["possible_match", "需复核", "系统方案待确认"],
+    needConfirm: ["drawing", "panel thickness", "option selection"],
+    supplierQuestions: [
+      "Can you review drawing?",
+      "What ceiling system option is suitable?",
+      "What panel/profile thickness is available?",
+      "What is MOQ?",
+      "What packing method is recommended?",
+      "What is estimated lead time?",
+    ],
+    recommendedAction: "Ask customer to confirm drawing, material option, thickness and target port before preparing a supplier RFQ draft.",
+    actionReason: "Different ceiling systems may require different suppliers, cost basis and packing rules.",
+    safetyNote: "当前只显示供应商方向，不确认供应能力、不承诺价格或交期。",
+  },
+  {
+    title: "Ecuador Window Measurement Issue",
+    customer: "Carlos Ramirez / DEMO Developer Contact",
+    country: "Ecuador",
+    product: "Aluminum window/door project",
+    category: "Window and door system",
+    material: "Aluminum profile + glass + hardware",
+    likelyProcess: "Profile cutting / assembly / glazing",
+    requiredSupplierType: "aluminum window factory / installation consultant",
+    matchedCapability: "Aluminum extrusion / window fabrication + technical review",
+    matchStatus: "not ready for RFQ",
+    priority: "Medium",
+    risk: "Medium",
+    confidence: "Medium",
+    quotationReadiness: "No / responsibility boundary unclear",
+    canPrepareRfqDraft: "No",
+    canSendRfq: "No, requires Paul approval",
+    riskIfRfqNow: "site measurement responsibility / wrong size / unclear installation scope",
+    badges: ["not_ready", "责任边界", "不承诺交期"],
+    needConfirm: ["site measurement", "installation responsibility"],
+    supplierQuestions: [
+      "Can you review drawing?",
+      "What profile system is suitable?",
+      "Is installation included?",
+      "Who is responsible for site measurement?",
+      "What drawings are required before supplier review?",
+    ],
+    recommendedAction: "Clarify whether CBM is responsible only for supply or also expected to support measurement/install advice before discussing RFQ.",
+    actionReason: "Window projects can create responsibility and size-risk issues if scope boundaries are not defined early.",
+    safetyNote: "不确认供应商、不确认生产可行性、不确认交期；需先由 Paul 复核责任边界。",
+  },
+];
+
+const supplierCapabilityMatches = [
+  ["Roll forming", "strong_match"],
+  ["Aluminum extrusion / window fabrication", "possible_match"],
+  ["Ceiling system production", "possible_match"],
+  ["Glass/accessory sourcing", "needs_confirm"],
+  ["Packing/loading calculation", "needs_confirm"],
+  ["Custom drawing review", "needs_confirm"],
+];
+
+const supplierRiskSignals = [
+  "new product category",
+  "missing drawing",
+  "unclear material",
+  "unknown supplier capability",
+  "unit weight not confirmed",
+  "packaging/loading unknown",
+  "production lead time unknown",
+  "quality standard unclear",
+];
+
+const supplierIntelligenceSafetyItems = [
+  "不自动联系供应商",
+  "不自动创建 RFQ",
+  "不自动发送 RFQ",
+  "不自动确认供应商",
+  "不自动报价",
+  "不创建 PI / 订单 / 付款 / 生产 / 发货动作",
+  "所有供应商沟通必须 Paul 人工确认",
+];
+
+const supplierRfqDraft = {
+  subject: "RFQ for galvanized drywall profiles",
+  body:
+    "Dear Supplier,\n\nPlease help confirm whether you can produce the attached/profile drywall steel profiles. Kindly advise available thickness, unit weight per meter, MOQ, packing method, 20GP loading quantity, FOB cost, and production lead time.\n\nThis is for preliminary evaluation only. Final specifications will be confirmed later.\n\nBest regards,\nPaul",
+};
+
+function renderSupplierIntelligence() {
+  const selected = supplierIntelligenceMatches[0];
+  return `
+    <div class="supplier-intelligence-preview" aria-label="AI 供应商智能匹配静态只读预览">
+      <div class="supplier-intelligence-hero">
+        <div>
+          <span class="state-label">静态预览（安全示例，非实时数据）</span>
+          <h3>AI 供应商智能匹配</h3>
+          <p>AI Supplier Intelligence Center</p>
+          <p>根据询盘产品分类、材料、工艺、缺失参数和报价准备度，辅助判断需要哪类供应商、匹配哪些能力、是否需要 RFQ 或供应商确认。当前为只读预览，不自动联系供应商、不自动创建 RFQ、不自动报价。</p>
+        </div>
+        <div class="supplier-intelligence-badges" aria-label="AI 供应商智能匹配状态">
+          ${badge("只读预览", "draft")}
+          ${badge("AI 建议", "active")}
+          ${badge("不自动联系供应商", "pending")}
+          ${badge("不自动创建 RFQ", "pending")}
+          ${badge("不自动报价", "pending")}
+          ${badge("需人工确认", "approval")}
+        </div>
+      </div>
+
+      <section class="supplier-intelligence-section" aria-label="供应商智能概览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>供应商智能概览</h3>
+            <p>DEMO 数字仅用于验证界面；不代表真实供应商、真实价格、真实交期或已确认供应能力。</p>
+          </div>
+          <span>static preview</span>
+        </div>
+        <div class="supplier-summary-grid">
+          ${renderSummaryCards(supplierIntelligenceSummaryCards, renderSupplierIntelligenceSummaryCard)}
+        </div>
+      </section>
+
+      <div class="supplier-intelligence-layout">
+        <section class="supplier-match-queue" aria-label="DEMO 供应商匹配队列">
+          <div class="workbench-section-header">
+            <div>
+              <h3>DEMO 供应商匹配队列</h3>
+              <p>队列项不可点击。当前只展示静态匹配判断，用于人工理解供应商方向。</p>
+            </div>
+            <span>3 条静态示例</span>
+          </div>
+          ${supplierIntelligenceMatches.map(renderSupplierMatchCard).join("")}
+        </section>
+
+        <aside class="supplier-detail-panel" aria-label="选中供应商匹配详情">
+          <div class="workbench-review-heading">
+            <div>
+              <h3>选中匹配详情</h3>
+              <p class="workbench-review-note">固定展示 Peru Light Steel Keel 示例。当前没有点击选择行为。</p>
+            </div>
+            ${badge("人工复核", "approval")}
+          </div>
+          ${renderSupplierMatchDetail(selected)}
+        </aside>
+      </div>
+
+      <div class="supplier-intelligence-two-column">
+        ${renderSupplierCapabilityPanel()}
+        ${renderSupplierQuestionPanel(selected)}
+      </div>
+
+      <div class="supplier-intelligence-two-column">
+        ${renderSupplierRfqReadinessPanel(selected)}
+        ${renderSupplierRiskPanel()}
+      </div>
+
+      <div class="supplier-intelligence-two-column">
+        ${renderSupplierActionPanel(selected)}
+        ${renderSupplierDraftPanel()}
+      </div>
+
+      <section class="supplier-safety-panel" aria-label="AI 供应商智能匹配安全边界">
+        <div class="workbench-section-header">
+          <div>
+            <h3>安全边界</h3>
+            <p>供应商匹配、RFQ 问题和草稿只作为人工复核材料。供应商沟通、RFQ、报价、PI、订单、付款、生产和发货必须另行人工确认。</p>
+          </div>
+          <span>Human approval</span>
+        </div>
+        <div class="supplier-safety-grid">
+          ${supplierIntelligenceSafetyItems.map((item) => `<span class="supplier-safety-chip">${escapeHtml(item)}</span>`).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderSupplierIntelligenceSummaryCard(card) {
+  return `
+    <article class="supplier-intelligence-summary-card supplier-intelligence-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderSupplierMatchCard(item, index) {
+  const isSelected = index === 0;
+  return `
+    <article class="supplier-match-card ${isSelected ? "supplier-match-card-selected" : ""}" aria-label="${escapeHtml(item.title)} 供应商匹配">
+      <div class="supplier-match-heading">
+        <div>
+          <span class="workbench-category">${escapeHtml(item.category)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+          <p>${escapeHtml(item.requiredSupplierType)}</p>
+        </div>
+        <span>${escapeHtml(item.matchStatus)}</span>
+      </div>
+      <dl class="supplier-intelligence-compact-list">
+        <dt>Priority</dt>
+        <dd>${escapeHtml(item.priority)}</dd>
+        <dt>Risk</dt>
+        <dd>${escapeHtml(item.risk)}</dd>
+        <dt>Need confirm</dt>
+        <dd>${escapeHtml(item.needConfirm.join(", "))}</dd>
+      </dl>
+      <div class="supplier-intelligence-chip-row">
+        ${renderChipList(item.badges, "supplier-match-chip")}
+      </div>
+    </article>
+  `;
+}
+
+function renderSupplierMatchDetail(item) {
+  return `
+    <dl class="supplier-intelligence-meta-list">
+      <dt>inquiry title</dt>
+      <dd>${escapeHtml(item.title)}</dd>
+      <dt>customer / country</dt>
+      <dd>${escapeHtml(item.customer)} / ${escapeHtml(item.country)}</dd>
+      <dt>product / category</dt>
+      <dd>${escapeHtml(item.product)} / ${escapeHtml(item.category)}</dd>
+      <dt>material</dt>
+      <dd>${escapeHtml(item.material)}</dd>
+      <dt>likely process</dt>
+      <dd>${escapeHtml(item.likelyProcess)}</dd>
+      <dt>required supplier type</dt>
+      <dd>${escapeHtml(item.requiredSupplierType)}</dd>
+      <dt>matched capability</dt>
+      <dd>${escapeHtml(item.matchedCapability)}</dd>
+      <dt>missing supplier questions</dt>
+      <dd>${escapeHtml(item.needConfirm.join(", "))}</dd>
+      <dt>quotation readiness</dt>
+      <dd>${escapeHtml(item.quotationReadiness)}</dd>
+      <dt>priority</dt>
+      <dd>${escapeHtml(item.priority)}</dd>
+      <dt>risk</dt>
+      <dd>${escapeHtml(item.risk)}</dd>
+      <dt>confidence</dt>
+      <dd>${escapeHtml(item.confidence)}</dd>
+    </dl>
+  `;
+}
+
+function renderSupplierCapabilityPanel() {
+  return `
+    <section class="supplier-capability-panel" aria-label="供应商能力匹配">
+      <div class="workbench-section-header">
+        <div>
+          <h3>供应商能力匹配</h3>
+          <p>能力标签只表示 DEMO 匹配方向，不代表供应商已经确认可生产。</p>
+        </div>
+        <span>capability map</span>
+      </div>
+      <div class="supplier-capability-grid">
+        ${supplierCapabilityMatches
+          .map(
+            ([label, status]) => `
+              <div class="supplier-capability-item">
+                <span>${escapeHtml(label)}</span>
+                <small class="supplier-match-status supplier-match-${escapeHtml(status)}">${escapeHtml(status)}</small>
+              </div>
+            `,
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderSupplierQuestionPanel(item) {
+  return `
+    <section class="supplier-question-panel" aria-label="供应商问题清单">
+      <div class="workbench-section-header">
+        <div>
+          <h3>供应商问题清单</h3>
+          <p>这些问题用于准备草稿，不会自动发送给供应商。</p>
+        </div>
+        <span>draft questions</span>
+      </div>
+      <div class="supplier-question-grid">
+        ${item.supplierQuestions.map((question) => `<span class="supplier-question-chip">${escapeHtml(question)}</span>`).join("")}
+      </div>
+      <div class="supplier-question-group">
+        <h4>Aluminum / window review</h4>
+        <div class="supplier-question-grid">
+          ${["Can you review drawing?", "What profile system is suitable?", "Is installation included?", "Who is responsible for site measurement?"]
+            .map((question) => `<span class="supplier-question-chip supplier-question-secondary">${escapeHtml(question)}</span>`)
+            .join("")}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderSupplierRfqReadinessPanel(item) {
+  const rows = [
+    ["RFQ ready", "No / Needs more info / Draft possible"],
+    ["Reason", "missing thickness and quantity split"],
+    ["Can prepare RFQ draft", item.canPrepareRfqDraft],
+    ["Can send RFQ", item.canSendRfq],
+    ["Risk if RFQ now", item.riskIfRfqNow],
+  ];
+  return `
+    <section class="supplier-rfq-readiness-panel" aria-label="RFQ 准备度">
+      <div class="workbench-section-header">
+        <div>
+          <h3>RFQ 准备度</h3>
+          <p>只判断草稿准备度，不创建 RFQ，不发送给供应商。</p>
+        </div>
+        <span>RFQ not sent</span>
+      </div>
+      <dl class="supplier-intelligence-meta-list">
+        ${rows
+          .map(
+            ([label, value]) => `
+              <dt>${escapeHtml(label)}</dt>
+              <dd>${escapeHtml(value)}</dd>
+            `,
+          )
+          .join("")}
+      </dl>
+    </section>
+  `;
+}
+
+function renderSupplierRiskPanel() {
+  return `
+    <section class="supplier-risk-panel" aria-label="供应商风险信号">
+      <div class="workbench-section-header">
+        <div>
+          <h3>供应商风险信号</h3>
+          <p>风险信号只用于人工判断优先级，不自动阻断或执行任何动作。</p>
+        </div>
+        <span>risk review</span>
+      </div>
+      <div class="supplier-risk-grid">
+        ${supplierRiskSignals.map((risk) => `<span class="supplier-risk-chip">${escapeHtml(risk)}</span>`).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderSupplierActionPanel(item) {
+  return `
+    <section class="supplier-action-panel" aria-label="推荐人工动作">
+      <div class="workbench-section-header">
+        <div>
+          <h3>推荐人工动作</h3>
+          <p>建议只作为供应商沟通前的内部复核材料，不代表已联系供应商。</p>
+        </div>
+        <span>${escapeHtml(item.priority)}</span>
+      </div>
+      <dl class="supplier-intelligence-meta-list">
+        <dt>recommended action</dt>
+        <dd>${escapeHtml(item.recommendedAction)}</dd>
+        <dt>reason</dt>
+        <dd>${escapeHtml(item.actionReason)}</dd>
+        <dt>priority</dt>
+        <dd>${escapeHtml(item.priority)}</dd>
+        <dt>confidence</dt>
+        <dd>${escapeHtml(item.confidence)}</dd>
+        <dt>safety note</dt>
+        <dd>${escapeHtml(item.safetyNote)}</dd>
+      </dl>
+    </section>
+  `;
+}
+
+function renderSupplierDraftPanel() {
+  return `
+    <section class="supplier-draft-panel" aria-label="RFQ 草稿预览">
+      <div class="workbench-section-header">
+        <div>
+          <h3>RFQ 草稿预览</h3>
+          <p>Draft only. Not sent. Human approval required.</p>
+        </div>
+        <span>draft only</span>
+      </div>
+      <div class="supplier-draft-box">
+        <span>Subject: ${escapeHtml(supplierRfqDraft.subject)}</span>
+        <pre>${escapeHtml(supplierRfqDraft.body)}</pre>
+      </div>
+      <div class="supplier-intelligence-chip-row">
+        ${renderChipList(["Draft only", "Not sent", "Human approval required"], "supplier-match-chip")}
+      </div>
+    </section>
+  `;
+}
+
+function renderSupplierIntelligenceReview() {
+  const selected = supplierIntelligenceMatches[0];
+  return `
+    <div class="review-stack">
+      <div class="review-card">
+        <h3>AI 供应商智能匹配只读边界</h3>
+        <ul class="check-list">
+          <li>静态只读预览，不调用 AI provider，不读取外部供应商数据，不联系供应商</li>
+          <li>不创建 RFQ，不发送 RFQ，不确认供应商，不生成报价</li>
+          <li>不修改供应商、客户、询盘、报价、订单、文件或知识库数据</li>
+          <li>报价、PI、订单、付款、生产和发货都必须另行人工确认</li>
+        </ul>
+      </div>
+      <div class="review-card">
+        <h3>当前复核样本</h3>
+        <dl>
+          <dt>数据状态</dt>
+          <dd>静态预览（安全示例，非实时数据）</dd>
+          <dt>询盘</dt>
+          <dd>${escapeHtml(selected.title)}</dd>
+          <dt>供应商类型</dt>
+          <dd>${escapeHtml(selected.requiredSupplierType)}</dd>
+          <dt>匹配状态</dt>
+          <dd>${escapeHtml(selected.matchStatus)}</dd>
+          <dt>推荐动作</dt>
+          <dd>${escapeHtml(selected.recommendedAction)}</dd>
+          <dt>草稿状态</dt>
+          <dd>Draft only / Not sent / Human approval required</dd>
+        </dl>
+      </div>
+      <div class="review-card">
+        <h3>禁用能力</h3>
+        <div class="disabled-chip-row">
+          ${renderDisabledCapabilities(["不可联系供应商", "不可创建 RFQ", "不可发送 RFQ", "不可报价", "不可生成 PI", "不可下单", "不可触发付款 / 生产 / 发货"])}
         </div>
       </div>
     </div>
