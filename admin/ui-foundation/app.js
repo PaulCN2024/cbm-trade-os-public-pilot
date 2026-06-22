@@ -9,6 +9,7 @@ const navItems = [
   { id: "business-card-capture", label: "AI 名片识别" },
   { id: "knowledge-center", label: "AI 知识库" },
   { id: "inquiries", label: "询盘" },
+  { id: "inquiry-intelligence", label: "AI 询盘智能分析" },
   { id: "customers", label: "客户" },
   { id: "companies", label: "客户公司" },
   { id: "suppliers", label: "供应商" },
@@ -104,6 +105,14 @@ const sections = {
     sectionHelp: "只读 admin-read 列表。当前不创建询盘、不外发消息、不自动报价。",
     content: renderInquiries,
     review: renderInquiryReview,
+  },
+  "inquiry-intelligence": {
+    title: "AI 询盘智能分析",
+    description: "把客户询盘拆解为产品类别、缺失信息、报价准备度、供应商确认点、风险和草稿回复；当前为静态只读预览。",
+    sectionTitle: "AI 询盘智能分析",
+    sectionHelp: "静态只读预览。当前不调用 AI、不解析文件、不联系供应商、不创建 RFQ、不报价、不发送消息。",
+    content: renderInquiryIntelligence,
+    review: renderInquiryIntelligenceReview,
   },
   suppliers: {
     title: "供应商",
@@ -4330,6 +4339,565 @@ function refreshFollowupAssistantView() {
   if (activeSectionId !== "followup-assistant") return;
   mainContent.innerHTML = renderFollowupAssistant();
   reviewPanel.innerHTML = renderFollowupAssistantReview();
+}
+
+const inquiryIntelligenceSummaryCards = [
+  { label: "待分析询盘", value: "12", subtitle: "静态 DEMO，用于验证 AI 询盘拆解界面", tone: "info" },
+  { label: "可进入报价", value: "3", subtitle: "仍需人工确认价格、交期和供应能力", tone: "active" },
+  { label: "需补充信息", value: "7", subtitle: "图纸、规格、数量或包装资料缺失", tone: "warning" },
+  { label: "需供应商确认", value: "5", subtitle: "单位重量、MOQ、装柜或交期待核实", tone: "warning" },
+  { label: "高风险询盘", value: "2", subtitle: "价格、付款、质量责任或交期风险", tone: "danger" },
+  { label: "草稿回复", value: "4", subtitle: "Draft only，发送前必须人工确认", tone: "neutral" },
+];
+
+const inquiryIntelligenceItems = [
+  {
+    title: "Peru Light Steel Keel Inquiry",
+    customer: "Maria Gonzalez",
+    company: "DEMO Construction Importers",
+    country: "Peru",
+    channel: "Email",
+    category: "询盘",
+    product: "Drywall galvanized steel profiles",
+    requestedQuantity: "20GP trial order / quantity split pending",
+    targetPort: "Callao, Peru",
+    stage: "information_missing",
+    stageLabel: "缺失信息",
+    priority: "High",
+    risk: "Medium",
+    confidence: "Medium-high",
+    customerVerificationStatus: "needs_review",
+    followupStatus: "information_request",
+    badges: ["缺失信息", "需要复核", "供应商确认"],
+    needs: ["thickness", "exact quantity allocation", "packing", "loading plan"],
+    summary: "客户询盘需要补充图纸、规格和目标数量后，才能进入正式报价判断。",
+    classification: {
+      primaryCategory: "Light Steel Keel / Drywall Profile",
+      secondaryCategory: "Galvanized steel framing",
+      productFamily: "建材龙骨 / drywall profile",
+      possibleMaterial: "Galvanized steel",
+      productionProcess: "roll forming / cutting / packing",
+      supplierType: "steel profile roll-forming factory",
+    },
+    missingChecklist: [
+      ["exact specification", "missing"],
+      ["thickness", "missing"],
+      ["drawing/photo", "needs_review"],
+      ["quantity by item", "missing"],
+      ["surface treatment", "supplier_confirm"],
+      ["packing requirement", "missing"],
+      ["target port", "confirmed"],
+      ["delivery time", "supplier_confirm"],
+      ["installation responsibility", "not_required"],
+      ["brand/private label", "needs_review"],
+      ["payment terms", "needs_review"],
+    ],
+    quotationReadiness: [
+      ["Ready for quotation", "No / Needs more information"],
+      ["Reason", "Missing thickness, drawing/photo, quantity split, packing and loading plan."],
+      ["Can prepare budget estimate", "Yes, only with explicit assumptions and Paul review."],
+      ["Formal quotation", "Requires customer confirmation and supplier confirmation."],
+      ["Risk if quote now", "Wrong specification, wrong weight, wrong loading plan, or misleading delivery expectation."],
+    ],
+    supplierRequirement: [
+      ["Supplier confirmation needed", "Yes"],
+      ["Need to ask supplier", "material thickness, unit weight, MOQ, packing, 20GP loading, FOB cost, production lead time"],
+      ["Supplier category", "galvanized steel profile supplier / steel profile roll-forming factory"],
+      ["RFQ status", "Not created. Future RFQ draft must remain human-reviewed."],
+    ],
+    risks: [
+      "incomplete specification",
+      "missing drawing",
+      "unclear quantity split",
+      "packing/loading plan not confirmed",
+      "urgent price-only inquiry risk",
+    ],
+    recommendedAction: {
+      action: "Ask customer to confirm thickness, profile drawing/photo, exact quantity by profile type, packing preference, and private label requirement.",
+      reason: "Formal quote is unsafe until specification, quantity split and loading assumptions are reviewed.",
+      timing: "Before supplier RFQ or customer quotation preparation",
+      priority: "High",
+      confidence: "Medium-high",
+    },
+    draftSubject: "Confirmation needed for your drywall profile inquiry",
+    draftBody:
+      "Dear Maria,\n\nThank you for your inquiry. Before preparing a formal quotation, could you please confirm the profile thickness, drawing or photo, exact quantity by profile type, packing preference, and whether private label is required?\n\nAfter these details are confirmed, we can review the suitable supplier options and prepare the next quotation step for your approval.\n\nBest regards,\nPaul",
+    disabledCapabilities: ["不可发送", "不可报价", "不可生成 PI", "不可创建 RFQ", "不可下单", "不可触发付款 / 生产 / 发货"],
+  },
+  {
+    title: "Indonesia Ceiling System Inquiry",
+    customer: "Daniel Wong",
+    company: "DEMO Building Materials Asia",
+    country: "Indonesia",
+    channel: "WhatsApp / Email",
+    category: "询盘",
+    product: "Aluminum ceiling / light steel keel",
+    requestedQuantity: "Project quantity pending",
+    targetPort: "Jakarta / Surabaya pending",
+    stage: "supplier_confirmation_needed",
+    stageLabel: "供应商确认",
+    priority: "Medium-high",
+    risk: "Medium",
+    confidence: "Medium",
+    customerVerificationStatus: "needs_review",
+    followupStatus: "clarification_needed",
+    badges: ["附件复核", "供应商确认", "需要人工复核"],
+    needs: ["drawing confirmation", "panel thickness", "option selection"],
+    summary: "客户描述了吊顶系统需求，但产品方案和材料选型仍不清楚，需要先确认图纸、厚度和可选方案。",
+    classification: {
+      primaryCategory: "Ceiling system",
+      secondaryCategory: "Aluminum ceiling / light steel keel",
+      productFamily: "吊顶系统 / ceiling profile",
+      possibleMaterial: "Aluminum or galvanized steel",
+      productionProcess: "extrusion / roll forming / surface treatment",
+      supplierType: "ceiling system supplier with option confirmation",
+    },
+    missingChecklist: [
+      ["exact specification", "needs_review"],
+      ["thickness", "supplier_confirm"],
+      ["drawing/photo", "needs_review"],
+      ["quantity by item", "missing"],
+      ["surface treatment", "needs_review"],
+      ["packing requirement", "supplier_confirm"],
+      ["target port", "missing"],
+      ["delivery time", "supplier_confirm"],
+      ["installation responsibility", "needs_review"],
+      ["brand/private label", "not_required"],
+      ["payment terms", "needs_review"],
+    ],
+    quotationReadiness: [
+      ["Ready for quotation", "No"],
+      ["Reason", "Product option, material and target port are not confirmed."],
+      ["Can prepare budget estimate", "Only after option and material confirmation."],
+      ["Formal quotation", "Requires supplier confirmation."],
+      ["Risk if quote now", "Wrong product option or material assumption."],
+    ],
+    supplierRequirement: [
+      ["Supplier confirmation needed", "Yes"],
+      ["Need to ask supplier", "product option, material, panel/profile thickness, MOQ, packing, lead time"],
+      ["Supplier category", "aluminum ceiling supplier / ceiling system supplier"],
+      ["RFQ status", "Not created. Future RFQ draft must remain human-reviewed."],
+    ],
+    risks: ["unclear product option", "missing target port", "supplier lead time unknown", "material assumption risk"],
+    recommendedAction: {
+      action: "Ask customer to choose or confirm the ceiling system option, material, thickness and target port before any quote estimate.",
+      reason: "The request could refer to different ceiling systems with different suppliers, cost structure and packing rules.",
+      timing: "Before supplier RFQ",
+      priority: "Medium-high",
+      confidence: "Medium",
+    },
+    draftSubject: "Confirming ceiling system details before quotation",
+    draftBody:
+      "Dear Daniel,\n\nThank you for your ceiling system inquiry. Could you please confirm the drawing or selected product option, material preference, thickness, quantity and target port?\n\nWith these details, we can review the suitable supplier direction before preparing any quotation.\n\nBest regards,\nPaul",
+    disabledCapabilities: ["不可发送", "不可报价", "不可创建 RFQ", "不可确认交期", "不可确认订单"],
+  },
+  {
+    title: "Ecuador Window Measurement Issue",
+    customer: "Carlos Ramirez",
+    company: "DEMO Developer Contact",
+    country: "Ecuador",
+    channel: "Email",
+    category: "项目澄清",
+    product: "Aluminum window/door project",
+    requestedQuantity: "Project quantity pending",
+    targetPort: "Guayaquil pending",
+    stage: "clarification_needed",
+    stageLabel: "责任边界澄清",
+    priority: "Medium",
+    risk: "Medium",
+    confidence: "Medium",
+    customerVerificationStatus: "needs_review",
+    followupStatus: "risk_review",
+    badges: ["责任边界", "需要复核", "不承诺交期"],
+    needs: ["installation responsibility", "site measurement responsibility", "developer confirmation"],
+    summary: "客户提到门窗尺寸和现场问题，必须先区分供货、测量、安装和现场责任边界。",
+    classification: {
+      primaryCategory: "Aluminum window/door project",
+      secondaryCategory: "Project measurement clarification",
+      productFamily: "铝合金门窗 / window and door system",
+      possibleMaterial: "Aluminum profile + glass + hardware",
+      productionProcess: "profile cutting / assembly / glazing",
+      supplierType: "window and door system supplier with technical review",
+    },
+    missingChecklist: [
+      ["exact specification", "needs_review"],
+      ["thickness", "not_required"],
+      ["drawing/photo", "missing"],
+      ["quantity by item", "missing"],
+      ["surface treatment", "needs_review"],
+      ["packing requirement", "supplier_confirm"],
+      ["target port", "missing"],
+      ["delivery time", "supplier_confirm"],
+      ["installation responsibility", "missing"],
+      ["brand/private label", "not_required"],
+      ["payment terms", "needs_review"],
+    ],
+    quotationReadiness: [
+      ["Ready for quotation", "No"],
+      ["Reason", "Site measurement, drawing and responsibility boundary are unclear."],
+      ["Can prepare budget estimate", "Not recommended before measurement responsibility is clarified."],
+      ["Formal quotation", "Requires drawing, measurement confirmation and Paul review."],
+      ["Risk if quote now", "Responsibility misunderstanding, wrong size, wrong delivery expectation."],
+    ],
+    supplierRequirement: [
+      ["Supplier confirmation needed", "Yes, later"],
+      ["Need to ask supplier", "profile system, glass option, hardware, packing and lead time after drawings are available"],
+      ["Supplier category", "aluminum window and door system supplier"],
+      ["RFQ status", "Not created. Future RFQ draft must remain human-reviewed."],
+    ],
+    risks: ["installation responsibility unclear", "site measurement responsibility unclear", "missing drawing", "delivery commitment risk"],
+    recommendedAction: {
+      action: "Clarify whether CBM is responsible only for supply, or also expected to support measurement/install advice, before discussing quotation.",
+      reason: "Door/window projects can create responsibility and size-risk issues if boundaries are not defined early.",
+      timing: "Before quotation or supplier confirmation",
+      priority: "Medium",
+      confidence: "Medium",
+    },
+    draftSubject: "Clarifying window project measurements and responsibility",
+    draftBody:
+      "Dear Carlos,\n\nThank you for the project information. Before reviewing quotation possibilities, could you please confirm the drawings, opening measurements, project scope, and whether CBM is expected to supply materials only or support installation-related review?\n\nThis will help avoid misunderstanding on size, responsibility and delivery expectations.\n\nBest regards,\nPaul",
+    disabledCapabilities: ["不可发送", "不可报价", "不可确认责任", "不可确认交期", "不可生成 PI", "不可触发生产 / 发货"],
+  },
+];
+
+const inquiryIntelligenceSafetyItems = [
+  "不自动报价",
+  "不自动发送客户消息",
+  "不自动联系供应商",
+  "不自动创建 RFQ",
+  "不自动创建 PI / 订单 / 付款 / 生产 / 发货动作",
+  "所有结论需要 Paul 人工确认",
+];
+
+function renderInquiryIntelligence() {
+  const selected = inquiryIntelligenceItems[0];
+  return `
+    <div class="inquiry-intelligence-preview" aria-label="AI 询盘智能分析静态只读预览">
+      <div class="inquiry-intelligence-hero">
+        <div>
+          <span class="state-label">静态只读预览</span>
+          <h3>AI 询盘智能分析</h3>
+          <p>把客户询盘拆成产品类别、缺失信息、报价准备度、供应商确认点、风险信号和草稿回复，帮助 Paul 判断下一步。</p>
+          <p>当前只展示 DEMO 结果；不调用 AI、不解析真实附件、不联系供应商、不报价、不发送。</p>
+        </div>
+        <div class="inquiry-intelligence-badges" aria-label="AI 询盘智能分析状态">
+          ${badge("只读预览", "draft")}
+          ${badge("AI 建议", "active")}
+          ${badge("不自动报价", "pending")}
+          ${badge("不自动发送", "pending")}
+          ${badge("需人工确认", "approval")}
+          ${badge("不自动执行", "pending")}
+        </div>
+      </div>
+
+      <section class="inquiry-intelligence-section" aria-label="询盘智能分析概览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>询盘智能概览</h3>
+            <p>以静态 DEMO 方式展示未来 AI 可以整理的询盘状态，不代表实时客户或真实报价状态。</p>
+          </div>
+          <span>static demo</span>
+        </div>
+        <div class="inquiry-intelligence-summary-grid">
+          ${renderSummaryCards(inquiryIntelligenceSummaryCards, renderInquiryIntelligenceSummaryCard)}
+        </div>
+      </section>
+
+      <div class="inquiry-intelligence-layout">
+        <section class="inquiry-intelligence-queue" aria-label="AI 询盘智能分析队列">
+          <div class="workbench-section-header">
+            <div>
+              <h3>DEMO 询盘分析队列</h3>
+              <p>队列项不可点击；固定展示三条示例询盘，验证 AI 分析信息架构。</p>
+            </div>
+            <span>${escapeHtml(String(inquiryIntelligenceItems.length))} 条静态示例</span>
+          </div>
+          ${inquiryIntelligenceItems.map(renderInquiryIntelligenceQueueItem).join("")}
+        </section>
+
+        <aside class="inquiry-intelligence-detail-panel" aria-label="选中询盘详情">
+          <div class="workbench-review-heading">
+            <div>
+              <h3>选中询盘详情</h3>
+              <p class="workbench-review-note">固定展示第一条示例。当前没有点击选择行为。</p>
+            </div>
+            ${badge("人工复核", "approval")}
+          </div>
+          ${renderInquiryIntelligenceDetail(selected)}
+        </aside>
+      </div>
+
+      <div class="inquiry-intelligence-two-column">
+        <section class="inquiry-intelligence-analysis-panel" aria-label="产品分类与报价准备度">
+          <div class="workbench-section-header">
+            <div>
+              <h3>产品分类 / 报价准备度</h3>
+              <p>分类和准备度仅作为人工复核材料，不构成正式报价或供应承诺。</p>
+            </div>
+            <span>${escapeHtml(selected.confidence)}</span>
+          </div>
+          ${renderInquiryIntelligenceClassification(selected.classification)}
+          ${renderInquiryIntelligenceRows("报价准备度", selected.quotationReadiness)}
+        </section>
+
+        <section class="inquiry-intelligence-analysis-panel" aria-label="缺失信息清单">
+          <div class="workbench-section-header">
+            <div>
+              <h3>缺失信息清单</h3>
+              <p>把图纸、规格、数量、包装、付款和责任边界拆成可核对状态。</p>
+            </div>
+            <span>review checklist</span>
+          </div>
+          <div class="inquiry-intelligence-checklist">
+            ${selected.missingChecklist.map(renderInquiryIntelligenceChecklistItem).join("")}
+          </div>
+        </section>
+      </div>
+
+      <div class="inquiry-intelligence-two-column">
+        <section class="inquiry-intelligence-analysis-panel" aria-label="供应商和 RFQ 判断">
+          <div class="workbench-section-header">
+            <div>
+              <h3>供应商 / RFQ 判断</h3>
+              <p>只显示未来 RFQ 准备方向，不创建 RFQ，不联系供应商。</p>
+            </div>
+            <span>RFQ not created</span>
+          </div>
+          ${renderInquiryIntelligenceRows("供应商确认", selected.supplierRequirement)}
+        </section>
+
+        <section class="inquiry-intelligence-analysis-panel" aria-label="风险信号">
+          <div class="workbench-section-header">
+            <div>
+              <h3>风险信号</h3>
+              <p>风险提示只用于 Paul 判断优先级和下一步，不自动阻断或执行动作。</p>
+            </div>
+            <span>${escapeHtml(selected.risk)}</span>
+          </div>
+          <div class="inquiry-intelligence-risk-grid">
+            ${selected.risks.map((risk) => `<span class="inquiry-intelligence-risk-chip">${escapeHtml(risk)}</span>`).join("")}
+          </div>
+        </section>
+      </div>
+
+      <div class="inquiry-intelligence-two-column">
+        <section class="inquiry-intelligence-action-panel" aria-label="推荐人工动作">
+          <div class="workbench-section-header">
+            <div>
+              <h3>推荐人工动作</h3>
+              <p>建议只作为操作员复核材料，不代表系统已进入报价、供应商询价或发送流程。</p>
+            </div>
+            <span>${escapeHtml(selected.recommendedAction.priority)}</span>
+          </div>
+          <dl class="inquiry-intelligence-meta-list">
+            <dt>recommended action</dt>
+            <dd>${escapeHtml(selected.recommendedAction.action)}</dd>
+            <dt>reason</dt>
+            <dd>${escapeHtml(selected.recommendedAction.reason)}</dd>
+            <dt>timing</dt>
+            <dd>${escapeHtml(selected.recommendedAction.timing)}</dd>
+            <dt>priority</dt>
+            <dd>${escapeHtml(selected.recommendedAction.priority)}</dd>
+            <dt>confidence</dt>
+            <dd>${escapeHtml(selected.recommendedAction.confidence)}</dd>
+          </dl>
+        </section>
+
+        <section class="inquiry-intelligence-draft-panel" aria-label="草稿回复预览">
+          <div class="workbench-section-header">
+            <div>
+              <h3>回复草稿预览</h3>
+              <p>Draft only. Not sent. Human approval required.</p>
+            </div>
+            <span>draft only</span>
+          </div>
+          <div class="inquiry-intelligence-draft-box">
+            <span>Subject: ${escapeHtml(selected.draftSubject)}</span>
+            <pre>${escapeHtml(selected.draftBody)}</pre>
+          </div>
+          <div class="inquiry-intelligence-chip-row">
+            ${renderChipList(["Draft only", "Not sent", "Human approval required"], "inquiry-intelligence-status-chip")}
+          </div>
+        </section>
+      </div>
+
+      <section class="inquiry-intelligence-safety-panel" aria-label="AI 询盘智能分析安全边界">
+        <div class="workbench-section-header">
+          <div>
+            <h3>安全边界</h3>
+            <p>这个模块只整理询盘信息。报价、发送、RFQ、供应商联系、PI、订单和生产发货都必须另行人工确认。</p>
+          </div>
+          <span>Human approval</span>
+        </div>
+        <div class="inquiry-intelligence-safety-grid">
+          ${inquiryIntelligenceSafetyItems.map((item) => `<span class="inquiry-intelligence-safety-chip">${escapeHtml(item)}</span>`).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderInquiryIntelligenceSummaryCard(card) {
+  return `
+    <article class="inquiry-intelligence-summary-card inquiry-intelligence-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderInquiryIntelligenceQueueItem(item, index) {
+  const isSelected = index === 0;
+  return `
+    <article class="inquiry-intelligence-queue-item ${isSelected ? "inquiry-intelligence-queue-selected" : ""}" aria-label="${escapeHtml(item.title)} 询盘分析">
+      <div class="inquiry-intelligence-queue-heading">
+        <div>
+          <span class="workbench-category">${escapeHtml(item.category)}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+          <p>${escapeHtml(item.company)} / ${escapeHtml(item.country)}</p>
+        </div>
+        <span>${escapeHtml(item.stageLabel)}</span>
+      </div>
+      <p>${escapeHtml(item.summary)}</p>
+      <div class="inquiry-intelligence-chip-row">
+        ${renderChipList(item.badges, "inquiry-intelligence-status-chip")}
+      </div>
+      <div class="inquiry-intelligence-mini-group">
+        <span>Need</span>
+        <div class="inquiry-intelligence-chip-row">
+          ${renderChipList(item.needs, "inquiry-intelligence-need-chip")}
+        </div>
+      </div>
+      <div class="inquiry-intelligence-mini-group">
+        <span>禁用能力</span>
+        <div class="disabled-chip-row">${renderDisabledCapabilities(item.disabledCapabilities.slice(0, 3))}</div>
+      </div>
+    </article>
+  `;
+}
+
+function renderInquiryIntelligenceDetail(item) {
+  return `
+    <dl class="inquiry-intelligence-meta-list">
+      <dt>inquiry title</dt>
+      <dd>${escapeHtml(item.title)}</dd>
+      <dt>customer / company</dt>
+      <dd>${escapeHtml(item.customer)} / ${escapeHtml(item.company)}</dd>
+      <dt>country</dt>
+      <dd>${escapeHtml(item.country)}</dd>
+      <dt>source channel</dt>
+      <dd>${escapeHtml(item.channel)}</dd>
+      <dt>product / category</dt>
+      <dd>${escapeHtml(item.product)}</dd>
+      <dt>requested quantity</dt>
+      <dd>${escapeHtml(item.requestedQuantity)}</dd>
+      <dt>target port</dt>
+      <dd>${escapeHtml(item.targetPort)}</dd>
+      <dt>current stage</dt>
+      <dd>${escapeHtml(item.stage)}</dd>
+      <dt>customer verification</dt>
+      <dd>${escapeHtml(item.customerVerificationStatus)}</dd>
+      <dt>follow-up status</dt>
+      <dd>${escapeHtml(item.followupStatus)}</dd>
+      <dt>priority</dt>
+      <dd>${escapeHtml(item.priority)}</dd>
+      <dt>risk</dt>
+      <dd>${escapeHtml(item.risk)}</dd>
+      <dt>confidence</dt>
+      <dd>${escapeHtml(item.confidence)}</dd>
+    </dl>
+  `;
+}
+
+function renderInquiryIntelligenceClassification(classification) {
+  return `
+    <dl class="inquiry-intelligence-meta-list inquiry-intelligence-classification-list">
+      <dt>primary category</dt>
+      <dd>${escapeHtml(classification.primaryCategory)}</dd>
+      <dt>secondary category</dt>
+      <dd>${escapeHtml(classification.secondaryCategory)}</dd>
+      <dt>product family</dt>
+      <dd>${escapeHtml(classification.productFamily)}</dd>
+      <dt>possible material</dt>
+      <dd>${escapeHtml(classification.possibleMaterial)}</dd>
+      <dt>production process</dt>
+      <dd>${escapeHtml(classification.productionProcess)}</dd>
+      <dt>supplier type</dt>
+      <dd>${escapeHtml(classification.supplierType)}</dd>
+    </dl>
+  `;
+}
+
+function renderInquiryIntelligenceRows(title, rows) {
+  return `
+    <div class="inquiry-intelligence-row-panel">
+      <h4>${escapeHtml(title)}</h4>
+      <dl class="inquiry-intelligence-meta-list">
+        ${rows
+          .map(
+            ([label, value]) => `
+              <dt>${escapeHtml(label)}</dt>
+              <dd>${escapeHtml(value)}</dd>
+            `,
+          )
+          .join("")}
+      </dl>
+    </div>
+  `;
+}
+
+function renderInquiryIntelligenceChecklistItem([label, status]) {
+  const statusLabel = {
+    confirmed: "已确认",
+    missing: "缺失",
+    needs_review: "需复核",
+    supplier_confirm: "供应商确认",
+    not_required: "暂不需要",
+  }[status] || status;
+
+  return `
+    <div class="inquiry-intelligence-check-item">
+      <span>${escapeHtml(label)}</span>
+      <small class="inquiry-intelligence-check-status inquiry-intelligence-check-${escapeHtml(status)}">${escapeHtml(statusLabel)}</small>
+    </div>
+  `;
+}
+
+function renderInquiryIntelligenceReview() {
+  const selected = inquiryIntelligenceItems[0];
+  return `
+    <div class="review-stack">
+      <div class="review-card">
+        <h3>AI 询盘智能分析只读边界</h3>
+        <ul class="check-list">
+          <li>静态 DEMO 预览，不调用 AI provider，不解析真实附件，不读取外部网站</li>
+          <li>不创建 RFQ，不联系供应商，不生成报价，不发送客户消息</li>
+          <li>不修改客户、询盘、报价、订单、文件或知识库数据</li>
+          <li>报价、PI、订单、付款、生产和发货都必须另行人工确认</li>
+        </ul>
+      </div>
+      <div class="review-card">
+        <h3>当前复核样本</h3>
+        <dl>
+          <dt>询盘</dt>
+          <dd>${escapeHtml(selected.title)}</dd>
+          <dt>客户 / 公司</dt>
+          <dd>${escapeHtml(selected.customer)} / ${escapeHtml(selected.company)}</dd>
+          <dt>推荐动作</dt>
+          <dd>${escapeHtml(selected.recommendedAction.action)}</dd>
+          <dt>草稿状态</dt>
+          <dd>Draft only / Not sent / Human approval required</dd>
+        </dl>
+      </div>
+      <div class="review-card">
+        <h3>禁用能力</h3>
+        <div class="disabled-chip-row">
+          ${renderDisabledCapabilities(selected.disabledCapabilities)}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function getBusinessCardCaptureViewModel() {

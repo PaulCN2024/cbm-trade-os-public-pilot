@@ -1981,6 +1981,333 @@ tr:last-child td {
     linear-gradient(135deg, #06111f, #0f172a);
 }
 
+.inquiry-intelligence-preview {
+  display: grid;
+  gap: 18px;
+}
+
+.inquiry-intelligence-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(125, 211, 252, 0.32);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.13), transparent 32%),
+    linear-gradient(135deg, #06111f, #0f172a 58%, #111827);
+  color: #e5edf8;
+  box-shadow: 0 18px 52px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+
+.inquiry-intelligence-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #38bdf8, #a78bfa, #22c55e);
+}
+
+.inquiry-intelligence-hero h3 {
+  margin: 6px 0 8px;
+  color: #f8fafc;
+  font-size: 24px;
+}
+
+.inquiry-intelligence-hero p {
+  max-width: 880px;
+  margin: 3px 0;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.inquiry-intelligence-badges,
+.inquiry-intelligence-chip-row,
+.inquiry-intelligence-safety-grid,
+.inquiry-intelligence-risk-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inquiry-intelligence-section {
+  display: grid;
+  gap: 12px;
+}
+
+.inquiry-intelligence-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.inquiry-intelligence-summary-card,
+.inquiry-intelligence-queue,
+.inquiry-intelligence-queue-item,
+.inquiry-intelligence-detail-panel,
+.inquiry-intelligence-analysis-panel,
+.inquiry-intelligence-action-panel,
+.inquiry-intelligence-draft-panel,
+.inquiry-intelligence-safety-panel {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.92)),
+    #0f172a;
+  color: #e5edf8;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+}
+
+.inquiry-intelligence-summary-card {
+  gap: 5px;
+  padding: 12px;
+}
+
+.inquiry-intelligence-summary-card::before,
+.inquiry-intelligence-queue-item::before,
+.inquiry-intelligence-detail-panel::before,
+.inquiry-intelligence-analysis-panel::before,
+.inquiry-intelligence-action-panel::before,
+.inquiry-intelligence-draft-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #38bdf8, #a78bfa);
+  opacity: 0.82;
+}
+
+.inquiry-intelligence-summary-card span,
+.inquiry-intelligence-meta-list dt,
+.inquiry-intelligence-check-item span,
+.inquiry-intelligence-mini-group > span {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.inquiry-intelligence-summary-card strong {
+  color: #f8fafc;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.inquiry-intelligence-summary-card small,
+.inquiry-intelligence-queue-heading p,
+.inquiry-intelligence-queue-item p,
+.inquiry-intelligence-meta-list dd {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.inquiry-intelligence-summary-warning {
+  border-color: rgba(251, 191, 36, 0.34);
+}
+
+.inquiry-intelligence-summary-danger {
+  border-color: rgba(248, 113, 113, 0.36);
+}
+
+.inquiry-intelligence-summary-active {
+  border-color: rgba(74, 222, 128, 0.32);
+}
+
+.inquiry-intelligence-summary-info {
+  border-color: rgba(125, 211, 252, 0.34);
+}
+
+.inquiry-intelligence-summary-neutral {
+  border-color: rgba(196, 181, 253, 0.3);
+}
+
+.inquiry-intelligence-layout,
+.inquiry-intelligence-two-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.95fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.inquiry-intelligence-queue {
+  gap: 10px;
+}
+
+.inquiry-intelligence-queue-item {
+  padding: 13px;
+  cursor: default;
+  user-select: text;
+}
+
+.inquiry-intelligence-queue-selected {
+  border-color: rgba(56, 189, 248, 0.44);
+  background:
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.16), transparent 35%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.94));
+}
+
+.inquiry-intelligence-queue-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inquiry-intelligence-queue-heading h4 {
+  margin: 4px 0 5px;
+  color: #f8fafc;
+  font-size: 15px;
+}
+
+.inquiry-intelligence-queue-heading > span,
+.inquiry-intelligence-status-chip,
+.inquiry-intelligence-need-chip,
+.inquiry-intelligence-risk-chip,
+.inquiry-intelligence-safety-chip,
+.inquiry-intelligence-check-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #dbeafe;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  cursor: default;
+  user-select: none;
+}
+
+.inquiry-intelligence-status-chip,
+.inquiry-intelligence-need-chip {
+  border-color: rgba(125, 211, 252, 0.3);
+  background: rgba(8, 47, 73, 0.35);
+  color: #bae6fd;
+}
+
+.inquiry-intelligence-risk-chip {
+  border-color: rgba(251, 191, 36, 0.32);
+  background: rgba(120, 53, 15, 0.3);
+  color: #fde68a;
+}
+
+.inquiry-intelligence-safety-chip {
+  border-color: rgba(74, 222, 128, 0.3);
+  background: rgba(22, 101, 52, 0.3);
+  color: #bbf7d0;
+}
+
+.inquiry-intelligence-mini-group,
+.inquiry-intelligence-row-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.inquiry-intelligence-row-panel h4 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 14px;
+}
+
+.inquiry-intelligence-meta-list {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 9px 12px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: var(--radius);
+  background: rgba(2, 6, 23, 0.36);
+}
+
+.inquiry-intelligence-meta-list dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.inquiry-intelligence-checklist {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.inquiry-intelligence-check-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.65);
+}
+
+.inquiry-intelligence-check-missing,
+.inquiry-intelligence-check-needs_review,
+.inquiry-intelligence-check-supplier_confirm {
+  border-color: rgba(251, 191, 36, 0.32);
+  background: rgba(120, 53, 15, 0.3);
+  color: #fde68a;
+}
+
+.inquiry-intelligence-check-confirmed {
+  border-color: rgba(74, 222, 128, 0.3);
+  background: rgba(22, 101, 52, 0.3);
+  color: #bbf7d0;
+}
+
+.inquiry-intelligence-check-not_required {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(30, 41, 59, 0.55);
+  color: #cbd5e1;
+}
+
+.inquiry-intelligence-draft-box {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  border-radius: var(--radius);
+  background: rgba(8, 47, 73, 0.35);
+}
+
+.inquiry-intelligence-draft-box span {
+  color: #7dd3fc;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.inquiry-intelligence-draft-box pre {
+  max-width: 100%;
+  margin: 0;
+  color: #e5edf8;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.inquiry-intelligence-safety-panel {
+  border-color: rgba(74, 222, 128, 0.28);
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.16), transparent 34%),
+    linear-gradient(135deg, #06111f, #0f172a);
+}
+
 .business-card-capture-preview {
   display: grid;
   gap: 18px;
@@ -5807,6 +6134,8 @@ tbody tr:hover {
   .verification-two-column,
   .followup-layout,
   .followup-two-column,
+  .inquiry-intelligence-layout,
+  .inquiry-intelligence-two-column,
   .business-card-layout,
   .business-card-two-column,
   .capture-safety-grid,
@@ -5830,6 +6159,8 @@ tbody tr:hover {
   .verification-checklist-grid,
   .followup-summary-grid,
   .followup-missing-info-grid,
+  .inquiry-intelligence-summary-grid,
+  .inquiry-intelligence-checklist,
   .business-card-summary-grid,
   .extraction-preview-grid,
   .workflow-stepper,
@@ -5892,6 +6223,10 @@ tbody tr:hover {
     .followup-missing-info-grid,
     .followup-layout,
     .followup-two-column,
+    .inquiry-intelligence-summary-grid,
+    .inquiry-intelligence-checklist,
+    .inquiry-intelligence-layout,
+    .inquiry-intelligence-two-column,
     .extraction-preview-grid,
     .business-card-layout,
     .business-card-two-column,
@@ -5939,6 +6274,7 @@ tbody tr:hover {
 
   .workbench-header,
   .followup-hero,
+  .inquiry-intelligence-hero,
   .command-center-hero,
   .prospecting-header,
   .business-card-capture-hero,
@@ -5961,6 +6297,7 @@ tbody tr:hover {
   .workbench-review-heading,
   .draft-preview-heading,
   .followup-candidate-heading,
+  .inquiry-intelligence-queue-heading,
   .prospecting-lead-heading,
   .knowledge-item-heading,
   .ai-review-queue-main,
@@ -5983,7 +6320,8 @@ tbody tr:hover {
     display: grid;
   }
 
-  .followup-meta-list {
+  .followup-meta-list,
+  .inquiry-intelligence-meta-list {
     grid-template-columns: 1fr;
   }
 }
