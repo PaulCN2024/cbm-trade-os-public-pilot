@@ -98,6 +98,12 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 | `CBM-CODEX-SPRINT-COPILOT-SHELL-001` | Unified AI Copilot Shell | Add read-only AI Copilot surface | explain context, risk, missing info, disabled actions | static/read-only first, no helper execution | `admin/ui-foundation/app.js`, `styles.css` if approved | Medium-low | 20 |
 | `CBM-CODEX-SPRINT-INQUIRY-INTELLIGENCE-PLAN-001` | Inquiry Intelligence | Plan inquiry decomposition and RFQ draft flow | extract specs, missing info, draft questions | no sending, no quote commitment | docs only | Low | 21 |
 | `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001` | Follow-up Assistant | Prevent missed customer follow-up | suggest timing and draft messages | no auto-send, no task creation yet | docs only | Low | 22 |
+| `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-UI-001` | Follow-up Assistant | Add static/read-only Follow-up Assistant UI preview | show candidates, missing info, timing, draft-only labels | no send, no task creation, no customer mutation | UI only if separately approved | Medium-low | 22.1 |
+| `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-DATA-PLAN-001` | Follow-up Assistant | Plan follow-up data foundation and admin-read shape | candidates, missing info, recommendations, drafts, reviews | docs only, no schema execution | docs only | Low | 22.2 |
+| `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-DATA-READONLY-001` | Follow-up Assistant | Create read-only follow-up data foundation after schema approval | safe DEMO records and protected projection | no real task creation, no send | docs/API/schema only if separately approved | Medium | 22.3 |
+| `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-MESSAGE-TEMPLATE-001` | Follow-up Assistant | Create reviewed draft-only follow-up templates | information request, quote follow-up, buyer role, dormant lead | no AI provider call, no sending | docs only | Low | 22.4 |
+| `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-AI-PROVIDER-PLAN-001` | Follow-up Assistant | Plan AI provider use for follow-up drafts | privacy, prompts, cost, review boundary | no live AI call, no provider key change | docs only | Medium | 22.5 |
+| `CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-HUMAN-REVIEW-QUEUE-001` | Follow-up Assistant | Plan or preview follow-up review queue | draft messages, proposed tasks, disabled decisions | no approve/send/task execution | docs/UI only if separately approved | Medium-low | 22.6 |
 | `CBM-CODEX-SPRINT-RISK-CENTER-PLAN-001` | Risk Center | Plan cross-module AI safety net | detect commitments, leakage, unverified knowledge | alerts only, no enforcement writes yet | docs only | Low | 23 |
 | `CBM-CODEX-SPRINT-BI-PLAN-001` | Business Intelligence | Plan daily/weekly business review | summarize customers, products, countries, suppliers | read-only analytics first | docs only | Low | 24 |
 | `CBM-CODEX-SPRINT-KNOWLEDGE-SAFETY-001` | Knowledge Safety | Strengthen knowledge verification and source rules | source, confidence, freshness, visibility review | no RAG or customer-facing AI answers | docs only | Low | 25 |
@@ -119,12 +125,12 @@ It is planning only. It does not authorize code changes, schema changes, AI call
 Recommended next task:
 
 ```text
-CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-PLAN-001
+CBM-CODEX-SPRINT-FOLLOWUP-ASSISTANT-UI-001
 ```
 
 Reason:
 
-AI Customer Verification now has static UI, production smoke verification, data model planning, evidence rules, confidence/risk rules, human review workflow, read-only data foundation, SQL/RLS verification, admin-read routes, UI data binding, and duplicate check planning. The next recommended task is Follow-up Assistant planning; if Paul wants to continue duplicate work first, use the read-only duplicate candidate task. Do not jump to external lookup, AI reasoning, customer mutation, merge execution, or sending.
+AI Customer Verification and Follow-up Assistant planning are now complete. The next recommended task is a static/read-only Follow-up Assistant UI preview before schema, API, AI provider, task creation, or sending work. Do not jump to external lookup, AI reasoning, customer mutation, merge execution, task creation, or sending.
 
 ## Business Card Capture Real Upload/OCR Pause
 
