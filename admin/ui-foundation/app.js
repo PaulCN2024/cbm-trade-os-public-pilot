@@ -5,6 +5,7 @@ const navItems = [
   { id: "dashboard", label: "工作台" },
   { id: "prospecting", label: "AI 开发客户" },
   { id: "customer-verification", label: "AI 客户验证" },
+  { id: "followup-assistant", label: "AI 跟进助手" },
   { id: "business-card-capture", label: "AI 名片识别" },
   { id: "knowledge-center", label: "AI 知识库" },
   { id: "inquiries", label: "询盘" },
@@ -55,6 +56,14 @@ const sections = {
     sectionHelp: "只读预览。当前不联网、不自动查询、不调用 AI、不创建客户、不修改客户资料、不发送消息。",
     content: renderCustomerVerification,
     review: renderCustomerVerificationReview,
+  },
+  "followup-assistant": {
+    title: "AI 跟进助手",
+    description: "根据客户验证、询盘状态、报价阶段和缺失信息，辅助判断下一步跟进动作；当前仅为静态只读预览。",
+    sectionTitle: "AI 跟进助手",
+    sectionHelp: "只读预览。当前不自动创建任务、不自动发送消息、不修改客户或询盘状态。",
+    content: renderFollowupAssistant,
+    review: renderFollowupAssistantReview,
   },
   "business-card-capture": {
     title: "AI 名片识别",
@@ -3576,6 +3585,390 @@ function renderCustomerVerificationReview() {
         <h3>禁用能力</h3>
         <div class="disabled-chip-row">
           ${renderDisabledCapabilities(["不可自动查询", "不可自动创建客户", "不可修改客户", "不可发送消息", "不可生成报价", "不可确认订单"])}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+const followupAssistantSummaryCards = [
+  { label: "今日建议跟进", value: "7", subtitle: "静态 DEMO 候选，等待人工判断", tone: "active" },
+  { label: "需补充信息", value: "5", subtitle: "规格、数量、角色或项目资料缺失", tone: "warning" },
+  { label: "报价后待回复", value: "3", subtitle: "建议 2-3 个工作日后温和跟进", tone: "info" },
+  { label: "高优先级客户", value: "2", subtitle: "项目明确，适合尽快人工复核", tone: "active" },
+  { label: "风险/暂缓", value: "2", subtitle: "重复、身份不清或风险信号待确认", tone: "danger" },
+  { label: "草稿消息", value: "4", subtitle: "仅草稿，未发送，需 Paul 确认", tone: "neutral" },
+];
+
+const followupAssistantCandidates = [
+  {
+    customerName: "Carlos Ramirez",
+    company: "DEMO Facade Solutions",
+    country: "Peru",
+    source: "customer_verification",
+    currentStage: "information_request",
+    stageLabel: "资料补充",
+    productInterest: "Aluminum window and facade profiles",
+    lastInteraction: "客户询问铝合金窗项目方案，但尚未提供项目位置、规格、数量和买家角色。",
+    reason: "Missing project location and specifications",
+    priority: "High",
+    risk: "Medium",
+    confidence: "Medium-high",
+    suggestedTiming: "within 24 hours",
+    suggestedLanguage: "English",
+    alternativeLanguage: "Spanish",
+    channel: "Email / WhatsApp",
+    tone: "professional, concise",
+    recommendedAction: "Request project location, required specifications, estimated quantity, and buyer role before preparing formal quotation.",
+    actionReason: "报价前缺少关键项目资料，直接报价可能造成价格、规格和交期误判。",
+    riskNotes: "不要承诺价格、交期或供应能力；先确认项目和身份。",
+    missingInformation: [
+      ["company website", "needs_review"],
+      ["project location", "missing"],
+      ["product specification", "missing"],
+      ["quantity", "missing"],
+      ["buyer role", "missing"],
+      ["drawings/photos", "needs_review"],
+      ["delivery port", "not_required"],
+      ["expected timeline", "needs_review"],
+    ],
+    draftSubject: "Project details for your aluminum window inquiry",
+    draftBody: `Dear Carlos,\n\nThank you for your inquiry. Before preparing a suitable proposal, could you please share the project location, required window specifications, estimated quantity, and your role in the project?\n\nThis will help us prepare a more accurate recommendation and quotation.\n\nBest regards,\nPaul`,
+  },
+  {
+    customerName: "Maria Gonzalez",
+    company: "DEMO Construction Importers",
+    country: "Panama",
+    source: "customer_verification_duplicate",
+    currentStage: "possible_duplicate_review",
+    stageLabel: "重复风险复核",
+    productInterest: "Curtain wall accessories and aluminum profiles",
+    lastInteraction: "系统提示该公司名称和国家与既有客户资料相似，跟进前需要确认是否为同一买家或关联公司。",
+    reason: "Possible duplicate customer, needs review before follow-up",
+    priority: "Medium",
+    risk: "Medium",
+    confidence: "Medium",
+    suggestedTiming: "after duplicate review",
+    suggestedLanguage: "English",
+    alternativeLanguage: "Spanish",
+    channel: "Email",
+    tone: "professional, careful",
+    recommendedAction: "Review duplicate evidence before using previous customer context or preparing any follow-up draft.",
+    actionReason: "重复关系未确认前，不应混用历史报价、联系人或客户状态。",
+    riskNotes: "不自动合并客户，不自动归档，不用重复关系对外沟通。",
+    missingInformation: [
+      ["company website", "needs_review"],
+      ["project location", "confirmed"],
+      ["product specification", "needs_review"],
+      ["quantity", "needs_review"],
+      ["buyer role", "missing"],
+      ["drawings/photos", "not_required"],
+      ["delivery port", "needs_review"],
+      ["expected timeline", "missing"],
+    ],
+    draftSubject: "Confirming project details before next step",
+    draftBody: `Dear Maria,\n\nThank you for your message. Before we prepare the next step, could you please confirm your company website, project role, and the required product specifications?\n\nThis will help us avoid duplicated records and make sure we respond with the correct project context.\n\nBest regards,\nPaul`,
+  },
+  {
+    customerName: "Daniel Wong",
+    company: "DEMO Building Materials Asia",
+    country: "Indonesia",
+    source: "business_card",
+    currentStage: "dormant / prospecting_lead",
+    stageLabel: "低频线索澄清",
+    productInterest: "Ceiling system profiles",
+    lastInteraction: "来自名片或展会线索，缺少公司网站、买家角色和明确项目需求。",
+    reason: "Need company website and buyer role",
+    priority: "Low-medium",
+    risk: "Medium",
+    confidence: "Low-medium",
+    suggestedTiming: "wait for clarification",
+    suggestedLanguage: "English",
+    alternativeLanguage: "Chinese",
+    channel: "WhatsApp / Email",
+    tone: "friendly, brief",
+    recommendedAction: "Ask for company website, buyer role, and current project need before adding to active follow-up queue.",
+    actionReason: "线索价值和身份都不清楚，应该先轻量确认，不进入报价或任务执行。",
+    riskNotes: "不要发送强销售话术，不要承诺报价或样品。",
+    missingInformation: [
+      ["company website", "missing"],
+      ["project location", "missing"],
+      ["product specification", "needs_review"],
+      ["quantity", "missing"],
+      ["buyer role", "missing"],
+      ["drawings/photos", "not_required"],
+      ["delivery port", "not_required"],
+      ["expected timeline", "missing"],
+    ],
+    draftSubject: "Quick confirmation about your building materials interest",
+    draftBody: `Hello Daniel,\n\nNice to connect with you. Could you please share your company website and your role in current building materials projects?\n\nIf you have an active aluminum or ceiling profile requirement, you may also send the basic specifications for our review.\n\nBest regards,\nPaul`,
+  },
+];
+
+const followupAssistantSafetyItems = [
+  "不自动发送邮件/WhatsApp",
+  "不自动创建正式任务",
+  "不自动修改客户状态",
+  "不生成正式报价",
+  "不创建 PI / 订单 / 付款 / 生产 / 发货动作",
+  "所有外部沟通必须 Paul 人工确认",
+];
+
+const followupAssistantDecisions = [
+  "Approve follow-up task",
+  "Revise message",
+  "Request more context",
+  "Hold due to risk",
+  "Skip",
+  "Archive",
+];
+
+function renderFollowupAssistant() {
+  const selected = followupAssistantCandidates[0];
+  return `
+    <div class="followup-assistant-preview" aria-label="AI 跟进助手静态只读预览">
+      <div class="followup-hero">
+        <div>
+          <span class="state-label">AI Follow-up Assistant</span>
+          <h3>AI 跟进助手</h3>
+          <p>根据客户验证、询盘状态、报价阶段和缺失信息，辅助判断下一步跟进动作。当前为只读预览，不自动创建任务、不自动发送消息、不自动修改客户状态。</p>
+        </div>
+        <div class="followup-badge-row" aria-label="AI 跟进助手状态">
+          ${badge("只读预览", "draft")}
+          ${badge("AI 建议", "active")}
+          ${badge("草稿", "draft")}
+          ${badge("未发送", "pending")}
+          ${badge("需人工确认", "approval")}
+          ${badge("不自动执行", "pending")}
+        </div>
+      </div>
+
+      <section class="followup-section" aria-label="跟进概览">
+        <div class="workbench-section-header">
+          <div>
+            <h3>跟进概览</h3>
+            <p>DEMO 静态数据，仅用于验证后续跟进工作台的信息结构和人工复核边界。</p>
+          </div>
+          <span>Static preview</span>
+        </div>
+        <div class="followup-summary-grid">
+          ${followupAssistantSummaryCards.map(renderFollowupSummaryCard).join("")}
+        </div>
+      </section>
+
+      <div class="followup-layout">
+        <section class="followup-candidate-list" aria-label="跟进候选列表">
+          <div class="workbench-section-header">
+            <div>
+              <h3>建议跟进队列</h3>
+              <p>队列项不可点击，不创建任务；仅展示 AI 建议和 Paul 复核所需信息。</p>
+            </div>
+            <span>3 DEMO candidates</span>
+          </div>
+          ${followupAssistantCandidates.map(renderFollowupCandidateCard).join("")}
+        </section>
+
+        <aside class="followup-detail-panel" aria-label="选中候选详情">
+          <div class="workbench-review-heading">
+            <div>
+              <h3>选中候选详情</h3>
+              <p class="workbench-review-note">固定示例：Carlos Ramirez。当前没有点击选择行为。</p>
+            </div>
+            ${badge("需人工确认", "approval")}
+          </div>
+          ${renderFollowupCandidateDetails(selected)}
+        </aside>
+      </div>
+
+      <div class="followup-two-column">
+        <section class="followup-action-panel" aria-label="推荐下一步">
+          <div class="workbench-section-header">
+            <div>
+              <h3>AI 建议下一步</h3>
+              <p>建议只作为 Paul 复核材料，不代表系统已经执行或准备外发。</p>
+            </div>
+            <span>${escapeHtml(selected.confidence)}</span>
+          </div>
+          <dl class="followup-meta-list">
+            <dt>recommended action</dt>
+            <dd>${escapeHtml(selected.recommendedAction)}</dd>
+            <dt>reason</dt>
+            <dd>${escapeHtml(selected.actionReason)}</dd>
+            <dt>timing</dt>
+            <dd>${escapeHtml(selected.suggestedTiming)}</dd>
+            <dt>risk notes</dt>
+            <dd>${escapeHtml(selected.riskNotes)}</dd>
+            <dt>confidence</dt>
+            <dd>${escapeHtml(selected.confidence)}</dd>
+          </dl>
+        </section>
+
+        <section class="followup-draft-panel" aria-label="草稿消息预览">
+          <div class="workbench-section-header">
+            <div>
+              <h3>消息草稿预览</h3>
+              <p>Draft only. Not sent. Human approval required.</p>
+            </div>
+            <span>未发送</span>
+          </div>
+          <div class="followup-draft-box">
+            <span>Subject: ${escapeHtml(selected.draftSubject)}</span>
+            <pre>${escapeHtml(selected.draftBody)}</pre>
+          </div>
+          <div class="followup-chip-row">
+            ${renderChipList(["Draft only", "Not sent", "Human approval required"], "followup-draft-chip")}
+          </div>
+        </section>
+      </div>
+
+      <div class="followup-two-column">
+        <section class="followup-channel-panel" aria-label="渠道语言语气建议">
+          <div class="workbench-section-header">
+            <div>
+              <h3>语言 / 渠道 / 语气</h3>
+              <p>仅显示建议，不连接 Email、WhatsApp、LinkedIn 或任何外部渠道。</p>
+            </div>
+            <span>no automatic send</span>
+          </div>
+          <dl class="followup-meta-list">
+            <dt>suggested language</dt>
+            <dd>${escapeHtml(selected.suggestedLanguage)}</dd>
+            <dt>alternative</dt>
+            <dd>${escapeHtml(selected.alternativeLanguage)}</dd>
+            <dt>channel</dt>
+            <dd>${escapeHtml(selected.channel)}</dd>
+            <dt>tone</dt>
+            <dd>${escapeHtml(selected.tone)}</dd>
+          </dl>
+        </section>
+
+        <section class="followup-review-panel" aria-label="人工复核决策预览">
+          <div class="workbench-section-header">
+            <div>
+              <h3>复核决策预览</h3>
+              <p>以下选项全部禁用、不可点击、不会创建任务或写入数据。</p>
+            </div>
+            <span>disabled</span>
+          </div>
+          <div class="followup-decision-grid">
+            ${followupAssistantDecisions.map((item) => `<span class="followup-decision-chip">${escapeHtml(item)}</span>`).join("")}
+          </div>
+        </section>
+      </div>
+
+      <section class="followup-safety-panel" aria-label="AI 跟进助手安全边界">
+        <div class="workbench-section-header">
+          <div>
+            <h3>安全边界</h3>
+            <p>所有外部沟通和客户状态变化都必须由 Paul 人工确认。当前模块只展示建议和草稿。</p>
+          </div>
+          <span>Human approval</span>
+        </div>
+        <div class="followup-safety-grid">
+          ${followupAssistantSafetyItems.map((item) => `<span class="followup-safety-chip">${escapeHtml(item)}</span>`).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderFollowupSummaryCard(card) {
+  return `
+    <article class="followup-summary-card followup-summary-${escapeHtml(card.tone)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.subtitle)}</small>
+    </article>
+  `;
+}
+
+function renderFollowupCandidateCard(candidate, index) {
+  const isSelected = index === 0;
+  return `
+    <article class="followup-candidate-card ${isSelected ? "followup-candidate-selected" : ""}" aria-label="${escapeHtml(candidate.customerName)} 跟进候选">
+      <div class="followup-candidate-heading">
+        <div>
+          <h4>${escapeHtml(candidate.customerName)}</h4>
+          <p>${escapeHtml(candidate.company)} / ${escapeHtml(candidate.country)}</p>
+        </div>
+        <span>${escapeHtml(candidate.stageLabel)}</span>
+      </div>
+      <p class="followup-candidate-reason">${escapeHtml(candidate.reason)}</p>
+      <div class="followup-chip-row">
+        ${renderChipList([`Priority: ${candidate.priority}`, `Risk: ${candidate.risk}`, `Timing: ${candidate.suggestedTiming}`], "followup-status-chip")}
+      </div>
+    </article>
+  `;
+}
+
+function renderFollowupCandidateDetails(candidate) {
+  return `
+    <dl class="followup-meta-list">
+      <dt>customer name</dt>
+      <dd>${escapeHtml(candidate.customerName)}</dd>
+      <dt>company</dt>
+      <dd>${escapeHtml(candidate.company)}</dd>
+      <dt>country</dt>
+      <dd>${escapeHtml(candidate.country)}</dd>
+      <dt>source</dt>
+      <dd>${escapeHtml(candidate.source)}</dd>
+      <dt>current stage</dt>
+      <dd>${escapeHtml(candidate.currentStage)}</dd>
+      <dt>product interest</dt>
+      <dd>${escapeHtml(candidate.productInterest)}</dd>
+      <dt>last interaction</dt>
+      <dd>${escapeHtml(candidate.lastInteraction)}</dd>
+      <dt>duplicate status</dt>
+      <dd>${escapeHtml(candidate.currentStage.includes("duplicate") ? "needs_review" : "not_checked")}</dd>
+      <dt>priority</dt>
+      <dd>${escapeHtml(candidate.priority)}</dd>
+      <dt>risk</dt>
+      <dd>${escapeHtml(candidate.risk)}</dd>
+      <dt>confidence</dt>
+      <dd>${escapeHtml(candidate.confidence)}</dd>
+    </dl>
+    <div class="followup-missing-info-grid" aria-label="缺失信息清单">
+      ${candidate.missingInformation.map(renderFollowupMissingInfoItem).join("")}
+    </div>
+  `;
+}
+
+function renderFollowupMissingInfoItem([label, status]) {
+  return `
+    <div class="followup-missing-info-item">
+      <span>${escapeHtml(label)}</span>
+      <small class="followup-info-status followup-info-${escapeHtml(status)}">${escapeHtml(status)}</small>
+    </div>
+  `;
+}
+
+function renderFollowupAssistantReview() {
+  return `
+    <div class="review-stack">
+      <div class="review-card">
+        <h3>AI 跟进助手只读边界</h3>
+        <ul class="check-list">
+          <li>静态预览，不调用 AI provider，不连接 Email / WhatsApp / LinkedIn</li>
+          <li>不自动创建任务、不创建定时提醒、不写入客户或询盘状态</li>
+          <li>不发送消息，不生成报价、PI、订单，不触发付款 / 生产 / 发货</li>
+          <li>所有外部沟通必须 Paul 人工确认后才可执行</li>
+        </ul>
+      </div>
+      <div class="review-card">
+        <h3>当前预览样本</h3>
+        <dl>
+          <dt>候选客户</dt>
+          <dd>Carlos Ramirez / DEMO Facade Solutions</dd>
+          <dt>建议动作</dt>
+          <dd>先索取项目位置、规格、数量和买家角色，再考虑报价准备。</dd>
+          <dt>草稿状态</dt>
+          <dd>Draft only / Not sent / Human approval required</dd>
+        </dl>
+      </div>
+      <div class="review-card">
+        <h3>禁用能力</h3>
+        <div class="disabled-chip-row">
+          ${renderDisabledCapabilities(["不可自动发送", "不可创建任务", "不可修改客户", "不可修改询盘", "不可报价", "不可创建 PI / 订单 / 付款 / 生产 / 发货"])}
         </div>
       </div>
     </div>
