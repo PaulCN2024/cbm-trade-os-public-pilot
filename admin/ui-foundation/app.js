@@ -279,6 +279,14 @@ const INQUIRY_SUPPLIER_RFQ_REQUIREMENTS_ENDPOINT = "/api/admin-read/inquiry-supp
 const INQUIRY_REPLY_DRAFTS_ENDPOINT = "/api/admin-read/inquiry-reply-drafts";
 const INQUIRY_INTELLIGENCE_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/inquiry-intelligence-review-queue";
 const INQUIRY_INTELLIGENCE_REVIEWS_ENDPOINT = "/api/admin-read/inquiry-intelligence-reviews";
+const SUPPLIER_INTELLIGENCE_SUMMARY_ENDPOINT = "/api/admin-read/supplier-intelligence-summary";
+const SUPPLIER_INTELLIGENCE_REQUESTS_ENDPOINT = "/api/admin-read/supplier-intelligence-requests";
+const SUPPLIER_CAPABILITY_MATCHES_ENDPOINT = "/api/admin-read/supplier-capability-matches";
+const SUPPLIER_INTELLIGENCE_QUESTIONS_ENDPOINT = "/api/admin-read/supplier-intelligence-questions";
+const SUPPLIER_RFQ_READINESS_ENDPOINT = "/api/admin-read/supplier-rfq-readiness";
+const SUPPLIER_RFQ_DRAFTS_ENDPOINT = "/api/admin-read/supplier-rfq-drafts";
+const SUPPLIER_INTELLIGENCE_REVIEW_QUEUE_ENDPOINT = "/api/admin-read/supplier-intelligence-review-queue";
+const SUPPLIER_INTELLIGENCE_REVIEWS_ENDPOINT = "/api/admin-read/supplier-intelligence-reviews";
 
 const dashboardSummaryApiState = createDashboardSummaryState();
 const knowledgeApiState = createKnowledgeState();
@@ -286,6 +294,7 @@ const businessCardApiState = createBusinessCardCaptureState();
 const customerVerificationApiState = createCustomerVerificationState();
 const followupAssistantApiState = createFollowupAssistantState();
 const inquiryIntelligenceApiState = createInquiryIntelligenceState();
+const supplierIntelligenceApiState = createSupplierIntelligenceState();
 
 const companyPreviewFallback = [
   {
@@ -2252,6 +2261,9 @@ function setSection(sectionId) {
   }
   if (sectionId === "inquiry-intelligence") {
     loadInquiryIntelligenceReadOnly();
+  }
+  if (sectionId === "supplier-intelligence") {
+    loadSupplierIntelligenceReadOnly();
   }
   if (sectionId === "files") {
     loadDocumentsReadOnly();
@@ -5310,19 +5322,203 @@ const supplierRfqDraft = {
     "Dear Supplier,\n\nPlease help confirm whether you can produce the attached/profile drywall steel profiles. Kindly advise available thickness, unit weight per meter, MOQ, packing method, 20GP loading quantity, FOB cost, and production lead time.\n\nThis is for preliminary evaluation only. Final specifications will be confirmed later.\n\nBest regards,\nPaul",
 };
 
+function fallbackSupplierIntelligenceApiData() {
+  return {
+    summary: {
+      total_requests: supplierIntelligenceMatches.length,
+      capability_matches: supplierCapabilityMatches.length,
+      supplier_confirm_needed: 4,
+      rfq_draft_ready: 2,
+      questions_missing: 8,
+      ready_for_paul_review: 0,
+      draft_rfqs: 1,
+      high_risk: 1,
+    },
+    items: supplierIntelligenceMatches.map((item) => ({
+      ...item,
+      capabilityMatches: supplierCapabilityMatches,
+      riskSignals: supplierRiskSignals,
+      rfqDraft: supplierRfqDraft,
+      disabledCapabilities: ["不可联系供应商", "不可创建 RFQ", "不可发送 RFQ", "不可报价", "不可生成 PI", "不可下单", "不可触发付款 / 生产 / 发货"],
+    })),
+    requests: [],
+    capabilityMatches: [],
+    questions: [],
+    rfqReadiness: [],
+    rfqDrafts: [],
+    reviewQueue: [],
+    reviews: [],
+  };
+}
+
+function getSupplierIntelligenceViewModel() {
+  const fallback = fallbackSupplierIntelligenceApiData();
+  const isLive = supplierIntelligenceApiState.status === "loaded" && supplierIntelligenceApiState.source === "api";
+  const isLoading = supplierIntelligenceApiState.status === "loading";
+  const summary = supplierIntelligenceApiState.summary || fallback.summary;
+  const liveItems = normalizeSupplierIntelligenceItems({
+    requests: supplierIntelligenceApiState.requests,
+    capabilityMatches: supplierIntelligenceApiState.capabilityMatches,
+    questions: supplierIntelligenceApiState.questions,
+    rfqReadiness: supplierIntelligenceApiState.rfqReadiness,
+    rfqDrafts: supplierIntelligenceApiState.rfqDrafts,
+    reviews: supplierIntelligenceApiState.reviews,
+  });
+  const items = isLive && liveItems.length ? liveItems : fallback.items;
+  const sourceLabel = isLive ? "实时只读数据" : isLoading ? "正在读取 admin-read 数据" : fallbackLabel;
+
+  return {
+    isLive,
+    isLoading,
+    sourceLabel,
+    summaryCards: buildSupplierIntelligenceSummaryCards(summary),
+    items,
+    selected: items[0] || fallback.items[0],
+    queueCountLabel: `${items.length} 条${isLive ? "只读记录" : "静态示例"}`,
+    headerCopy: isLive
+      ? "已连接 admin-read 供应商智能只读数据。当前只展示供应商能力匹配、问题清单、RFQ 草稿和人工复核状态，不联系供应商、不创建 RFQ、不报价。"
+      : "当前显示安全 fallback / DEMO 数据，用于验证供应商匹配和 RFQ 草稿复核流程；不联系供应商、不创建 RFQ、不发送、不报价。",
+  };
+}
+
+function buildSupplierIntelligenceSummaryCards(summary) {
+  return [
+    { label: "待匹配询盘", value: displayValue(summary.total_requests), subtitle: "需要判断供应商类型和能力方向", tone: "info" },
+    { label: "已匹配能力", value: displayValue(summary.capability_matches), subtitle: "能力标签仅供人工复核", tone: "active" },
+    { label: "需供应商确认", value: displayValue(summary.supplier_confirm_needed), subtitle: "厚度、单位重量、MOQ、包装或交期待确认", tone: "warning" },
+    { label: "RFQ 草稿", value: displayValue(summary.draft_rfqs ?? summary.rfq_draft_ready), subtitle: "草稿仅供 Paul 审核，不自动发送", tone: "neutral" },
+    { label: "高风险匹配", value: displayValue(summary.high_risk), subtitle: "规格、责任或供应能力仍不清楚", tone: "danger" },
+    { label: "待补充参数", value: displayValue(summary.questions_missing), subtitle: "图纸、规格、数量、装柜等信息缺失", tone: "warning" },
+  ];
+}
+
+function groupSupplierIntelligenceRecords(records, key = "supplier_intelligence_request_id") {
+  return (records || []).reduce((map, record) => {
+    const groupKey = record?.[key] || "";
+    if (!map.has(groupKey)) map.set(groupKey, []);
+    map.get(groupKey).push(record);
+    return map;
+  }, new Map());
+}
+
+function firstSupplierIntelligenceRecord(records, key = "supplier_intelligence_request_id") {
+  const grouped = groupSupplierIntelligenceRecords(records, key);
+  return new Map(Array.from(grouped.entries()).map(([groupKey, groupRecords]) => [groupKey, groupRecords[0] || {}]));
+}
+
+function normalizeSupplierIntelligenceItems(data) {
+  const requests = data.requests || [];
+  if (!requests.length) return [];
+
+  const matchMap = groupSupplierIntelligenceRecords(data.capabilityMatches || []);
+  const questionMap = groupSupplierIntelligenceRecords(data.questions || []);
+  const readinessMap = firstSupplierIntelligenceRecord(data.rfqReadiness || []);
+  const draftMap = firstSupplierIntelligenceRecord(data.rfqDrafts || []);
+  const reviewMap = firstSupplierIntelligenceRecord(data.reviews || []);
+
+  return requests.map((request) => {
+    const matches = matchMap.get(request.id) || [];
+    const questions = questionMap.get(request.id) || [];
+    const readiness = readinessMap.get(request.id) || {};
+    const draft = draftMap.get(request.id) || {};
+    const review = reviewMap.get(request.id) || {};
+    const firstMatch = matches[0] || {};
+    const needs = questions
+      .filter((question) => ["missing", "needs_review"].includes(question.status))
+      .map((question) => safeDashboardText(question.question_type || question.question_text, "供应商确认点"))
+      .slice(0, 6);
+    const supplierQuestions = questions.length
+      ? questions.map((question) => safeDashboardText(question.question_text, "供应商问题待补充")).slice(0, 10)
+      : ["Supplier questions require Paul review before any RFQ."];
+    const capabilityMatches = matches.length
+      ? matches.map((match) => [
+          safeDashboardText(match.capability_type || match.process || match.product_category, "供应商能力待确认"),
+          safeDashboardText(match.match_level, "needs_confirm"),
+        ])
+      : [[safeDashboardText(request.required_supplier_type, "供应商类型待确认"), "needs_confirm"]];
+    const riskSignals = [
+      request.risk_level === "high" ? "high supplier match risk" : "",
+      readiness.blockers,
+      readiness.assumptions_needed,
+      readiness.risk_if_sent_now,
+      firstMatch.match_reason,
+    ].filter(Boolean);
+
+    return {
+      title: safeDashboardText(request.inquiry_title, "未命名供应商匹配请求"),
+      customer: safeDashboardText(request.customer_id || request.inquiry_id, "客户 / 询盘待关联"),
+      country: safeDashboardText(request.country_or_region_preference, "供应商区域待确认"),
+      product: safeDashboardText(request.product_family || request.product_category, "产品类别待确认"),
+      category: safeDashboardText(request.product_category, "供应商匹配"),
+      material: safeDashboardText(request.material, "材料待确认"),
+      likelyProcess: safeDashboardText(firstMatch.process, "工艺待确认"),
+      requiredSupplierType: safeDashboardText(request.required_supplier_type, "供应商类型待确认"),
+      matchedCapability: safeDashboardText(firstMatch.capability_type || firstMatch.process, "供应商能力待确认"),
+      matchStatus: safeDashboardText(firstMatch.match_level || request.request_status, "needs_confirm"),
+      priority: safeDashboardText(request.priority_level, "medium"),
+      risk: safeDashboardText(request.risk_level, "medium"),
+      confidence: safeDashboardText(request.confidence_level || firstMatch.confidence_level, "medium"),
+      quotationReadiness: safeDashboardText(readiness.readiness_status, "not_ready"),
+      canPrepareRfqDraft: readiness.can_prepare_rfq_draft ? "Yes, draft only / Paul review required" : "No",
+      canSendRfq: "No, requires Paul approval",
+      riskIfRfqNow: safeDashboardText(readiness.risk_if_sent_now || readiness.blockers, "供应商确认前不能发送 RFQ。"),
+      badges: supplierIntelligenceBadges(request, readiness, firstMatch),
+      needConfirm: needs.length ? needs : ["supplier capability", "RFQ assumptions"],
+      supplierQuestions,
+      recommendedAction: safeDashboardText(
+        review.approved_next_action,
+        readiness.can_prepare_rfq_draft
+          ? "人工复核 RFQ 草稿、供应商问题和风险边界后，再决定是否联系供应商。"
+          : "先复核供应商能力、缺失参数和客户规格，再决定是否准备 RFQ 草稿。"
+      ),
+      actionReason: safeDashboardText(readiness.blockers || firstMatch.match_reason, "供应商匹配和 RFQ 前需要人工复核。"),
+      safetyNote: safeDashboardText(draft.safety_notes, "Draft only. Not sent. Human approval required."),
+      capabilityMatches,
+      riskSignals: riskSignals.length ? riskSignals : supplierRiskSignals.slice(0, 4),
+      rfqDraft: {
+        subject: safeDashboardText(draft.draft_subject, "RFQ draft requires review"),
+        body: safeDashboardText(draft.draft_body, "RFQ draft body is not available. Human review is required before any supplier contact."),
+      },
+      disabledCapabilities: ["不可联系供应商", "不可创建 RFQ", "不可发送 RFQ", "不可报价", "不可生成 PI", "不可下单", "不可触发付款 / 生产 / 发货"],
+    };
+  });
+}
+
+function supplierIntelligenceBadges(request, readiness, match) {
+  const labels = ["需要人工复核"];
+  if (request.request_status) labels.push(request.request_status);
+  if (request.risk_level === "high") labels.push("高风险");
+  if (match?.match_level) labels.push(match.match_level);
+  if (readiness?.can_prepare_rfq_draft) labels.push("RFQ 草稿可准备");
+  if (readiness?.readiness_status === "not_ready" || readiness?.readiness_status === "blocked_by_missing_info") labels.push("未就绪");
+  return labels.slice(0, 5);
+}
+
 function renderSupplierIntelligence() {
-  const selected = supplierIntelligenceMatches[0];
+  const model = getSupplierIntelligenceViewModel();
+  const selected = model.selected;
+  const statusNotice =
+    supplierIntelligenceApiState.status === "loading"
+      ? renderDataStatus("loading", "正在加载供应商智能数据", `正在使用当前管理员会话请求 GET ${SUPPLIER_INTELLIGENCE_SUMMARY_ENDPOINT}。`)
+      : supplierIntelligenceApiState.status === "error"
+      ? renderDataStatus("error", "供应商智能 API 暂不可用", `${apiUnavailableMessage} 显示静态预览 fallback。系统提示：${supplierIntelligenceApiState.error}`)
+      : supplierIntelligenceApiState.status === "empty"
+      ? renderDataStatus("empty", "暂无实时供应商智能数据", "当前没有可用实时供应商智能记录，继续显示静态预览 fallback。")
+      : supplierIntelligenceApiState.status === "loaded"
+      ? renderDataStatus("success", "供应商智能只读数据已加载", "已读取 admin-read 只读数据；没有供应商联系、RFQ 创建、发送或报价动作。")
+      : "";
   return `
-    <div class="supplier-intelligence-preview" aria-label="AI 供应商智能匹配静态只读预览">
+    <div class="supplier-intelligence-preview" aria-label="AI 供应商智能匹配只读预览">
+      ${statusNotice}
       <div class="supplier-intelligence-hero">
         <div>
-          <span class="state-label">静态预览（安全示例，非实时数据）</span>
+          <span class="state-label">${escapeHtml(model.sourceLabel)}</span>
           <h3>AI 供应商智能匹配</h3>
           <p>AI Supplier Intelligence Center</p>
-          <p>根据询盘产品分类、材料、工艺、缺失参数和报价准备度，辅助判断需要哪类供应商、匹配哪些能力、是否需要 RFQ 或供应商确认。当前为只读预览，不自动联系供应商、不自动创建 RFQ、不自动报价。</p>
+          <p>${escapeHtml(model.headerCopy)}</p>
         </div>
         <div class="supplier-intelligence-badges" aria-label="AI 供应商智能匹配状态">
-          ${badge("只读预览", "draft")}
+          ${badge(model.sourceLabel, model.isLive ? "active" : "draft")}
           ${badge("AI 建议", "active")}
           ${badge("不自动联系供应商", "pending")}
           ${badge("不自动创建 RFQ", "pending")}
@@ -5335,12 +5531,12 @@ function renderSupplierIntelligence() {
         <div class="workbench-section-header">
           <div>
             <h3>供应商智能概览</h3>
-            <p>DEMO 数字仅用于验证界面；不代表真实供应商、真实价格、真实交期或已确认供应能力。</p>
+            <p>${model.isLive ? "来自 admin-read 的只读统计；不代表供应商、价格、交期或产能已经确认。" : "安全 fallback / DEMO 数字仅用于验证界面；不代表真实供应商、真实价格、真实交期或已确认供应能力。"}</p>
           </div>
-          <span>static preview</span>
+          <span>${escapeHtml(model.sourceLabel)}</span>
         </div>
         <div class="supplier-summary-grid">
-          ${renderSummaryCards(supplierIntelligenceSummaryCards, renderSupplierIntelligenceSummaryCard)}
+          ${renderSummaryCards(model.summaryCards, renderSupplierIntelligenceSummaryCard)}
         </div>
       </section>
 
@@ -5349,18 +5545,18 @@ function renderSupplierIntelligence() {
           <div class="workbench-section-header">
             <div>
               <h3>DEMO 供应商匹配队列</h3>
-              <p>队列项不可点击。当前只展示静态匹配判断，用于人工理解供应商方向。</p>
+              <p>队列项不可点击。当前只展示只读匹配判断，用于人工理解供应商方向。</p>
             </div>
-            <span>3 条静态示例</span>
+            <span>${escapeHtml(model.queueCountLabel)}</span>
           </div>
-          ${supplierIntelligenceMatches.map(renderSupplierMatchCard).join("")}
+          ${model.items.map(renderSupplierMatchCard).join("")}
         </section>
 
         <aside class="supplier-detail-panel" aria-label="选中供应商匹配详情">
           <div class="workbench-review-heading">
             <div>
               <h3>选中匹配详情</h3>
-              <p class="workbench-review-note">固定展示 Peru Light Steel Keel 示例。当前没有点击选择行为。</p>
+              <p class="workbench-review-note">${model.isLive ? "展示第一条 admin-read 只读记录。" : "固定展示 Peru Light Steel Keel 示例。"}当前没有点击选择行为。</p>
             </div>
             ${badge("人工复核", "approval")}
           </div>
@@ -5369,18 +5565,18 @@ function renderSupplierIntelligence() {
       </div>
 
       <div class="supplier-intelligence-two-column">
-        ${renderSupplierCapabilityPanel()}
+        ${renderSupplierCapabilityPanel(selected)}
         ${renderSupplierQuestionPanel(selected)}
       </div>
 
       <div class="supplier-intelligence-two-column">
         ${renderSupplierRfqReadinessPanel(selected)}
-        ${renderSupplierRiskPanel()}
+        ${renderSupplierRiskPanel(selected)}
       </div>
 
       <div class="supplier-intelligence-two-column">
         ${renderSupplierActionPanel(selected)}
-        ${renderSupplierDraftPanel()}
+        ${renderSupplierDraftPanel(selected)}
       </div>
 
       <section class="supplier-safety-panel" aria-label="AI 供应商智能匹配安全边界">
@@ -5467,7 +5663,8 @@ function renderSupplierMatchDetail(item) {
   `;
 }
 
-function renderSupplierCapabilityPanel() {
+function renderSupplierCapabilityPanel(item) {
+  const capabilityMatches = item.capabilityMatches || supplierCapabilityMatches;
   return `
     <section class="supplier-capability-panel" aria-label="供应商能力匹配">
       <div class="workbench-section-header">
@@ -5478,7 +5675,7 @@ function renderSupplierCapabilityPanel() {
         <span>capability map</span>
       </div>
       <div class="supplier-capability-grid">
-        ${supplierCapabilityMatches
+        ${capabilityMatches
           .map(
             ([label, status]) => `
               <div class="supplier-capability-item">
@@ -5549,7 +5746,8 @@ function renderSupplierRfqReadinessPanel(item) {
   `;
 }
 
-function renderSupplierRiskPanel() {
+function renderSupplierRiskPanel(item) {
+  const riskSignals = item.riskSignals || supplierRiskSignals;
   return `
     <section class="supplier-risk-panel" aria-label="供应商风险信号">
       <div class="workbench-section-header">
@@ -5560,7 +5758,7 @@ function renderSupplierRiskPanel() {
         <span>risk review</span>
       </div>
       <div class="supplier-risk-grid">
-        ${supplierRiskSignals.map((risk) => `<span class="supplier-risk-chip">${escapeHtml(risk)}</span>`).join("")}
+        ${riskSignals.map((risk) => `<span class="supplier-risk-chip">${escapeHtml(risk)}</span>`).join("")}
       </div>
     </section>
   `;
@@ -5592,7 +5790,8 @@ function renderSupplierActionPanel(item) {
   `;
 }
 
-function renderSupplierDraftPanel() {
+function renderSupplierDraftPanel(item) {
+  const draft = item.rfqDraft || supplierRfqDraft;
   return `
     <section class="supplier-draft-panel" aria-label="RFQ 草稿预览">
       <div class="workbench-section-header">
@@ -5603,8 +5802,8 @@ function renderSupplierDraftPanel() {
         <span>draft only</span>
       </div>
       <div class="supplier-draft-box">
-        <span>Subject: ${escapeHtml(supplierRfqDraft.subject)}</span>
-        <pre>${escapeHtml(supplierRfqDraft.body)}</pre>
+        <span>Subject: ${escapeHtml(draft.subject)}</span>
+        <pre>${escapeHtml(draft.body)}</pre>
       </div>
       <div class="supplier-intelligence-chip-row">
         ${renderChipList(["Draft only", "Not sent", "Human approval required"], "supplier-match-chip")}
@@ -5614,7 +5813,8 @@ function renderSupplierDraftPanel() {
 }
 
 function renderSupplierIntelligenceReview() {
-  const selected = supplierIntelligenceMatches[0];
+  const model = getSupplierIntelligenceViewModel();
+  const selected = model.selected;
   return `
     <div class="review-stack">
       <div class="review-card">
@@ -5629,8 +5829,10 @@ function renderSupplierIntelligenceReview() {
       <div class="review-card">
         <h3>当前复核样本</h3>
         <dl>
+          <dt>API 路由</dt>
+          <dd>GET ${SUPPLIER_INTELLIGENCE_REQUESTS_ENDPOINT}</dd>
           <dt>数据状态</dt>
-          <dd>静态预览（安全示例，非实时数据）</dd>
+          <dd>${escapeHtml(model.sourceLabel)}</dd>
           <dt>询盘</dt>
           <dd>${escapeHtml(selected.title)}</dd>
           <dt>供应商类型</dt>
@@ -5646,7 +5848,7 @@ function renderSupplierIntelligenceReview() {
       <div class="review-card">
         <h3>禁用能力</h3>
         <div class="disabled-chip-row">
-          ${renderDisabledCapabilities(["不可联系供应商", "不可创建 RFQ", "不可发送 RFQ", "不可报价", "不可生成 PI", "不可下单", "不可触发付款 / 生产 / 发货"])}
+          ${renderDisabledCapabilities(selected.disabledCapabilities || ["不可联系供应商", "不可创建 RFQ", "不可发送 RFQ", "不可报价", "不可生成 PI", "不可下单", "不可触发付款 / 生产 / 发货"])}
         </div>
       </div>
     </div>
@@ -5780,6 +5982,126 @@ function refreshInquiryIntelligenceView() {
   if (activeSectionId !== "inquiry-intelligence") return;
   mainContent.innerHTML = renderInquiryIntelligence();
   reviewPanel.innerHTML = renderInquiryIntelligenceReview();
+}
+
+async function fetchSupplierIntelligenceResource(endpoint) {
+  const token = getAdminAccessToken();
+  const response = await fetch(endpoint, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || `${endpoint} failed with ${response.status}`);
+  }
+  return payload;
+}
+
+function supplierIntelligenceRecords(payload) {
+  return Array.isArray(payload?.records) ? payload.records : [];
+}
+
+function supplierIntelligenceIsFallbackPayload(...payloads) {
+  return payloads.some((payload) => payload?.meta?.source === "fallback_demo" || payload?.meta?.is_fallback === true);
+}
+
+function resetSupplierIntelligenceCollections() {
+  supplierIntelligenceApiState.requests = [];
+  supplierIntelligenceApiState.capabilityMatches = [];
+  supplierIntelligenceApiState.questions = [];
+  supplierIntelligenceApiState.rfqReadiness = [];
+  supplierIntelligenceApiState.rfqDrafts = [];
+  supplierIntelligenceApiState.reviewQueue = [];
+  supplierIntelligenceApiState.reviews = [];
+}
+
+async function loadSupplierIntelligenceReadOnly() {
+  supplierIntelligenceApiState.status = "loading";
+  supplierIntelligenceApiState.error = "";
+  supplierIntelligenceApiState.source = "api";
+  refreshSupplierIntelligenceView();
+
+  try {
+    const [
+      summaryPayload,
+      requestsPayload,
+      matchesPayload,
+      questionsPayload,
+      readinessPayload,
+      draftsPayload,
+      queuePayload,
+      reviewsPayload,
+    ] = await Promise.all([
+      fetchSupplierIntelligenceResource(SUPPLIER_INTELLIGENCE_SUMMARY_ENDPOINT),
+      fetchSupplierIntelligenceResource(SUPPLIER_INTELLIGENCE_REQUESTS_ENDPOINT),
+      fetchSupplierIntelligenceResource(SUPPLIER_CAPABILITY_MATCHES_ENDPOINT),
+      fetchSupplierIntelligenceResource(SUPPLIER_INTELLIGENCE_QUESTIONS_ENDPOINT),
+      fetchSupplierIntelligenceResource(SUPPLIER_RFQ_READINESS_ENDPOINT),
+      fetchSupplierIntelligenceResource(SUPPLIER_RFQ_DRAFTS_ENDPOINT),
+      fetchSupplierIntelligenceResource(SUPPLIER_INTELLIGENCE_REVIEW_QUEUE_ENDPOINT),
+      fetchSupplierIntelligenceResource(SUPPLIER_INTELLIGENCE_REVIEWS_ENDPOINT),
+    ]);
+
+    supplierIntelligenceApiState.summary = summaryPayload.summary || null;
+    supplierIntelligenceApiState.requests = supplierIntelligenceRecords(requestsPayload);
+    supplierIntelligenceApiState.capabilityMatches = supplierIntelligenceRecords(matchesPayload);
+    supplierIntelligenceApiState.questions = supplierIntelligenceRecords(questionsPayload);
+    supplierIntelligenceApiState.rfqReadiness = supplierIntelligenceRecords(readinessPayload);
+    supplierIntelligenceApiState.rfqDrafts = supplierIntelligenceRecords(draftsPayload);
+    supplierIntelligenceApiState.reviewQueue = supplierIntelligenceRecords(queuePayload);
+    supplierIntelligenceApiState.reviews = supplierIntelligenceRecords(reviewsPayload);
+
+    const recordCount =
+      supplierIntelligenceApiState.requests.length +
+      supplierIntelligenceApiState.capabilityMatches.length +
+      supplierIntelligenceApiState.questions.length +
+      supplierIntelligenceApiState.rfqReadiness.length +
+      supplierIntelligenceApiState.rfqDrafts.length +
+      supplierIntelligenceApiState.reviewQueue.length +
+      supplierIntelligenceApiState.reviews.length;
+
+    if (
+      supplierIntelligenceIsFallbackPayload(
+        summaryPayload,
+        requestsPayload,
+        matchesPayload,
+        questionsPayload,
+        readinessPayload,
+        draftsPayload,
+        queuePayload,
+        reviewsPayload
+      )
+    ) {
+      const fallback = fallbackSupplierIntelligenceApiData();
+      supplierIntelligenceApiState.summary = fallback.summary;
+      resetSupplierIntelligenceCollections();
+      supplierIntelligenceApiState.status = "error";
+      supplierIntelligenceApiState.error = "supplier-intelligence admin-read source unavailable; showing fallback demo";
+      supplierIntelligenceApiState.source = fallbackLabel;
+    } else if (recordCount === 0) {
+      const fallback = fallbackSupplierIntelligenceApiData();
+      supplierIntelligenceApiState.summary = fallback.summary;
+      supplierIntelligenceApiState.status = "empty";
+      supplierIntelligenceApiState.source = fallbackLabel;
+    } else {
+      supplierIntelligenceApiState.status = "loaded";
+      supplierIntelligenceApiState.source = "api";
+    }
+  } catch (error) {
+    const fallback = fallbackSupplierIntelligenceApiData();
+    supplierIntelligenceApiState.summary = fallback.summary;
+    resetSupplierIntelligenceCollections();
+    supplierIntelligenceApiState.status = "error";
+    supplierIntelligenceApiState.error = error.message || "Unknown API error";
+    supplierIntelligenceApiState.source = fallbackLabel;
+  }
+
+  refreshSupplierIntelligenceView();
+}
+
+function refreshSupplierIntelligenceView() {
+  if (activeSectionId !== "supplier-intelligence") return;
+  mainContent.innerHTML = renderSupplierIntelligence();
+  reviewPanel.innerHTML = renderSupplierIntelligenceReview();
 }
 
 function getBusinessCardCaptureViewModel() {
@@ -8497,6 +8819,22 @@ function createInquiryIntelligenceState() {
     quotationReadiness: [],
     supplierRequirements: [],
     replyDrafts: [],
+    reviewQueue: [],
+    reviews: [],
+    error: "",
+    source: "not loaded",
+  };
+}
+
+function createSupplierIntelligenceState() {
+  return {
+    status: "idle",
+    summary: null,
+    requests: [],
+    capabilityMatches: [],
+    questions: [],
+    rfqReadiness: [],
+    rfqDrafts: [],
     reviewQueue: [],
     reviews: [],
     error: "",

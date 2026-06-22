@@ -120,6 +120,26 @@ test("inquiry intelligence admin-read routes remain protected without auth", asy
   }
 });
 
+test("supplier intelligence admin-read routes remain protected without auth", async () => {
+  const routes = [
+    "/api/admin-read/supplier-intelligence-summary",
+    "/api/admin-read/supplier-intelligence-requests",
+    "/api/admin-read/supplier-capability-matches",
+    "/api/admin-read/supplier-intelligence-questions",
+    "/api/admin-read/supplier-rfq-readiness",
+    "/api/admin-read/supplier-rfq-drafts",
+    "/api/admin-read/supplier-intelligence-review-queue",
+    "/api/admin-read/supplier-intelligence-reviews",
+  ];
+
+  for (const route of routes) {
+    const result = await invoke(route);
+    assert.equal(result.statusCode, 401);
+    assert.match(result.body.error, /Bearer token/);
+    assert.match(result.body.safety_boundary, /No automatic customer messages/);
+  }
+});
+
 test("unknown admin-read resource still returns stable JSON 404", async () => {
   const result = await invoke("/api/admin-read/not-a-real-resource");
   assert.equal(result.statusCode, 404);
@@ -151,6 +171,13 @@ test("customer verification admin-read routes remain GET only", async () => {
 
 test("inquiry intelligence admin-read routes remain GET only", async () => {
   const result = await invoke("/api/admin-read/inquiry-intelligence-summary", "POST");
+  assert.equal(result.statusCode, 405);
+  assert.equal(result.headers.allow, "GET");
+  assert.equal(result.body.error, "Method not allowed");
+});
+
+test("supplier intelligence admin-read routes remain GET only", async () => {
+  const result = await invoke("/api/admin-read/supplier-intelligence-summary", "POST");
   assert.equal(result.statusCode, 405);
   assert.equal(result.headers.allow, "GET");
   assert.equal(result.body.error, "Method not allowed");

@@ -144,6 +144,24 @@ const INQUIRY_INTELLIGENCE_DISABLED_ACTIONS = Object.freeze([
   "trigger_shipment",
 ]);
 
+const SUPPLIER_INTELLIGENCE_DISABLED_ACTIONS = Object.freeze([
+  "call_ai_provider",
+  "external_supplier_search",
+  "contact_supplier",
+  "create_supplier",
+  "update_supplier",
+  "create_supplier_rfq",
+  "send_supplier_rfq",
+  "approve_rfq_send",
+  "create_quote",
+  "send_quote",
+  "generate_pi",
+  "confirm_order",
+  "confirm_payment",
+  "trigger_production",
+  "trigger_shipment",
+]);
+
 const DASHBOARD_HIGH_RISK_TERMS = Object.freeze([
   "price",
   "payment",
@@ -305,7 +323,15 @@ function isSupportedResource(resource) {
     resource === "inquiry-supplier-rfq-requirements" ||
     resource === "inquiry-reply-drafts" ||
     resource === "inquiry-intelligence-review-queue" ||
-    resource === "inquiry-intelligence-reviews"
+    resource === "inquiry-intelligence-reviews" ||
+    resource === "supplier-intelligence-summary" ||
+    resource === "supplier-intelligence-requests" ||
+    resource === "supplier-capability-matches" ||
+    resource === "supplier-intelligence-questions" ||
+    resource === "supplier-rfq-readiness" ||
+    resource === "supplier-rfq-drafts" ||
+    resource === "supplier-intelligence-review-queue" ||
+    resource === "supplier-intelligence-reviews"
   );
 }
 
@@ -2901,6 +2927,356 @@ async function readInquiryIntelligenceReviews(response, supabase) {
   );
 }
 
+function supplierIntelligenceSafetyPayload() {
+  return {
+    human_review_required: true,
+    safety: "read_only_preview",
+    disabled_actions: [...SUPPLIER_INTELLIGENCE_DISABLED_ACTIONS],
+  };
+}
+
+function supplierIntelligenceMeta(resource, warnings, source = "admin_read") {
+  return {
+    generated_at: new Date().toISOString(),
+    source,
+    resource,
+    is_fallback: source === "fallback_demo" || warnings.length > 0,
+  };
+}
+
+function supplierIntelligenceFallbackWarnings(warnings) {
+  return warnings.length ? warnings : ["supplier_intelligence_source_unavailable"];
+}
+
+function supplierIntelligenceRequestRecord(row) {
+  return {
+    id: row.id || "",
+    source_type: row.source_type || "",
+    source_entity_id: row.source_entity_id || "",
+    inquiry_intelligence_request_id: row.inquiry_intelligence_request_id || "",
+    inquiry_id: row.inquiry_id || "",
+    customer_id: row.customer_id || "",
+    inquiry_title: row.inquiry_title || "",
+    product_category: row.product_category || "",
+    product_family: row.product_family || "",
+    material: row.material || "",
+    required_supplier_type: row.required_supplier_type || "",
+    country_or_region_preference: row.country_or_region_preference || "",
+    priority_level: row.priority_level || "",
+    risk_level: row.risk_level || "",
+    confidence_level: row.confidence_level || "",
+    request_status: row.request_status || "",
+    requested_by: row.requested_by || "",
+    requested_at: row.requested_at || "",
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function supplierCapabilityMatchRecord(row) {
+  return {
+    id: row.id || "",
+    supplier_intelligence_request_id: row.supplier_intelligence_request_id || "",
+    supplier_id: row.supplier_id || "",
+    supplier_name: row.supplier_name || "",
+    capability_type: row.capability_type || "",
+    product_category: row.product_category || "",
+    material: row.material || "",
+    process: row.process || "",
+    match_level: row.match_level || "",
+    match_reason: row.match_reason || "",
+    confidence_level: row.confidence_level || "",
+    risk_level: row.risk_level || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function supplierQuestionRecord(row) {
+  return {
+    id: row.id || "",
+    supplier_intelligence_request_id: row.supplier_intelligence_request_id || "",
+    question_type: row.question_type || "",
+    question_text: row.question_text || "",
+    required_level: row.required_level || "",
+    status: row.status || "",
+    reason: row.reason || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function supplierRfqReadinessRecord(row) {
+  return {
+    id: row.id || "",
+    supplier_intelligence_request_id: row.supplier_intelligence_request_id || "",
+    readiness_status: row.readiness_status || "",
+    can_prepare_rfq_draft: row.can_prepare_rfq_draft === true,
+    can_send_rfq: false,
+    blockers: row.blockers || "",
+    assumptions_needed: row.assumptions_needed || "",
+    risk_if_sent_now: row.risk_if_sent_now || "",
+    confidence_level: row.confidence_level || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function supplierRfqDraftRecord(row) {
+  return {
+    id: row.id || "",
+    supplier_intelligence_request_id: row.supplier_intelligence_request_id || "",
+    language: row.language || "",
+    channel: row.channel || "",
+    draft_subject: row.draft_subject || "",
+    draft_body: row.draft_body || "",
+    draft_status: row.draft_status || "",
+    safety_notes: row.safety_notes || "",
+    requires_approval: row.requires_approval !== false,
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || "",
+  };
+}
+
+function supplierIntelligenceReviewRecord(row) {
+  return {
+    id: row.id || "",
+    supplier_intelligence_request_id: row.supplier_intelligence_request_id || "",
+    reviewer: row.reviewer || "",
+    review_status: row.review_status || "",
+    decision: row.decision || "",
+    reviewer_notes: row.reviewer_notes || "",
+    approved_next_action: row.approved_next_action || "",
+    reviewed_at: row.reviewed_at || "",
+    created_at: row.created_at || "",
+  };
+}
+
+function supplierIntelligenceSummary(data) {
+  const requests = data.requests || [];
+  const matches = data.capabilityMatches || [];
+  const questions = data.questions || [];
+  const readiness = data.rfqReadiness || [];
+  const drafts = data.rfqDrafts || [];
+
+  return {
+    total_requests: requests.length,
+    capability_matches: matches.length,
+    supplier_confirm_needed: requests.filter((record) => record.request_status === "supplier_confirm_needed").length,
+    rfq_draft_ready: requests.filter((record) => record.request_status === "rfq_draft_ready").length,
+    questions_missing: questions.filter((record) => ["missing", "needs_review"].includes(record.status)).length,
+    ready_for_paul_review: readiness.filter((record) => record.readiness_status === "ready_for_paul_review").length,
+    draft_rfqs: drafts.filter((record) => ["draft", "needs_review"].includes(record.draft_status)).length,
+    high_risk: requests.filter((record) => record.risk_level === "high" || record.request_status === "risk_hold").length,
+  };
+}
+
+function supplierIntelligenceReviewQueueFromData(data) {
+  const readinessMap = new Map((data.rfqReadiness || []).map((record) => [record.supplier_intelligence_request_id, record]));
+  const reviewMap = new Map((data.reviews || []).map((record) => [record.supplier_intelligence_request_id, record]));
+  return (data.requests || [])
+    .filter((record) => record.request_status !== "archived")
+    .map((record) => {
+      const readiness = readinessMap.get(record.id) || {};
+      const review = reviewMap.get(record.id) || {};
+      return {
+        id: record.id,
+        inquiry_title: record.inquiry_title,
+        product_category: record.product_category,
+        product_family: record.product_family,
+        material: record.material,
+        required_supplier_type: record.required_supplier_type,
+        priority_level: record.priority_level,
+        risk_level: record.risk_level,
+        confidence_level: record.confidence_level,
+        request_status: record.request_status,
+        readiness_status: readiness.readiness_status || "",
+        can_prepare_rfq_draft: readiness.can_prepare_rfq_draft === true,
+        can_send_rfq: false,
+        review_status: review.review_status || "pending",
+        recommended_next_action:
+          review.approved_next_action ||
+          (readiness.can_prepare_rfq_draft
+            ? "Review RFQ draft content and supplier questions before any supplier contact."
+            : "Review supplier capability and missing information before preparing RFQ draft."),
+        created_at: record.created_at,
+      };
+    })
+    .slice(0, 50);
+}
+
+async function readSupplierIntelligenceSources(supabase, warnings) {
+  const [requests, capabilityMatches, questions, rfqReadiness, rfqDrafts, reviews] = await Promise.all([
+    readSource({
+      supabase,
+      table: "supplier_intelligence_requests",
+      select:
+        "id,source_type,source_entity_id,inquiry_intelligence_request_id,inquiry_id,customer_id,inquiry_title,product_category,product_family,material,required_supplier_type,country_or_region_preference,priority_level,risk_level,confidence_level,request_status,requested_by,requested_at,created_at,updated_at",
+      warning: "supplier_intelligence_requests_unavailable",
+      warnings,
+      order: "requested_at",
+      limit: 50,
+    }),
+    readSource({
+      supabase,
+      table: "supplier_capability_matches",
+      select:
+        "id,supplier_intelligence_request_id,supplier_id,supplier_name,capability_type,product_category,material,process,match_level,match_reason,confidence_level,risk_level,created_at",
+      warning: "supplier_capability_matches_unavailable",
+      warnings,
+      limit: 80,
+    }),
+    readSource({
+      supabase,
+      table: "supplier_questions",
+      select: "id,supplier_intelligence_request_id,question_type,question_text,required_level,status,reason,created_at",
+      warning: "supplier_questions_unavailable",
+      warnings,
+      limit: 160,
+    }),
+    readSource({
+      supabase,
+      table: "supplier_rfq_readiness",
+      select:
+        "id,supplier_intelligence_request_id,readiness_status,can_prepare_rfq_draft,can_send_rfq,blockers,assumptions_needed,risk_if_sent_now,confidence_level,created_at",
+      warning: "supplier_rfq_readiness_unavailable",
+      warnings,
+      limit: 80,
+    }),
+    readSource({
+      supabase,
+      table: "supplier_rfq_drafts",
+      select:
+        "id,supplier_intelligence_request_id,language,channel,draft_subject,draft_body,draft_status,safety_notes,requires_approval,created_at,updated_at",
+      warning: "supplier_rfq_drafts_unavailable",
+      warnings,
+      limit: 80,
+    }),
+    readSource({
+      supabase,
+      table: "supplier_intelligence_reviews",
+      select:
+        "id,supplier_intelligence_request_id,reviewer,review_status,decision,reviewer_notes,approved_next_action,reviewed_at,created_at",
+      warning: "supplier_intelligence_reviews_unavailable",
+      warnings,
+      limit: 80,
+    }),
+  ]);
+
+  return {
+    requests: requests.map(supplierIntelligenceRequestRecord),
+    capabilityMatches: capabilityMatches.map(supplierCapabilityMatchRecord),
+    questions: questions.map(supplierQuestionRecord),
+    rfqReadiness: rfqReadiness.map(supplierRfqReadinessRecord),
+    rfqDrafts: rfqDrafts.map(supplierRfqDraftRecord),
+    reviews: reviews.map(supplierIntelligenceReviewRecord),
+  };
+}
+
+function sendSupplierIntelligencePayload(response, resource, records, summary, warnings, source = "admin_read") {
+  sendJson(response, 200, {
+    meta: supplierIntelligenceMeta(resource, warnings, source),
+    records,
+    summary,
+    safety: supplierIntelligenceSafetyPayload(),
+    warnings,
+  });
+}
+
+function sendSupplierIntelligenceFallback(response, resource, records, summary, warnings) {
+  sendSupplierIntelligencePayload(response, resource, records, summary, supplierIntelligenceFallbackWarnings(warnings), "fallback_demo");
+}
+
+async function readSupplierIntelligenceDataOrFallback(response, supabase, resource, pickRecords, pickSummary) {
+  const warnings = [];
+  const data = await readSupplierIntelligenceSources(supabase, warnings);
+  if (warnings.length > 0) {
+    const emptyData = {
+      requests: [],
+      capabilityMatches: [],
+      questions: [],
+      rfqReadiness: [],
+      rfqDrafts: [],
+      reviews: [],
+    };
+    sendSupplierIntelligenceFallback(response, resource, pickRecords(emptyData), pickSummary(emptyData), warnings);
+    return;
+  }
+
+  sendSupplierIntelligencePayload(response, resource, pickRecords(data), pickSummary(data), warnings);
+}
+
+async function readSupplierIntelligenceSummary(response, supabase) {
+  await readSupplierIntelligenceDataOrFallback(response, supabase, "supplier-intelligence-summary", () => [], supplierIntelligenceSummary);
+}
+
+async function readSupplierIntelligenceRequests(response, supabase) {
+  await readSupplierIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "supplier-intelligence-requests",
+    (data) => data.requests,
+    supplierIntelligenceSummary
+  );
+}
+
+async function readSupplierCapabilityMatches(response, supabase) {
+  await readSupplierIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "supplier-capability-matches",
+    (data) => data.capabilityMatches,
+    (data) => ({ total_records: data.capabilityMatches.length })
+  );
+}
+
+async function readSupplierIntelligenceQuestions(response, supabase) {
+  await readSupplierIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "supplier-intelligence-questions",
+    (data) => data.questions,
+    (data) => ({ total_records: data.questions.length })
+  );
+}
+
+async function readSupplierRfqReadiness(response, supabase) {
+  await readSupplierIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "supplier-rfq-readiness",
+    (data) => data.rfqReadiness,
+    (data) => ({ total_records: data.rfqReadiness.length })
+  );
+}
+
+async function readSupplierRfqDrafts(response, supabase) {
+  await readSupplierIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "supplier-rfq-drafts",
+    (data) => data.rfqDrafts,
+    (data) => ({ total_records: data.rfqDrafts.length })
+  );
+}
+
+async function readSupplierIntelligenceReviewQueue(response, supabase) {
+  await readSupplierIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "supplier-intelligence-review-queue",
+    supplierIntelligenceReviewQueueFromData,
+    (data) => ({ total_records: supplierIntelligenceReviewQueueFromData(data).length })
+  );
+}
+
+async function readSupplierIntelligenceReviews(response, supabase) {
+  await readSupplierIntelligenceDataOrFallback(
+    response,
+    supabase,
+    "supplier-intelligence-reviews",
+    (data) => data.reviews,
+    (data) => ({ total_records: data.reviews.length })
+  );
+}
+
 function dashboardSummaryCards({ inquiries, customers, aiAnalyses, followUps }, now = new Date()) {
   const newInquiries = inquiries.filter((record) => isToday(record.created_at, now)).length;
   const missingInquiryCount = inquiries.filter((record) => hasMissingInfo(record, "missing_info")).length;
@@ -3867,6 +4243,54 @@ module.exports = async function handler(request, response) {
     if (resource === "inquiry-intelligence-reviews") {
       const supabase = getSupabaseClient(request);
       await readInquiryIntelligenceReviews(response, supabase);
+      return;
+    }
+
+    if (resource === "supplier-intelligence-summary") {
+      const supabase = getSupabaseClient(request);
+      await readSupplierIntelligenceSummary(response, supabase);
+      return;
+    }
+
+    if (resource === "supplier-intelligence-requests") {
+      const supabase = getSupabaseClient(request);
+      await readSupplierIntelligenceRequests(response, supabase);
+      return;
+    }
+
+    if (resource === "supplier-capability-matches") {
+      const supabase = getSupabaseClient(request);
+      await readSupplierCapabilityMatches(response, supabase);
+      return;
+    }
+
+    if (resource === "supplier-intelligence-questions") {
+      const supabase = getSupabaseClient(request);
+      await readSupplierIntelligenceQuestions(response, supabase);
+      return;
+    }
+
+    if (resource === "supplier-rfq-readiness") {
+      const supabase = getSupabaseClient(request);
+      await readSupplierRfqReadiness(response, supabase);
+      return;
+    }
+
+    if (resource === "supplier-rfq-drafts") {
+      const supabase = getSupabaseClient(request);
+      await readSupplierRfqDrafts(response, supabase);
+      return;
+    }
+
+    if (resource === "supplier-intelligence-review-queue") {
+      const supabase = getSupabaseClient(request);
+      await readSupplierIntelligenceReviewQueue(response, supabase);
+      return;
+    }
+
+    if (resource === "supplier-intelligence-reviews") {
+      const supabase = getSupabaseClient(request);
+      await readSupplierIntelligenceReviews(response, supabase);
       return;
     }
   } catch (error) {
