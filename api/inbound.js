@@ -97,8 +97,22 @@ function leadFromWebsite(lead) {
 module.exports = async function handler(request, response) {
   // —— GET：WhatsApp 订阅验证握手（不碰库） ——
   if (request.method === "GET") {
+    const q = request.query || {};
+    // —— 桌面只读导出：凭 CBM_EXPORT_TOKEN 拉待复核线索（复用 GET·不加新 function·避 Hobby 12 上限）。只读·service_role 不出云。——
+    if (q.action === "export") {
+      const want = String(process.env.CBM_EXPORT_TOKEN || "");
+      const got = String(q.token || request.headers["x-cbm-export-token"] || "");
+      if (!want || got !== want) { sendJson(response, 401, { ok: false, error: "export token mismatch" }); return; }
+      try {
+        const supabase = getSupabaseAdminClient();
+        const { data, error } = await supabase.from("leads").select("*").eq("status", "NEED_REVIEW").order("created_at", { ascending: false }).limit(200);
+        if (error) { sendJson(response, 200, { ok: false, error: String(error.message || error), items: [] }); return; }
+        sendJson(response, 200, { ok: true, count: (data || []).length, items: data || [] });
+      } catch (e) { console.error("export failed", e && e.message); sendJson(response, 200, { ok: false, error: "export failed", items: [] }); }
+      return;
+    }
     const { parseVerifyChallenge } = await import("../lib/whatsapp/webhook.js");
-    const v = parseVerifyChallenge(request.query || {}, process.env.WHATSAPP_VERIFY_TOKEN || "");
+    const v = parseVerifyChallenge(q, process.env.WHATSAPP_VERIFY_TOKEN || "");
     if (v.ok) { response.status(200).send(String(v.challenge)); return; }
     sendJson(response, 403, { ok: false, error: "verify_token mismatch or mode not subscribe" });
     return;
