@@ -14,10 +14,6 @@
       "dest": "/api/admin-login"
     },
     {
-      "src": "^/admin/dev-test(?:/index(?:\\.html)?)?/?$",
-      "dest": "/api/admin-dev-test"
-    },
-    {
       "src": "^/admin/system-check(?:/index(?:\\.html)?)?/?$",
       "dest": "/api/admin-system-check"
     },
