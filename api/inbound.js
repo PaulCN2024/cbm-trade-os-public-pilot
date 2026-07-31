@@ -28,13 +28,15 @@ function setCors(response) {
 }
 
 // leads 查重 upsert（dedupCol=whatsapp 或 email；单租户·无 org_id）。
+// 库写错误统一打 dbError 标记：让 handler catch 区分"库挂(应让 Meta 重投)"vs"验签/解析错(可安全 2xx ACK)"。
+function dbErr(msg) { const e = new Error(msg); e.dbError = true; return e; }
 async function upsertLead(supabase, row, dedupCol) {
   const key = row[dedupCol];
   let existing = null;
   if (key) {
     const r = await supabase.from("leads").select("*").eq("source", row.source).eq(dedupCol, key)
       .order("created_at", { ascending: false }).limit(1).maybeSingle();
-    if (r.error) throw new Error("leads 查重失败：" + (r.error.message || r.error));   // 修：查重失败不再静默吞（否则库挂时误判"无重复"）
+    if (r.error) throw dbErr("leads 查重失败：" + (r.error.message || r.error));   // 修：查重失败不再静默吞（否则库挂时误判"无重复"）
     existing = r.data;
   }
   if (existing) {
@@ -43,10 +45,10 @@ async function upsertLead(supabase, row, dedupCol) {
       summary: row.summary || existing.summary,
       metadata: { ...(existing.metadata || {}), ...row.metadata, manual_review_required: true },
     }).eq("id", existing.id);
-    if (u.error) throw new Error("leads 更新失败：" + (u.error.message || u.error));   // 修
+    if (u.error) throw dbErr("leads 更新失败：" + (u.error.message || u.error));   // 修
   } else {
     const i = await supabase.from("leads").insert(row);
-    if (i.error) throw new Error("leads 落库失败：" + (i.error.message || i.error));   // 修：落库失败真抛错→handler 感知（不再"假成功"静默丢线索·库挂时客户线索无声丢失的根因）
+    if (i.error) throw dbErr("leads 落库失败：" + (i.error.message || i.error));   // 修：落库失败真抛错→handler 感知（不再"假成功"静默丢线索）
   }
 }
 
@@ -215,8 +217,10 @@ module.exports = async function handler(request, response) {
     await upsertLead(supabase, row, "email");
     sendJson(response, 200, { ok: true, channel: row.source, safety_boundary: "Manual review required. No automatic message; no quotation/price/PI." });
   } catch (error) {
-    console.error("inbound failed", { message: error && error.message, wa: isWhatsapp });
-    if (isWhatsapp) sendJson(response, 200, { ok: true, note: "received" });   // Meta 要 2xx 快速 ACK·内部错不外泄
+    console.error("inbound failed", { message: error && error.message, wa: isWhatsapp, db: !!(error && error.dbError) });
+    // WhatsApp：非库错误(验签/解析)可安全 2xx ACK(重投也无用·免 Meta 重试风暴)；但【库写错误】必须回非 2xx→让 Meta 重投(upsertLead 按 source+whatsapp 查重·重投幂等·不重复插)·否则库挂时 WhatsApp 线索永久丢(③扫描高危发现·补 upsertLead 修复在 WhatsApp 路径的盲点)。
+    if (isWhatsapp && !(error && error.dbError)) { sendJson(response, 200, { ok: true, note: "received" }); }
+    else if (isWhatsapp) { sendJson(response, 503, { ok: false, error: "db write failed, please retry" }); }
     else sendJson(response, 500, { ok: false, error: "submission failed" });
   }
 };
