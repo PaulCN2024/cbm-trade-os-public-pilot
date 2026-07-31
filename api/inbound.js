@@ -132,6 +132,27 @@ module.exports = async function handler(request, response) {
       } catch (e) { sendJson(response, 200, { ok: false, error: String((e && e.message) || e) }); }
       return;
     }
+    // —— 桌面回写：人在桌面处理完云线索后·标记这条已处理(status NEED_REVIEW→CONFIRMED/QUOTED)·免 export 再拉回。凭 token·id 精确(绝不批量改)·status 白名单。——
+    if (q.action === "confirm") {
+      const want = String(process.env.CBM_EXPORT_TOKEN || "");
+      const got = String(q.token || request.headers["x-cbm-export-token"] || "");
+      if (!want || got !== want) { sendJson(response, 401, { ok: false, error: "token mismatch" }); return; }
+      const id = String(q.id || "");
+      const status = /^(CONFIRMED|QUOTED)$/.test(String(q.status || "")) ? String(q.status) : "CONFIRMED";
+      if (!id) { sendJson(response, 200, { ok: false, error: "missing id" }); return; }
+      const sbUrl = String(process.env.NEXT_PUBLIC_SUPABASE_URL || "").trim().replace(/\/+$/, "");
+      const sbKey = String(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+      try {
+        const r = await fetch(sbUrl + "/rest/v1/leads?id=eq." + encodeURIComponent(id), {
+          method: "PATCH",
+          headers: { apikey: sbKey, Authorization: "Bearer " + sbKey, "Content-Type": "application/json", Prefer: "return=representation" },
+          body: JSON.stringify({ status }),
+        });
+        const txt = await r.text(); let rows = []; try { rows = JSON.parse(txt); } catch (pe) {}
+        sendJson(response, r.ok ? 200 : 503, { ok: r.ok, status: r.status, updated: Array.isArray(rows) ? rows.length : 0 });
+      } catch (e) { sendJson(response, 503, { ok: false, error: String((e && e.message) || e) }); }
+      return;
+    }
     // —— 桌面只读导出：凭 CBM_EXPORT_TOKEN 拉待复核线索（复用 GET·不加新 function·避 Hobby 12 上限）。只读·service_role 不出云。——
     // 用原生 fetch 直连 Supabase REST（绕 supabase-js·可控超时/重试/拿到真 cause）：观察到 serverless 里 supabase-js 的 select 稳定 8s "fetch failed"（insert 却成功）·换原生 fetch + 重试 + 暴露 cause 定位。
     if (q.action === "export") {
