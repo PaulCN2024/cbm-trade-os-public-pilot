@@ -153,6 +153,33 @@ module.exports = async function handler(request, response) {
       } catch (e) { sendJson(response, 503, { ok: false, error: String((e && e.message) || e) }); }
       return;
     }
+    // —— 广告 ROI 统计：按渠道/站点/广告系列聚合线索数 + 转化数(CONFIRMED/QUOTED)。凭 token·只读·云端聚合(不吐明细·省传输+隐私)。——
+    if (q.action === "stats") {
+      const want = String(process.env.CBM_EXPORT_TOKEN || "");
+      const got = String(q.token || request.headers["x-cbm-export-token"] || "");
+      if (!want || got !== want) { sendJson(response, 401, { ok: false, error: "token mismatch" }); return; }
+      const sbUrl = String(process.env.NEXT_PUBLIC_SUPABASE_URL || "").trim().replace(/\/+$/, "");
+      const sbKey = String(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+      try {
+        const r = await fetch(sbUrl + "/rest/v1/leads?select=source,status,metadata&limit=5000", { headers: { apikey: sbKey, Authorization: "Bearer " + sbKey, Accept: "application/json" } });
+        if (!r.ok) { sendJson(response, 503, { ok: false, error: "supabase HTTP " + r.status }); return; }
+        const data = await r.json();
+        const byStatus = {}, byChannel = {}, bySite = {}, byCampaign = {};
+        const bump = (obj, key, processed) => { if (!key) return; obj[key] = obj[key] || { total: 0, processed: 0 }; obj[key].total++; if (processed) obj[key].processed++; };
+        for (const row of (Array.isArray(data) ? data : [])) {
+          const st = row.status || "NEED_REVIEW";
+          byStatus[st] = (byStatus[st] || 0) + 1;
+          const done = st !== "NEED_REVIEW";   // 非待复核=已推进(涵盖 CONFIRMED/QUOTED 及真实业务态 QUALIFYING/CONVERTED_TO_CUSTOMER 等)
+          const m = row.metadata || {};
+          bump(byChannel, m.channel || row.source || "unknown", done);
+          bump(bySite, m.site || "", done);
+          bump(byCampaign, m.utm_campaign || "", done);
+        }
+        const toArr = (obj) => Object.entries(obj).map(([k, v]) => ({ key: k, total: v.total, processed: v.processed })).sort((a, b) => b.total - a.total);
+        sendJson(response, 200, { ok: true, total: (Array.isArray(data) ? data.length : 0), byStatus, byChannel: toArr(byChannel), bySite: toArr(bySite), byCampaign: toArr(byCampaign) });
+      } catch (e) { sendJson(response, 503, { ok: false, error: String((e && e.cause && e.cause.code) || (e && e.message) || e) }); }
+      return;
+    }
     // —— 桌面只读导出：凭 CBM_EXPORT_TOKEN 拉待复核线索（复用 GET·不加新 function·避 Hobby 12 上限）。只读·service_role 不出云。——
     // 用原生 fetch 直连 Supabase REST（绕 supabase-js·可控超时/重试/拿到真 cause）：观察到 serverless 里 supabase-js 的 select 稳定 8s "fetch failed"（insert 却成功）·换原生 fetch + 重试 + 暴露 cause 定位。
     if (q.action === "export") {
