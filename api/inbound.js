@@ -34,16 +34,19 @@ async function upsertLead(supabase, row, dedupCol) {
   if (key) {
     const r = await supabase.from("leads").select("*").eq("source", row.source).eq(dedupCol, key)
       .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (r.error) throw new Error("leads 查重失败：" + (r.error.message || r.error));   // 修：查重失败不再静默吞（否则库挂时误判"无重复"）
     existing = r.data;
   }
   if (existing) {
-    await supabase.from("leads").update({
+    const u = await supabase.from("leads").update({
       status: "NEED_REVIEW",
       summary: row.summary || existing.summary,
       metadata: { ...(existing.metadata || {}), ...row.metadata, manual_review_required: true },
     }).eq("id", existing.id);
+    if (u.error) throw new Error("leads 更新失败：" + (u.error.message || u.error));   // 修
   } else {
-    await supabase.from("leads").insert(row);
+    const i = await supabase.from("leads").insert(row);
+    if (i.error) throw new Error("leads 落库失败：" + (i.error.message || i.error));   // 修：落库失败真抛错→handler 感知（不再"假成功"静默丢线索·库挂时客户线索无声丢失的根因）
   }
 }
 
@@ -98,17 +101,67 @@ module.exports = async function handler(request, response) {
   // —— GET：WhatsApp 订阅验证握手（不碰库） ——
   if (request.method === "GET") {
     const q = request.query || {};
+    // —— 保活 + 健康：无需 token·只戳一下库(select id limit 1)·不返回任何线索·给免费库制造活动防 7 天不活动自动暂停(本次故障根因)。定时任务每 3 天调·不健康返 503→触发告警。——
+    if (q.action === "ping") {
+      const sbUrl = String(process.env.NEXT_PUBLIC_SUPABASE_URL || "").trim().replace(/\/+$/, "");
+      const sbKey = String(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+      if (!sbUrl || !sbKey) { sendJson(response, 200, { ok: false, healthy: false, error: "no supabase config" }); return; }
+      try {
+        const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 6500);
+        const r = await fetch(sbUrl + "/rest/v1/leads?select=id&limit=1", { headers: { apikey: sbKey, Authorization: "Bearer " + sbKey, Accept: "application/json" }, signal: ctrl.signal });
+        clearTimeout(timer);
+        sendJson(response, r.ok ? 200 : 503, { ok: r.ok, healthy: r.ok, status: r.status });
+      } catch (e) { sendJson(response, 503, { ok: false, healthy: false, error: String((e && e.cause && e.cause.code) || (e && e.message) || e) }); }
+      return;
+    }
+    // —— 一次性清理：删测试线索（company 前缀 ZZ-/CLOUD-TEST、name 含 Cloud Test）。凭 token·维护用·有 or 过滤(绝不裸删全表)。——
+    if (q.action === "purge_test") {
+      const want = String(process.env.CBM_EXPORT_TOKEN || "");
+      const got = String(q.token || request.headers["x-cbm-export-token"] || "");
+      if (!want || got !== want) { sendJson(response, 401, { ok: false, error: "token mismatch" }); return; }
+      const sbUrl = String(process.env.NEXT_PUBLIC_SUPABASE_URL || "").trim().replace(/\/+$/, "");
+      const sbKey = String(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+      try {
+        const delUrl = sbUrl + "/rest/v1/leads?or=(company.like.ZZ-*,company.like.CLOUD-TEST*,name.like.Cloud*Test*)";
+        const r = await fetch(delUrl, { method: "DELETE", headers: { apikey: sbKey, Authorization: "Bearer " + sbKey, Prefer: "return=representation", Accept: "application/json" } });
+        const txt = await r.text();
+        let deleted = []; try { deleted = JSON.parse(txt); } catch (pe) {}
+        sendJson(response, 200, { ok: r.ok, status: r.status, deletedCount: Array.isArray(deleted) ? deleted.length : 0 });
+      } catch (e) { sendJson(response, 200, { ok: false, error: String((e && e.message) || e) }); }
+      return;
+    }
     // —— 桌面只读导出：凭 CBM_EXPORT_TOKEN 拉待复核线索（复用 GET·不加新 function·避 Hobby 12 上限）。只读·service_role 不出云。——
+    // 用原生 fetch 直连 Supabase REST（绕 supabase-js·可控超时/重试/拿到真 cause）：观察到 serverless 里 supabase-js 的 select 稳定 8s "fetch failed"（insert 却成功）·换原生 fetch + 重试 + 暴露 cause 定位。
     if (q.action === "export") {
       const want = String(process.env.CBM_EXPORT_TOKEN || "");
       const got = String(q.token || request.headers["x-cbm-export-token"] || "");
       if (!want || got !== want) { sendJson(response, 401, { ok: false, error: "export token mismatch" }); return; }
-      try {
-        const supabase = getSupabaseAdminClient();
-        const { data, error } = await supabase.from("leads").select("*").eq("status", "NEED_REVIEW").order("created_at", { ascending: false }).limit(200);
-        if (error) { sendJson(response, 200, { ok: false, error: String(error.message || error), items: [] }); return; }
-        sendJson(response, 200, { ok: true, count: (data || []).length, items: data || [] });
-      } catch (e) { console.error("export failed", e && e.message); sendJson(response, 200, { ok: false, error: "export failed", items: [] }); }
+      const sbUrl = String(process.env.NEXT_PUBLIC_SUPABASE_URL || "").trim().replace(/\/+$/, "");
+      const sbKey = String(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+      if (!sbUrl || !sbKey) { sendJson(response, 200, { ok: false, error: "missing supabase url/key", items: [] }); return; }
+      const restUrl = sbUrl + "/rest/v1/leads?select=*&status=eq.NEED_REVIEW&order=id.desc&limit=200";
+      let dnsInfo = "";
+      try { const dnsp = require("dns").promises; const a = await dnsp.lookup(new URL(sbUrl).host); dnsInfo = "ok " + a.address; } catch (de) { dnsInfo = "ERR " + (de && (de.code || de.message)); }
+      let lastErr = "";
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 6500);
+          const r = await fetch(restUrl, { headers: { apikey: sbKey, Authorization: "Bearer " + sbKey, Accept: "application/json" }, signal: ctrl.signal });
+          clearTimeout(timer);
+          const txt = await r.text();
+          if (!r.ok) { lastErr = "supabase HTTP " + r.status + ": " + txt.slice(0, 180); continue; }
+          let items = []; try { items = JSON.parse(txt); } catch (pe) { lastErr = "bad json from supabase"; continue; }
+          sendJson(response, 200, { ok: true, count: items.length, items });
+          return;
+        } catch (e) {
+          const cause = e && e.cause ? (e.cause.code || e.cause.message || String(e.cause)) : "";
+          lastErr = (e && e.name) + ": " + (e && e.message) + (cause ? (" | cause=" + cause) : "");
+          console.error("export attempt " + attempt + " failed:", lastErr);
+        }
+      }
+      let dbgHost = ""; try { dbgHost = new URL(sbUrl).host; } catch (ue) { dbgHost = "BADURL"; }
+      sendJson(response, 200, { ok: false, error: lastErr || "export failed after retries", items: [], debug: { host: dbgHost, rawUrlLen: String(process.env.NEXT_PUBLIC_SUPABASE_URL || "").length, dns: dnsInfo } });
       return;
     }
     const { parseVerifyChallenge } = await import("../lib/whatsapp/webhook.js");
