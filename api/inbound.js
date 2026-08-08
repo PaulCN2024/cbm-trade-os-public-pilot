@@ -7,9 +7,31 @@
 // 【范式】照 api/public-inquiries.js：CJS handler·getSupabaseAdminClient·leads 查重 upsert·NEED_REVIEW·manual_review_required·不自动发·safety_boundary。
 // 【ESM 混用】lib/* 是 ESM——handler 内 await import（禁顶层 require）。
 // 【红线】外部未核实·AI 不自动回复·WhatsApp 强制验签防伪造·线索进 NEED_REVIEW 待人确认。
-// 【单租户】leads 无 org_id；按站分 org_id + 来源注册表下一步。
+// 【多租户·2026-08-07】配了 CBM_ORG_ID 即进多租户模式（目标库 cbm-prod）：落库带 org_id + dstatus='pending' + provenance。
+//   不配则保持原单租户行为（旧库 leads 无 org_id/dstatus 列，硬写会报 column does not exist）——两种库都能跑。
 // ============================================================================
 const { getSupabaseAdminClient, parseBody, sendJson } = require("./_supabase");
+
+// —— 多租户装配（只在配了 CBM_ORG_ID 时生效） ——
+// 【为什么必须显式写 dstatus】cbm-prod 的 leads.dstatus 默认是 'confirmed'，而系统的待拍板列表读的是
+//   dstatus='pending'（domains/lead listPending）。不显式写 'pending'，网站线索会以「已确认」落库、
+//   直接跳过待拍板队列——人确认铁律当场破掉，且没有任何报错。旧库没这列，所以只在多租户模式下加。
+const orgId = () => String(process.env.CBM_ORG_ID || "").trim();
+function withTenant(row, leadUid) {
+  const oid = orgId();
+  if (!oid) return row;                                  // 单租户模式：原样（兼容旧库）
+  return Object.assign({}, row, {
+    org_id: oid,
+    dstatus: "pending",                                  // 入站即待拍板·人确认才 confirmed（红线）
+    kind: "lead",
+    basis: row.source || "",
+    provenance: {
+      external: true, verified: false,                   // 外部来源·未核实
+      channel: (row.metadata && row.metadata.channel) || row.source || "",
+      lead_uid: leadUid || (row.metadata && row.metadata.lead_uid) || "",
+    },
+  });
+}
 
 // 原始请求体字节（WhatsApp 验签必需）。Vercel 纯 serverless：优先 rawBody，否则读流，最后降级。
 async function readRawBody(request) {
@@ -34,8 +56,9 @@ async function upsertLead(supabase, row, dedupCol) {
   const key = row[dedupCol];
   let existing = null;
   if (key) {
-    const r = await supabase.from("leads").select("*").eq("source", row.source).eq(dedupCol, key)
-      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    let q = supabase.from("leads").select("*").eq("source", row.source).eq(dedupCol, key);
+    if (orgId()) q = q.eq("org_id", orgId());   // 多租户：查重必须限定本 org，否则会跨租户误判重复
+    const r = await q.order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (r.error) throw dbErr("leads 查重失败：" + (r.error.message || r.error));   // 修：查重失败不再静默吞（否则库挂时误判"无重复"）
     existing = r.data;
   }
@@ -241,7 +264,7 @@ module.exports = async function handler(request, response) {
       if (!out.ok) { sendJson(response, 200, { ok: false, error: out.error }); return; }
       let ingested = 0;
       for (const ev of out.events) {
-        const row = leadFromWaEvent(ev);
+        const row = withTenant(leadFromWaEvent(ev), String((ev.raw && ev.raw.msg && ev.raw.msg.id) || ev.dedupKey || ""));
         if (!row.whatsapp && !row.name && !row.company) continue;
         await upsertLead(supabase, row, "whatsapp"); ingested++;
       }
@@ -261,7 +284,7 @@ module.exports = async function handler(request, response) {
     }
     const { normalizeWebsiteLead } = await import("../lib/website-leadgen.js");
     const lead = normalizeWebsiteLead(body, { site: (body && body.site) || "" });
-    const row = leadFromWebsite(lead);
+    const row = withTenant(leadFromWebsite(lead), lead.lead_uid || "");
     await upsertLead(supabase, row, "email");
     sendJson(response, 200, { ok: true, channel: row.source, safety_boundary: "Manual review required. No automatic message; no quotation/price/PI." });
   } catch (error) {
